@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* =================================================================
+           1. CSS Variablen (Custom Properties)
+           ================================================================= */
+        /* Standardwerte (diese werden durch JavaScript überschrieben) */
+        :root {
+            --primary-color: #4f46e5; /* indigo-600 */
+            --secondary-color: #a78bfa; /* violet-400 */
+            --bg-color-hex: #1f2937; /* gray-800 */
+            --bg-color-rgb: 31, 41, 55;
+            --bg-opacity: 0.9;
+            --border-width: 1px; /* Für die Einstellung "Ränder ausblenden" */
+	        --compensation-padding: 0px /* NEU: Variable für den Größenausgleich */
+        }
+
+        /* =================================================================
+           2. Layout und Grundstil
+           ================================================================= */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-color: #000000;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* =================================================================
+           3. Partikel-Hintergrund CSS (WICHTIG!)
+           ================================================================= */
+        #tsparticles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* =================================================================
+           4. Rand- und Padding-Kompensation (NEU)
+           ================================================================= */
+        /* Kompensation für Module mit p-2 (8px Basis-Padding), z.B. Wetter-Karte, Steuerung, Profil */
+        .compensated-p2 {
+            border-width: var(--border-width) !important;
+            /* Padding: Basis (8px) + Kompensation (0px oder 1px) */
+            padding: calc(8px + var(--compensation-padding)) !important; 
+            border-style: solid;
+            border-color: var(--secondary-color); /* Randfarbe über Variable steuern */
+        }
+
+        /* Kompensation für Module mit p-4 (16px Basis-Padding), z.B. Quick Dials */
+        .compensated-p4 {
+            border-width: var(--border-width) !important;
+            /* Padding: Basis (16px) + Kompensation (0px oder 1px) */
+            padding: calc(16px + var(--compensation-padding)) !important;
+            border-style: solid;
+            border-color: var(--secondary-color);
+        }
+        
+        .dynamic-border {
+            border-style: solid; 
+        }
+
+        #dashboard-container {
+            max-height: 100vh; 
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        #profile-image-input {
+            display: none;
+        }
+
+        .dynamic-bg {
+             background-color: rgba(var(--bg-color-rgb), var(--bg-opacity)); 
+             backdrop-filter: blur(12px); 
+             transition: background-color 0.3s, opacity 0.3s;
+        }
+        
+        /* Generischer Randstil mit variabler Breite */
+        .dynamic-border {
+             border-width: var(--border-width);
+             border-color: #374151; /* gray-700 Standard */
+             border-style: solid;
+        }
+
+        /* Spezialfall für den Add-Button: verwendet nun compensated-p4, falls er angezeigt wird */
+        /* Diese Klasse wird im JS hinzugefügt/entfernt */
+        .add-dial-button {
+            border-width: calc(var(--border-width) * 2) !important; 
+            border-style: dashed; 
+            border-color: var(--primary-color);
+            transition: border-color 0.3s, opacity 0.3s;
+        }
+        
+        /* FIX FÜR Search Engine Menu Scroll und HINTERGRUND */
+        #search-engine-menu {
+            max-height: 250px; 
+            overflow-y: auto; 
+            z-index: 60; 
+            border-width: calc(var(--border-width) * 2); 
+            background-color: #1f2937; 
+            backdrop-filter: none; 
+            opacity: 1;
+        }
+
+        @keyframes slowNeonGlow {
+            0%, 100% {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 15px var(--primary-color);
+            }
+            50% {
+                border-color: var(--secondary-color); 
+                box-shadow: 0 0 10px var(--secondary-color), 0 0 20px var(--secondary-color), 0 0 30px var(--secondary-color);
+            }
+        }
+        
+        #search-input.animate-neon-glow {
+            animation: slowNeonGlow 4s infinite alternate ease-in-out;
+            border-color: color-mix(in srgb, var(--primary-color) 50%, transparent); 
+        }
+
+        #search-input {
+            color: white !important; 
+        }
+
+        #search-input:focus {
+            animation: rainbowBorderGlow 8s linear infinite !important; 
+        }
+        
+        @keyframes rainbowBorderGlow {
+            0% { border-color: #FF0000; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.4); } 
+            16.66% { border-color: #FF7F00; box-shadow: 0 0 8px rgba(255, 127, 0, 0.8), 0 0 20px rgba(255, 127, 0, 0.4); } 
+            33.33% { border-color: #FFFF00; box-shadow: 0 0 8px rgba(255, 255, 0, 0.8), 0 0 20px rgba(255, 255, 0, 0.4); } 
+            50% { border-color: #00FF00; box-shadow: 0 0 8px rgba(0, 255, 0, 0.8), 0 0 20px rgba(0, 255, 0, 0.4); } 
+            66.66% { border-color: #0000FF; box-shadow: 0 0 10px rgba(0, 0, 255, 1.0), 0 0 25px rgba(0, 0, 255, 0.5); } 
+            83.33% { border-color: #4B0082; box-shadow: 0 0 15px rgba(75, 0, 130, 1.0), 0 0 40px rgba(75, 0, 130, 0.7); } 
+            95% { border-color: #FF00FF; box-shadow: 0 0 10px rgba(255, 0, 255, 1.0), 0 0 25px rgba(255, 0, 255, 0.5); } 
+            100% { border-color: #FF0000; box-shadow: 0 0 8px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.4); } 
+        }
+
+        #search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6); 
+        }
+
+        .iframe-wetteronline {
+            position: absolute;
+            transform: scale(0.7); 
+            transform-origin: top left;
+            width: 142.85%; 
+            height: 142.85%;
+            top: -30px; 
+        }
+        
+        /* FIX FÜR DRAG & DROP RÄNDER */
+        .manual-layout-mode .draggable-container {
+            position: absolute !important; 
+            transition: none !important; 
+            cursor: grab;
+            /* Feste 2px Grenze, unabhängig von var(--border-width) */
+            border: 2px dashed color-mix(in srgb, var(--primary-color) 50%, transparent); 
+            z-index: 40; 
+        }
+        
+        .manual-layout-mode .is-dragging {
+            cursor: grabbing;
+            z-index: 100 !important;
+            box-shadow: 0 0 20px var(--primary-color);
+        }
+        
+        .draggable-positioning {
+            position: absolute !important; 
+        }
+        
+        .manual-layout-mode #quick-dials-grid > div {
+            pointer-events: none;
+            cursor: default; 
+            opacity: 0.8;
+        }
+
+
+/* =================================================================
+   EDIT DIALS
+   ================================================================= */
+
+.edit-button, .delete-button {
+    pointer-events: all; /* Macht die Buttons klickbar, wenn sie sichtbar sind */
+    z-index: 20;
+    border: none;
+    cursor: pointer;
+}
+
+/* =================================================================
+   2. Layout und Grundstil
+   ================================================================= */
+html {
+    /* WICHTIG: Erlaubt 100% Höhenberechnung */
+    height: 100%; 
+   overflow: hidden !important;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* Verwenden Sie height, um Konflikte mit der .no-scroll-Klasse zu minimieren */
+    height: 100vh; 
+    background-color: #000000;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden; !important;
+}
+
+/* NEU: Aggressivste Scroll-Blockierung für <html> und <body> */
+.no-scroll, html.no-scroll {
+    /* Erzwingt das Verhindern des Scrollens */
+    overflow: hidden !important; 
+    
+    /* Fixiert das Fenster, um Layout-Konflikte zu vermeiden */
+    position: fixed !important; 
+    width: 100% !important;
+    height: 100% !important; 
+}
+    </style>
+</head>
+<body id="body-root">
+    <div id="tsparticles"></div>
+
+    <div id="weather-fixed-container" class="fixed top-8 left-8 z-50 draggable-container">
+        <div id="weather-card" class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2"> 
+            
+            <div class="h-56 w-full overflow-hidden relative dynamic-border rounded-lg">
+                <iframe 
+                    id="wetter-online-iframe"
+                    src="about:blank" 
+                    title="Aktuelles Wetter (WetterOnline)"
+                    class="w-full h-full border-0 iframe-wetteronline"
+                    loading="lazy">
+                </iframe>
+            </div>
+            
+            <input type="text" id="weather-city-input" placeholder="Ort eingeben (z.B. Zuerich)" class="mt-2 w-full bg-gray-700/50 text-white text-xs p-1 rounded focus:outline-none focus:ring-1 focus:ring-indigo-400">
+        </div>
+    </div>
+
+    <div id="profile-fixed-container" class="fixed top-8 right-8 z-50 draggable-container">
+        <div class="relative group text-right dynamic-bg rounded-xl shadow-2xl transition duration-300 compensated-p2">
+            <input type="file" id="profile-image-input" accept="image/*" />
+            <label for="profile-image-input" class="cursor-pointer">
+                <img id="profile-image" 
+                     src="https://placehold.co/80x80/0d1117/ffffff?text=U" 
+                     alt="Profilbild" 
+                     class="w-20 h-20 rounded-full border-4 border-indigo-500/80 shadow-xl transition transform duration-300 hover:scale-105 object-cover" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/80x80/0d1117/ffffff?text=U';" 
+                />
+            </label>
+            <p id="user-id-display" class="text-xs text-white/50 mt-1"></p>
+        </div>
+    </div>
+
+
+    <div id="dashboard-container" class="flex justify-center items-start lg:items-center py-8">
+        <div class="w-full max-w-5xl space-y-8 p-4 pt-32">
+
+            <section class="flex justify-center">
+                <form id="search-form" class="w-full max-w-xl">
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Schnellsuche..."
+                               class="w-full p-4 pl-16 pr-4 bg-gray-900/60 backdrop-blur-lg text-white text-xl rounded-full shadow-2xl border border-indigo-500/50 focus:outline-none transition duration-300 animate-neon-glow" required>
+                        
+                        <button type="button" id="search-engine-button" onclick="toggleSearchEngineMenu(event)"
+                                class="absolute left-1.5 top-1/2 transform -translate-y-1/2 h-10 w-10 p-1.5 bg-gray-700/50 rounded-full hover:bg-gray-600/70 transition duration-200 dynamic-border border-2" 
+                                title="Suchmaschine wechseln">
+                            <img id="current-search-icon" src="https://www.google.com/favicon.ico" alt="Search Icon" class="w-full h-full object-contain rounded-full">
+                        </button>
+                        
+                        <div id="search-engine-menu" class="hidden absolute left-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-2xl z-50 p-2 space-y-1 dynamic-border">
+                            <h4 class="text-xs text-white/50 px-2 pt-1 pb-1 border-b border-gray-700">Wähle Suchmaschine</h4>
+                            </div>
+                        
+                    </div>
+                </form>
+            </section>
+
+  <section class="pt-4">
+    <h2 class="text-2xl font-bold text-white mb-4 text-center"></h2>
+    <div id="quick-dials-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div id="add-dial-container" class="flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 cursor-pointer add-dial-button compensated-p4"
+            onclick="showAddModal()">
+            <svg class="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span class="mt-2 text-white text-sm font-medium">Link hinzufügen</span>
+        </div>
+    </div>
+</section>
+
+    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
+            <h3 class="text-xl font-bold text-white mb-4">Schnellwahleintrag hinzufügen</h3>
+            <input type="text" id="modal-title" placeholder="Titel (z.B. Google)" class="w-full p-3 mb-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="url" id="modal-url" placeholder="URL (z.B. https://google.com)" class="w-full p-3 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end space-x-3">
+                <button onclick="hideAddModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-200">Abbrechen</button>
+                <button onclick="saveQuickDial()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">Speichern</button>
+            </div>
+        </div>
+    </div>
+    
+     
+
+
+<div id="settings-fixed-container" class="fixed bottom-8 right-8 z-50 draggable-container">
+    <div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
+        
+        <button id="settings-button" onclick="showSettingsModal()" class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" title="Einstellungen öffnen">
+            <svg class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+    </div>
+</div>
+
+
+
+
+    <div id="import-fixed-container" class="fixed bottom-8 right-24 z-50 draggable-container">
+        <div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
+            <button id="import-button" onclick="document.getElementById('import-file-input').click()" class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" title="Einstellungen und Links importieren">
+                <svg class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+            </button>
+            <button id="export-button" onclick="exportSettings()" class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" title="Einstellungen und Links exportieren">
+                <svg class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0L8 12m4 4V4" />
+                </svg>
+            </button>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="importData(event)">
+        </div>
+    </div>
+
+
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-start pt-8 pb-8 z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
+            <h3 class="text-xl font-bold text-white mb-4">Dashboard-Einstellungen</h3>
+
+            <div class="space-y-4">
+                
+                <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Design & Farben</h4>
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-primary-color" class="text-white">Akzent-/Start-Glow-Farbe:</label>
+                    <input type="color" id="setting-primary-color" value="#4f46e5" class="w-12 h-8 rounded border-none cursor-pointer" oninput="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-secondary-color" class="text-white">Ziel-Glow-Farbe (Animation):</label>
+                    <input type="color" id="setting-secondary-color" value="#a78bfa" class="w-12 h-8 rounded border-none cursor-pointer" oninput="liveUpdateSettings()">
+                </div>
+
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-bg-color" class="text-white">Kachel-Hintergrundfarbe (Standard):</label>
+                    <input type="color" id="setting-bg-color" value="#1f2937" class="w-12 h-8 rounded border-none cursor-pointer" oninput="liveUpdateSettings()">
+                </div>
+
+                <div class="p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-bg-opacity" class="text-white block mb-1">Kachel-Transparenz:</label>
+                    <input type="range" id="setting-bg-opacity" min="0.0" max="1.0" step="0.05" value="0.9" class="w-full h-2 rounded-lg appearance-none cursor-pointer range-lg" oninput="liveUpdateSettings()">
+                    <span id="opacity-value-display" class="text-xs text-white/50 block text-right">90%</span>
+                </div>
+
+                <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Hintergründe & Ränder</h4>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-hide-button-bg" class="text-white">Hintergrund von Modulen/Buttons ausblenden (Wetter, Profil, Steuerung):</label>
+                    <input type="checkbox" id="setting-hide-button-bg" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-hide-quickdial-bg" class="text-white">Hintergrund von Schnellwahleinträgen ausblenden (Kacheln):</label>
+                    <input type="checkbox" id="setting-hide-quickdial-bg" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-hide-borders" class="text-white">Ränder ausblenden (Dynamic Border):</label>
+                    <input type="checkbox" id="setting-hide-borders" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-hide-add-dial" class="text-white">"Link hinzufügen"-Button ausblenden:</label>
+                    <input type="checkbox" id="setting-hide-add-dial" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+
+                <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Größen & Layout</h4>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-weather-width" class="text-white">Wetter-Karten-Breite (Tailwind-Klasse):</label>
+                    <input type="text" id="setting-weather-width" value="w-56" placeholder="z.B. w-56 oder w-80" class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" oninput="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-profile-size" class="text-white">Profilbild-Größe:</label>
+                    <select id="setting-profile-size" class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" onchange="liveUpdateSettings()">
+                        <option value="w-16 h-16">Klein (w-16 h-16)</option>
+                        <option value="w-20 h-20">Mittel (w-20 h-20)</option>
+                        <option value="w-24 h-24">Groß (w-24 h-24)</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-quickdial-size" class="text-white">Quick-Dial-Icon-Größe:</label>
+                    <select id="setting-quickdial-size" class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" onchange="liveUpdateSettings()">
+                        <option value="w-8 h-8">Klein (w-8 h-8)</option>
+                        <option value="w-10 h-10">Mittel (w-10 h-10)</option>
+                        <option value="w-12 h-12">Groß (w-12 h-12)</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-manual-layout" class="text-white">Manuellen Layout-Modus aktivieren (Drag & Drop):</label>
+                    <input type="checkbox" id="setting-manual-layout" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+
+                <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Suche & Verhalten</h4>
+
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-save-search-engine-id" class="text-white">Gewählte Suchmaschine speichern:</label>
+                    <input type="checkbox" id="setting-save-search-engine-id" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+                
+                <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+                    <label for="setting-autofill-disable" class="text-white">Suchvorschläge (Autofill) deaktivieren:</label>
+                    <input type="checkbox" id="setting-autofill-disable" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" onchange="liveUpdateSettings()">
+                </div>
+                
+                <div class="mt-6 border-t border-gray-700 pt-4 flex justify-between items-center">
+                    <button onclick="clearCacheAndReload()" class="text-red-400 text-sm hover:text-red-300 transition duration-200">
+                        Cache löschen (Alle Daten)
+                    </button>
+                    <div class="flex space-x-3">
+                        <button onclick="cancelSettings()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-200">Abbrechen</button>
+                        <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">Speichern & Schließen</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+ 
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@tsparticles/core@3.2.0/tsparticles.core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tsparticles/preset-links@3.2.0/tsparticles.preset.links.bundle.min.js"></script>
+
+
+
+    <script type="text/javascript">
+        // Partikel-Initialisierung (unverändert)
+        (async (engine) => {
+            if (typeof loadLinksPreset !== 'undefined') {
+                await loadLinksPreset(engine);
+            } else {
+                return;
+            }
+
+            const options = {
+                preset: "links",
+                background: {
+                    color: { value: "#000000" }
+                },
+                fullScreen: { enable: false },
+                particles: {
+                    number: { value: 120 },
+                    color: {
+                        value: "random",
+                        animation: {
+                            enable: true,
+                            speed: 0.8,
+                            sync: false,
+                            h: {
+                                enable: true,
+                                speed: 0.8,
+                                offset: 0,
+                                sync: false
+                            }
+                        }
+                    },
+                    opacity: {
+                        value: 1,
+                        animation: {
+                            enable: true,
+                            speed: 0.5,
+                            minimumValue: 0.2,
+                            sync: false
+                        }
+                    },
+                    size: {
+                        value: { min: 1, max: 3 },
+                    },
+                    links: {
+                        opacity: 0.5,
+                        distance: 140,
+                        color: { value: "random" },
+                        triangles: { enable: false }
+                    },
+                    move: {
+                        speed: 1,
+                        direction: "none",
+                        random: true,
+                        straight: false,
+                        outModes: {
+                            default: "bounce",
+                        },
+                    }
+                }
+            };
+
+            await engine.load({ id: "tsparticles", options: options });
+        })(tsParticles);
+
+// =================================================================
+// NEU: HILFSFUNKTIONEN FÜR LOCALSTORAGE & FAVICON
+// =================================================================
+
+// Liest die Quick Dials aus dem LocalStorage
+window.getDialsFromLocalStorage = () => {
+    try {
+        const dialsJson = localStorage.getItem('quickDials');
+        return dialsJson ? JSON.parse(dialsJson) : [];
+    } catch (e) {
+        console.error("Fehler beim Lesen der Dials aus LocalStorage:", e);
+        return [];
+    }
+};
+
+// Speichert die Quick Dials im LocalStorage und rendert sie neu
+window.saveDialsToLocalStorage = (dials) => {
+    try {
+        localStorage.setItem('quickDials', JSON.stringify(dials));
+        renderQuickDials(dials); // Ruft die Render-Funktion auf, um die Ansicht zu aktualisieren
+    } catch (e) {
+        console.error("Fehler beim Speichern der Dials in LocalStorage:", e);
+        alert("Speichern fehlgeschlagen. Der Speicher ist möglicherweise voll.");
+    }
+};
+
+// Hilfsfunktion zum Laden von Favicons
+function getFaviconUrl(url) {
+    const domain = (new URL(url)).hostname;
+    return `https://www.google.com/s2/favicons?sz=64&domain_url=${domain}`; 
+}
+
+        // =================================================================
+        // GLOBALE VARIABLEN & HILFSFUNKTIONEN
+        // =================================================================
+        const LOCAL_STORAGE_KEYS = ['profileGifBase64', 'quickDials', 'weatherCity', 'dashboardSettings', 'itemPositions', 'selectedSearchEngineId', 'autofillDisabled'];
+        const DRAGGABLE_ITEMS = [
+            'weather-fixed-container', 
+            'profile-fixed-container', 
+            'settings-fixed-container', 
+            'import-fixed-container', 
+            'export-fixed-container'
+        ];
+        let isDragging = false;
+        let settingsSnapshot = null; 
+        
+        // Suchmaschinen Konfiguration (ERWEITERT)
+        const SEARCH_ENGINES = [
+            { id: 'google', name: 'Google', url: 'https://www.google.com/search?q=', icon: 'https://www.google.com/favicon.ico' },
+            { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'https://duckduckgo.com/favicon.ico' },
+            { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/results?search_query=', icon: 'https://www.youtube.com/favicon.ico' },
+            { id: 'bing', name: 'Bing', url: 'https://www.bing.com/search?q=', icon: 'https://www.bing.com/favicon.ico' },
+            { id: 'wikipedia', name: 'Wikipedia', url: 'https://de.wikipedia.org/wiki/Spezial:Search/', icon: 'https://de.wikipedia.org/favicon.ico' },
+            { id: 'startpage', name: 'Startpage', url: 'https://www.startpage.com/sp/search?query=', icon: 'https://www.startpage.com/favicon.ico' },
+            { id: 'ecosia', name: 'Ecosia', url: 'https://www.ecosia.org/search?q=', icon: 'https://www.ecosia.org/favicon.ico' },
+            { id: 'perplexity', name: 'Perplexity AI', url: 'https://www.perplexity.ai/search?q=', icon: 'https://www.perplexity.ai/favicon.ico' },
+            { id: 'chatgpt', name: 'ChatGPT Prompt', url: 'https://chat.openai.com/?q=', icon: 'https://chat.openai.com/favicon.ico' },
+            { id: 'deepl', name: 'DeepL Translate', url: 'https://www.deepl.com/translator#de/en/', icon: 'https://www.deepl.com/favicon.ico' }
+        ];
+        const SEARCH_ENGINE_KEY = 'selectedSearchEngineId';
+
+        // Konvertiert HEX zu RGB für CSS-Variable --bg-color-rgb
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '31, 41, 55';
+        }
+
+
+
+
+
+        // =================================================================
+        // EINSTELLUNGEN
+        // =================================================================
+        const defaultSettings = {
+            primaryColor: '#4f46e5',
+            secondaryColor: '#a78bfa',
+            bgColor: '#1f2937', // gray-800
+            bgOpacity: 0.9,
+            manualLayout: false,
+            hideBorders: false,
+            hideButtonBackgrounds: false,
+            hideQuickDialBackgrounds: false,
+            hideAddDialButton: false, 
+            saveSearchEngineId: true, 
+            weatherModuleWidth: 'w-56',
+            profileModuleSize: 'w-20 h-20',
+            quickDialImageSize: 'w-10 h-10'
+        };
+        let currentSettings = {...defaultSettings};
+
+        function applySettings(settings) {
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', settings.primaryColor);
+            root.style.setProperty('--secondary-color', settings.secondaryColor);
+            root.style.setProperty('--bg-color-hex', settings.bgColor);
+            root.style.setProperty('--bg-color-rgb', hexToRgb(settings.bgColor));
+            root.style.setProperty('--bg-opacity', settings.bgOpacity);
+            root.style.setProperty('--border-width', settings.hideBorders ? '0px' : '1px');
+            root.style.setProperty('--compensation-padding', settings.hideBorders ? '1px' : '0px');
+            const primaryColor = settings.primaryColor; 
+
+            // 1. Module (Weather/Profile/Buttons) Styling
+            const fixedContainers = [ 
+                document.getElementById('weather-card'),
+                document.querySelector('#profile-fixed-container > div'),
+                document.querySelector('#settings-fixed-container > div'),
+                document.querySelector('#import-fixed-container > div'),
+                document.querySelector('#export-fixed-container > div'),
+            ].filter(el => el);
+            fixedContainers.forEach(container => {
+                if (settings.hideButtonBackgrounds) {
+                    container.classList.remove('dynamic-bg', 'shadow-2xl');
+                    container.classList.add('bg-transparent');
+                } else {
+                    container.classList.add('dynamic-bg', 'shadow-2xl');
+                    container.classList.remove('bg-transparent');
+                }
+                if (container.classList.contains('compensated-p2')) {
+                    container.style.borderColor = settings.secondaryColor;
+                }
+            });
+
+       
+
+        // =================================================================
+        // Quick Dials Styling
+        // =================================================================
+
+            // 2. Quick Dials Styling
+            const allDialContainers = document.querySelectorAll('#quick-dials-grid > div');
+            allDialContainers.forEach((el) => {
+                // Steuere den "Link hinzufügen"-Button separat
+                if (el.id === 'add-dial-container') {
+                     if (settings.hideAddDialButton) {
+                         el.classList.add('hidden');
+                     } else {
+                         el.classList.remove('hidden');
+                     }
+                     return;
+                }
+                // Reguläre Dials
+                if (settings.hideQuickDialBackgrounds) {
+                    el.classList.remove('dynamic-bg', 'shadow-xl');
+                    el.classList.add('bg-transparent');
+                } else {
+                    el.classList.add('dynamic-bg', 'shadow-xl');
+                    el.classList.remove('bg-transparent');
+                }
+            });
+
+            // 3. Modul-/Kachelgrößen
+            const weatherCard = document.getElementById('weather-card');
+            if (weatherCard) {
+                weatherCard.className = weatherCard.className.replace(/\b(w-\w+)\b/g, '').trim();
+                weatherCard.classList.add(settings.weatherModuleWidth);
+            }
+            const profileImage = document.getElementById('profile-image');
+            if (profileImage) {
+                const [profileW, profileH] = settings.profileModuleSize.split(' ');
+                profileImage.className = profileImage.className.replace(/\b(w-\w+)\b/g, '').trim();
+                profileImage.className = profileImage.className.replace(/\b(h-\w+)\b/g, '').trim();
+                profileImage.classList.add(profileW, profileH);
+            }
+            const quickDialIcons = document.querySelectorAll('.quick-dial-item a img');
+            if (quickDialIcons) {
+                const [qdW, qdH] = settings.quickDialImageSize.split(' ');
+                quickDialIcons.forEach(img => {
+                    img.className = img.className.replace(/\b(w-\w+)\b/g, '').trim();
+                    img.className = img.className.replace(/\b(h-\w+)\b/g, '').trim();
+                    img.classList.add(qdW, qdH);
+                });
+            }
+
+            // 4. Akzentfarben (unabhängig)
+            document.getElementById('profile-image').style.borderColor = primaryColor;
+            document.getElementById('settings-button').querySelector('svg').style.color = primaryColor;
+            const importSvg = document.getElementById('import-button') ? document.getElementById('import-button').querySelector('svg') : null;
+            if (importSvg) importSvg.style.color = primaryColor;
+            const exportSvg = document.getElementById('export-button') ? document.getElementById('export-button').querySelector('svg') : null;
+            if (exportSvg) exportSvg.style.color = primaryColor;
+            
+            // 5. Layout-Modus
+            toggleManualLayout(settings.manualLayout, false); // Stellt den Modus ein, speichert aber nicht erneut
+
+            // 6. Search Engine State (muss manuell synchronisiert werden, da es eine separate Einstellung hat)
+            if (!settings.saveSearchEngineId) {
+                localStorage.removeItem(SEARCH_ENGINE_KEY);
+                updateSearchEngine('google', false);
+            } else {
+                updateSearchEngine(localStorage.getItem(SEARCH_ENGINE_KEY) || 'google', false);
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const storedSettings = JSON.parse(localStorage.getItem('dashboardSettings'));
+                if (storedSettings) {
+                    // Merge stored settings with defaults to ensure new settings are always present
+                    currentSettings = { ...defaultSettings, ...storedSettings };
+                }
+            } catch (e) {
+                console.error("Fehler beim Laden der Einstellungen aus LocalStorage. Verwende Standardeinstellungen.", e);
+                // Bei Fehler werden Standardeinstellungen verwendet und fehlerhafte Daten gelöscht
+                currentSettings = {...defaultSettings};
+                localStorage.removeItem('dashboardSettings'); 
+            }
+
+            // Apply the loaded (or default) settings
+            applySettings(currentSettings);
+        }
+
+        // ** KORRIGIERTE UND ROBUSTE FUNKTION FÜR DAS ÖFFNEN DES POPUPS **
+        window.showSettingsModal = () => {
+            const settingsModal = document.getElementById('settings-modal');
+            if (!settingsModal) return; 
+
+            // 1. Snapshot erstellen (für Abbrechen-Funktion)
+            settingsSnapshot = { ...currentSettings };
+
+            // 2. MODAL ÖFFNEN: Dies muss zuerst und fehlerfrei geschehen.
+            settingsModal.classList.remove('hidden');
+
+            // 3. DATEN LADEN: Die fehleranfällige Logik in einen try...catch-Block einschließen.
+            try {
+                // --- Farben & Transparenz ---
+                document.getElementById('setting-primary-color').value = currentSettings.primaryColor;
+                document.getElementById('setting-secondary-color').value = currentSettings.secondaryColor;
+                document.getElementById('setting-bg-color').value = currentSettings.bgColor;
+                
+                document.getElementById('setting-bg-opacity').value = currentSettings.bgOpacity;
+                document.getElementById('opacity-value-display').textContent = (currentSettings.bgOpacity * 100).toFixed(0) + '%';
+                
+                // --- Checkboxen ---
+                document.getElementById('setting-hide-button-bg').checked = currentSettings.hideButtonBackgrounds;
+                document.getElementById('setting-hide-quickdial-bg').checked = currentSettings.hideQuickDialBackgrounds;
+                document.getElementById('setting-hide-borders').checked = currentSettings.hideBorders;
+                document.getElementById('setting-hide-add-dial').checked = currentSettings.hideAddDialButton;
+                document.getElementById('setting-save-search-engine-id').checked = currentSettings.saveSearchEngineId; 
+                document.getElementById('setting-manual-layout').checked = currentSettings.manualLayout; 
+
+                // --- Größen & Layout ---
+                document.getElementById('setting-weather-width').value = currentSettings.weatherModuleWidth;
+                document.getElementById('setting-profile-size').value = currentSettings.profileModuleSize;
+                document.getElementById('setting-quickdial-size').value = currentSettings.quickDialImageSize; 
+                
+                // --- Autofill (separate Logik) ---
+                if (typeof initAutofillSetting === 'function') {
+                     initAutofillSetting();
+                }
+
+            } catch (error) {
+                // Der Fehler wird nur protokolliert, das Modal ist aber sichtbar
+                console.error("Fehler beim Laden der Einstellungsdaten in das Modal:", error);
+            }
+        };
+
+        window.liveUpdateSettings = () => {
+            // Hole alle Werte aus den Input-Feldern, ohne zu speichern
+            currentSettings.primaryColor = document.getElementById('setting-primary-color').value;
+            currentSettings.secondaryColor = document.getElementById('setting-secondary-color').value;
+            currentSettings.bgColor = document.getElementById('setting-bg-color').value;
+            
+            currentSettings.bgOpacity = parseFloat(document.getElementById('setting-bg-opacity').value);
+            document.getElementById('opacity-value-display').textContent = (currentSettings.bgOpacity * 100).toFixed(0) + '%';
+
+            currentSettings.hideButtonBackgrounds = document.getElementById('setting-hide-button-bg').checked;
+            currentSettings.hideQuickDialBackgrounds = document.getElementById('setting-hide-quickdial-bg').checked;
+            currentSettings.hideBorders = document.getElementById('setting-hide-borders').checked;
+            currentSettings.hideAddDialButton = document.getElementById('setting-hide-add-dial').checked;
+            currentSettings.saveSearchEngineId = document.getElementById('setting-save-search-engine-id').checked; 
+            currentSettings.manualLayout = document.getElementById('setting-manual-layout').checked; 
+            
+            currentSettings.weatherModuleWidth = document.getElementById('setting-weather-width').value;
+            currentSettings.profileModuleSize = document.getElementById('setting-profile-size').value;
+            currentSettings.quickDialImageSize = document.getElementById('setting-quickdial-size').value;
+            
+            // Wende die Änderungen sofort an (ohne Speichern)
+            applySettings(currentSettings);
+        };
+
+        window.hideSettingsModal = () => {
+            document.getElementById('settings-modal').classList.add('hidden');
+        };
+
+        window.saveSettings = () => {
+            currentSettings.primaryColor = document.getElementById('setting-primary-color').value;
+            currentSettings.secondaryColor = document.getElementById('setting-secondary-color').value;
+            currentSettings.bgColor = document.getElementById('setting-bg-color').value;
+            currentSettings.bgOpacity = parseFloat(document.getElementById('setting-bg-opacity').value);
+
+            currentSettings.hideButtonBackgrounds = document.getElementById('setting-hide-button-bg').checked;
+            currentSettings.hideQuickDialBackgrounds = document.getElementById('setting-hide-quickdial-bg').checked;
+            currentSettings.hideBorders = document.getElementById('setting-hide-borders').checked;
+            currentSettings.hideAddDialButton = document.getElementById('setting-hide-add-dial').checked;
+            currentSettings.saveSearchEngineId = document.getElementById('setting-save-search-engine-id').checked; 
+            
+            currentSettings.weatherModuleWidth = document.getElementById('setting-weather-width').value;
+            currentSettings.profileModuleSize = document.getElementById('setting-profile-size').value;
+            currentSettings.quickDialImageSize = document.getElementById('setting-quickdial-size').value;
+            
+            const newManualLayout = document.getElementById('setting-manual-layout').checked;
+            if (newManualLayout !== currentSettings.manualLayout) {
+                toggleManualLayout(newManualLayout, true);
+            } else {
+                currentSettings.manualLayout = newManualLayout; 
+            }
+            
+            applySettings(currentSettings); 
+            localStorage.setItem('dashboardSettings', JSON.stringify(currentSettings));
+            document.getElementById('settings-modal').classList.add('hidden');
+            settingsSnapshot = null;
+            window.location.reload(true);
+        };
+
+        window.cancelSettings = () => {
+            if (settingsSnapshot) {
+                currentSettings = { ...settingsSnapshot };
+                applySettings(currentSettings);
+                toggleManualLayout(currentSettings.manualLayout, false);
+                localStorage.setItem('dashboardSettings', JSON.stringify(currentSettings));
+            }
+            document.getElementById('settings-modal').classList.add('hidden');
+            settingsSnapshot = null;
+        }
+
+        // NEU: Funktion zum Löschen des gesamten Local Storage (für Korrupte Daten)
+        window.clearCacheAndReload = () => {
+            if (confirm("WARNUNG: Dadurch werden ALLE gespeicherten Daten (Links, Einstellungen, Bilder, Positionen) gelöscht. Möchtest du wirklich fortfahren?")) {
+                LOCAL_STORAGE_KEYS.forEach(key => { localStorage.removeItem(key); });
+                window.location.reload(true);
+            }
+        }
+
+        // =================================================================
+        // MANUELLER LAYOUT MODUS (DRAG & DROP)
+        // =================================================================
+        function toggleManualLayout(enable, shouldSave = true) {
+            const body = document.getElementById('body-root');
+            DRAGGABLE_ITEMS.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (enable) {
+                    el.classList.add('draggable-container');
+                    makeDraggable(el);
+                } else {
+                    el.classList.remove('draggable-container');
+                    el.classList.remove('is-dragging');
+                    removeDraggable(el);
+                }
+            });
+            if (enable) {
+                body.classList.add('manual-layout-mode');
+            } else {
+                body.classList.remove('manual-layout-mode');
+            }
+            if (shouldSave) {
+                currentSettings.manualLayout = enable;
+                localStorage.setItem('dashboardSettings', JSON.stringify(currentSettings));
+            }
+        }
+
+        // --- Drag & Drop Helfer (Implementierung wie im alten Code) ---
+        function removeDraggable(element) { element.onmousedown = null; }
+
+        function makeDraggable(element) {
+            removeDraggable(element);
+            element.onmousedown = dragMouseDown;
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let initialClickPos = {};
+            let hasMoved = false;
+
+            function dragMouseDown(e) {
+                if (e.target.tagName === 'IFRAME' || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return false; 
+                
+                e = e || window.event;
+                e.preventDefault();
+                
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                initialClickPos = { x: e.clientX, y: e.clientY };
+                hasMoved = false;
+
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                element.classList.add('is-dragging');
+                isDragging = true;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                if (Math.abs(e.clientX - initialClickPos.x) > 5 || Math.abs(e.clientY - initialClickPos.y) > 5) {
+                    hasMoved = true;
+                }
+
+                // set the element's new position:
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+
+                // Entferne die fixed Klassen
+                element.classList.remove('fixed', 'top-8', 'left-8', 'right-8', 'bottom-8', 'right-24');
+                element.classList.add('draggable-positioning');
+            }
+
+            function closeDragElement(e) {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                element.classList.remove('is-dragging');
+                
+                if (hasMoved) {
+                     saveItemPosition(element.id, element.style.top, element.style.left);
+                }
+                isDragging = false;
+            }
+        }
+
+        function saveItemPosition(id, top, left) {
+            let positions;
+            try { positions = JSON.parse(localStorage.getItem('itemPositions')) || {}; } catch (e) { positions = {}; }
+            positions[id] = { top: top, left: left };
+            localStorage.setItem('itemPositions', JSON.stringify(positions));
+        }
+
+        function loadItemPositions() {
+            let positions;
+            try { positions = JSON.parse(localStorage.getItem('itemPositions')); } catch (e) { positions = null; }
+            if (positions) {
+                DRAGGABLE_ITEMS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && positions[id]) {
+                        // Entferne alle Standard-Positionierungs-Klassen
+                        el.classList.remove('fixed', 'top-8', 'left-8', 'right-8', 'bottom-8', 'right-24');
+                        // Füge die Klasse für absolute Positionierung hinzu
+                        el.classList.add('draggable-positioning');
+                        el.style.top = positions[id].top;
+                        el.style.left = positions[id].left;
+                    }
+                });
+            }
+        }
+
+        // =================================================================
+        // SUCHFUNKTION & SUCHMASCHINEN-AUSWAHL
+        // =================================================================
+        function handleSearch(event) {
+            event.preventDefault();
+            const input = document.getElementById('search-input');
+            const query = input.value.trim();
+            if (query) {
+                const selectedId = localStorage.getItem(SEARCH_ENGINE_KEY) || 'google';
+                const engine = SEARCH_ENGINES.find(e => e.id === selectedId) || SEARCH_ENGINES[0];
+                let searchUrl = engine.url;
+                if (engine.id === 'deepl' || engine.id === 'chatgpt') {
+                    searchUrl += encodeURIComponent(query);
+                } else {
+                    searchUrl += encodeURIComponent(query);
+                }
+                window.open(searchUrl, '_self');
+            }
+        }
+
+        function initSearch() {
+            document.getElementById('search-form').addEventListener('submit', handleSearch);
+            renderSearchEngineMenu();
+            // Die Auswahl wird jetzt in applySettings() behandelt, basierend auf saveSearchEngineId
+            updateSearchEngine(localStorage.getItem(SEARCH_ENGINE_KEY) || 'google', false); 
+        }
+
+function toggleSearchEngineMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('search-engine-menu');
+            
+            // Umschalten der 'hidden'-Klasse. isNowHidden ist TRUE, wenn das Menü geschlossen wird.
+            const isNowHidden = menu.classList.toggle('hidden'); 
+            const disableScroll = !isNowHidden; // TRUE, wenn Menü offen ist
+            
+            // Zuweisung der no-scroll-Klasse zum <html>-Tag (document.documentElement) und <body>
+            // Dies blockiert den HAUPT-SCROLLBALKEN des Browsers.
+            document.documentElement.classList.toggle('no-scroll', disableScroll);
+            document.body.classList.toggle('no-scroll', disableScroll);
+            
+            // WICHTIG: Es wird KEINE Änderung am #dashboard-container vorgenommen, 
+            // damit dieser weiterhin intern scrollbar bleibt.
+        }
+
+        window.updateSearchEngine = (engineId, shouldCloseMenu = true) => {
+            const engine = SEARCH_ENGINES.find(e => e.id === engineId);
+            if (!engine) return;
+
+            // Die Speicherung wird jetzt durch die Einstellung saveSearchEngineId gesteuert
+            if (currentSettings.saveSearchEngineId) {
+                localStorage.setItem(SEARCH_ENGINE_KEY, engineId);
+            } else {
+                 localStorage.removeItem(SEARCH_ENGINE_KEY);
+            }
+
+            let domain = new URL(engine.url.replace('#de/en/', '').replace('?q=', '').replace('&query=', '')).hostname;
+            document.getElementById('current-search-icon').src = engine.icon || `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+            document.getElementById('search-engine-button').title = `Suchmaschine: ${engine.name}`;
+
+            if (shouldCloseMenu) {
+                document.getElementById('search-engine-menu').classList.add('hidden');
+            }
+        }
+
+        function renderSearchEngineMenu() {
+            const menu = document.getElementById('search-engine-menu');
+            const menuContent = menu.querySelector('h4'); // Behalte den Header
+            
+            // Entferne alte Einträge
+            while (menuContent.nextElementSibling) {
+                menuContent.nextElementSibling.remove();
+            }
+
+            SEARCH_ENGINES.forEach(engine => {
+                const domain = new URL(engine.url.replace('#de/en/', '').replace('?q=', '').replace('&query=', '')).hostname;
+                const iconSrc = engine.icon || `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+
+                const button = document.createElement('button');
+                button.className = 'flex items-center w-full px-2 py-1 text-sm text-white rounded-lg hover:bg-gray-700 transition duration-150';
+                button.setAttribute('onclick', `updateSearchEngine('${engine.id}')`);
+                
+                button.innerHTML = `
+                    <img src="${iconSrc}" alt="${engine.name} Icon" class="w-4 h-4 mr-2 rounded-full">
+                    <span>${engine.name}</span>
+                `;
+                menu.appendChild(button);
+            });
+            
+            // Schließe das Menü, wenn außerhalb geklickt wird
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('search-engine-menu');
+                const button = document.getElementById('search-engine-button');
+                if (!menu.contains(e.target) && !button.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        }
+
+        // =================================================================
+        // AUTOFILL EINSTELLUNG
+        // =================================================================
+        function initAutofillSetting() {
+            const autofillToggle = document.getElementById('setting-autofill-disable');
+            const searchInput = document.getElementById('search-input');
+            if (!autofillToggle || !searchInput) return;
+
+            const isAutofillDisabled = localStorage.getItem('autofillDisabled') === 'true';
+            autofillToggle.checked = isAutofillDisabled;
+            searchInput.setAttribute('autocomplete', isAutofillDisabled ? 'off' : 'on');
+
+            // Stelle sicher, dass der Event-Listener nur einmal hinzugefügt wird
+            if (!autofillToggle.hasAttribute('data-listener-added')) {
+                 autofillToggle.setAttribute('data-listener-added', 'true');
+                 autofillToggle.addEventListener('change', () => {
+                     const disable = autofillToggle.checked;
+                     searchInput.setAttribute('autocomplete', disable ? 'off' : 'on');
+                     localStorage.setItem('autofillDisabled', disable);
+                     if (document.activeElement === searchInput && !disable) {
+                         searchInput.blur();
+                         searchInput.focus();
+                     }
+                 });
+            }
+        }
+
+        // =================================================================
+        // RESTLICHE FUNKTIONEN (Quick Dial, Wetter, etc.)
+        // =================================================================
+        window.showAddModal = () => {
+            if (isDragging) return;
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('modal-title').value = '';
+            document.getElementById('modal-url').value = 'https://';
+        };
+
+        window.hideAddModal = () => {
+            document.getElementById('add-modal').classList.add('hidden');
+        };
+
+        function getDialsFromLocalStorage() {
+            try {
+                const dials = JSON.parse(localStorage.getItem('quickDials')) || [];
+                return dials.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveDialsToLocalStorage(dials) {
+            localStorage.setItem('quickDials', JSON.stringify(dials));
+            renderQuickDials(dials);
+        }
+
+        window.saveQuickDial = () => {
+            const title = document.getElementById('modal-title').value.trim();
+            const url = document.getElementById('modal-url').value.trim();
+            if (title && url) {
+                const dials = getDialsFromLocalStorage();
+                dials.push({ id: crypto.randomUUID(), title: title, url: url, createdAt: Date.now() });
+                saveDialsToLocalStorage(dials);
+                hideAddModal();
+            }
+        };
+
+        window.deleteQuickDial = (dialId) => {
+            const dials = getDialsFromLocalStorage();
+            const updatedDials = dials.filter(dial => dial.id !== dialId);
+            saveDialsToLocalStorage(updatedDials);
+        };
+
+// =================================================================
+// QUICK DIALS RENDERING (Ersetzt die alte Funktion)
+// =================================================================
+function renderQuickDials(dials) {
+    const grid = document.getElementById('quick-dials-grid');
+    if (!grid) return;
+    
+    // Entferne alle aktuellen Dials (außer dem "Link hinzufügen" Button)
+    const existingDials = grid.querySelectorAll('div:not(#add-dial-container)');
+    existingDials.forEach(el => el.remove());
+
+    const addButton = document.getElementById('add-dial-container');
+    if (!addButton) return;
+
+    dials.forEach(dial => {
+        const dialDiv = document.createElement('div');
+        
+        // WICHTIG: Stellt sicher, dass die Klasse 'group' vorhanden ist
+        dialDiv.className = 'flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 dynamic-bg compensated-p4 hover:scale-105 group relative';
+        dialDiv.setAttribute('data-id', dial.id);
+        
+        dialDiv.innerHTML = `
+            <a href="${dial.url}" target="_self" class="w-full h-full flex flex-col items-center justify-center p-4">
+                <img src="${getFaviconUrl(dial.url)}" alt="${dial.title}" class="quick-dial-icon rounded-full mb-2 ${currentSettings.quickDialImageSize} shadow-lg transition duration-300">
+                <span class="text-white text-sm font-medium text-center w-full px-1">${dial.title}</span>
+            </a>
+            
+            <button class="edit-button absolute top-1 right-12 opacity-0 group-hover:opacity-100 transition duration-300 p-1 rounded-full bg-gray-900/50 hover:bg-indigo-600/70 z-20" 
+                    onclick="editLink(event, '${dial.id}')"
+                    title="Eintrag bearbeiten">
+                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+            </button>
+
+            <button class="delete-button absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition duration-300 p-1 rounded-full bg-gray-900/50 hover:bg-red-600/70 z-20" 
+                    onclick="deleteLink(event, '${dial.id}')"
+                    title="Eintrag löschen">
+                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        
+        grid.insertBefore(dialDiv, addButton);
+    });
+
+    applySettings(currentSettings);
+}
+// =================================================================
+        // EDIT/REMOVE DIALS & MODAL-LOGIK (Ersetzt die alte Logik)
+        // =================================================================
+
+let isEditingId = null; // Speichert die ID des Links, der gerade bearbeitet wird
+
+// --- FUNKTION ZUM ÖFFNEN DES MODALS (HINZUFÜGEN) ---
+window.showAddModal = () => {
+    // 1. WICHTIG: Setzt den Bearbeitungsmodus zurück, um "Hinzufügen" zu ermöglichen
+    isEditingId = null; 
+    
+    // 2. Leert die Felder
+    document.getElementById('modal-title').value = ''; 
+    document.getElementById('modal-url').value = '';
+    
+    // 3. Setzt den Modal-Titel und Button-Text für den Hinzufügen-Modus
+    document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag hinzufügen';
+    document.querySelector('#add-modal button[onclick="saveQuickDial()"]').textContent = 'Speichern';
+    
+    // 4. Zeigt das Modal an
+    document.getElementById('add-modal').classList.remove('hidden');
+};
+
+// --- FUNKTION ZUM LÖSCHEN EINES LINKS ---
+window.deleteLink = (event, id) => {
+    event.stopPropagation();
+    if (confirm("Soll dieser Schnellwahleintrag wirklich gelöscht werden?")) {
+        let dials = getDialsFromLocalStorage();
+        dials = dials.filter(dial => dial.id !== id);
+        saveDialsToLocalStorage(dials); 
+    }
+};
+
+// --- FUNKTION ZUM BEARBEITEN EINES LINKS ---
+window.editLink = (event, id) => {
+    event.stopPropagation();
+    isEditingId = id;
+    
+    const dials = getDialsFromLocalStorage();
+    const dialToEdit = dials.find(dial => dial.id === id);
+    
+    if (dialToEdit) {
+        document.getElementById('modal-title').value = dialToEdit.title;
+        document.getElementById('modal-url').value = dialToEdit.url;
+        
+        // UI auf Bearbeiten-Modus setzen
+        document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag bearbeiten';
+        document.querySelector('#add-modal button[onclick="saveQuickDial()"]').textContent = 'Speichern';
+        
+        document.getElementById('add-modal').classList.remove('hidden');
+    }
+};
+
+// --- SPEICHERFUNKTION ---
+window.saveQuickDial = () => {
+    const title = document.getElementById('modal-title').value.trim();
+    const url = document.getElementById('modal-url').value.trim();
+
+    if (title && url) {
+        let dials = getDialsFromLocalStorage();
+
+        if (isEditingId) {
+            // BEARBEITEN-MODUS
+            dials = dials.map(dial => {
+                if (dial.id === isEditingId) {
+                    return { ...dial, title: title, url: url };
+                }
+                return dial;
+            });
+        } else {
+            // HINZUFÜGEN-MODUS (isEditingId ist null)
+            dials.push({ 
+                id: crypto.randomUUID(), 
+                title: title, 
+                url: url, 
+                createdAt: Date.now() 
+            });
+        }
+        
+        // Speichert die Dials und rendert neu
+        saveDialsToLocalStorage(dials); 
+        hideAddModal(); // Schließt das Modal und setzt den Status zurück
+
+    } else {
+        alert("Bitte geben Sie einen Titel und eine URL ein.");
+    }
+};
+
+// --- FUNKTION ZUM SCHLIESSEN DES MODALS ---
+window.hideAddModal = () => {
+    document.getElementById('add-modal').classList.add('hidden');
+    
+    // Setzt den Bearbeitungsstatus zurück
+    isEditingId = null; 
+    
+    // Setzt Eingabefelder und UI auf den Hinzufügen-Modus zurück
+    document.getElementById('modal-title').value = ''; 
+    document.getElementById('modal-url').value = '';
+    document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag hinzufügen';
+    document.querySelector('#add-modal button[onclick="saveQuickDial()"]').textContent = 'Speichern'; 
+};
+        // =================================================================
+        // PROFILBILD & WETTER
+        // =================================================================
+        function handleProfileImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Data = e.target.result;
+                    localStorage.setItem('profileGifBase64', base64Data);
+                    document.getElementById('profile-image').src = base64Data;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        const weatherIframe = document.getElementById('wetter-online-iframe');
+        const weatherCityInput = document.getElementById('weather-city-input');
+        let weatherTimeout;
+
+        function updateWeatherIframe(city) {
+            if (!city) return;
+            localStorage.setItem('weatherCity', city);
+            const cleanCity = city.trim().split(' ')[0];
+            const encodedCity = encodeURIComponent(cleanCity.toLowerCase());
+            weatherIframe.src = `https://www.wetteronline.de/wetter/${encodedCity}`;
+        }
+
+        weatherCityInput.addEventListener('input', (e) => {
+            clearTimeout(weatherTimeout);
+            const city = e.target.value.trim();
+            if (city.length >= 3) {
+                weatherTimeout = setTimeout(() => {
+                    updateWeatherIframe(city);
+                }, 1000);
+            }
+        });
+        
+        // =================================================================
+        // IMPORT / EXPORT FUNKTIONEN
+        // =================================================================
+
+        window.exportSettings = () => {
+            const data = {};
+            LOCAL_STORAGE_KEYS.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value !== null) {
+                    data[key] = value;
+                }
+            });
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dashboard_backup.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        window.importSettings = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (confirm("Möchtest du wirklich alle aktuellen Dashboard-Daten mit den importierten Daten überschreiben?")) {
+                        for (const key in importedData) {
+                            if (LOCAL_STORAGE_KEYS.includes(key)) {
+                                localStorage.setItem(key, importedData[key]);
+                            }
+                        }
+                        window.location.reload(true);
+                    }
+                } catch (error) {
+                    alert("Fehler beim Lesen der Datei. Bitte stelle sicher, dass es eine gültige JSON-Backup-Datei ist.");
+                    console.error("Import error:", error);
+                }
+            };
+            reader.readAsText(file);
+        };
+
+
+
+
+        // =================================================================
+        // INITIALISIERUNG
+        // =================================================================
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+
+            loadSettings();
+            loadItemPositions();
+
+            // Lade dynamische Inhalte
+            renderQuickDials(getDialsFromLocalStorage());
+            initSearch();
+            initAutofillSetting();
+
+            // Lade Profilbild
+            const profileImageInput = document.getElementById('profile-image-input');
+            if (profileImageInput) {
+                profileImageInput.addEventListener('change', handleProfileImageUpload);
+                const base64Data = localStorage.getItem('profileGifBase64');
+                if (base64Data) {
+                    document.getElementById('profile-image').src = base64Data;
+                }
+            }
+            
+            // Lade Wetter (mit gespeicherter Stadt)
+            const storedCity = localStorage.getItem('weatherCity');
+            if (storedCity) {
+                weatherCityInput.value = storedCity;
+                updateWeatherIframe(storedCity);
+            }
+        });
+
+</script>
+</body>
+</html>
