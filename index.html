@@ -1601,76 +1601,136 @@ window.hideAddModal = () => {
 
 
 // =================================================================
-        // DRAG & DROP HELPER
-        // =================================================================
+// DRAG & DROP HELPER
+// =================================================================
+
         function removeDraggable(element) {
             element.onmousedown = null;
         }
 
-        function saveItemPosition(id, top, left) {
-            let positions;
-            try { positions = JSON.parse(localStorage.getItem('itemPositions')) || {}; } catch (e) { positions = {}; }
-            positions[id] = { top: top, left: left };
-            localStorage.setItem('itemPositions', JSON.stringify(positions));
-        }
+// =================================================================
+// HILFSFUNKTION: Lädt Position nur für ein Element (NEU)
+// =================================================================
+function loadItemPositionsForElement(element) {
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+    const itemId = element.id;
 
-        function loadItemPositions() {
-            let positions;
-            try { positions = JSON.parse(localStorage.getItem('itemPositions')) || {}; } catch (e) { positions = {}; }
-            
-            if (Object.keys(positions).length > 0) {
-                DRAGGABLE_ITEMS.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el && positions[id]) {
-                        // Entfernt die ursprünglichen Tailwind-Klassen
-                        el.classList.remove('fixed', 'top-8', 'left-8', 'right-8', 'bottom-8', 'right-24');
-                        el.classList.add('draggable-positioning');
-                        el.style.top = positions[id].top;
-                        el.style.left = positions[id].left;
-                    }
-                });
-            }
-        }
+    const storedRelativeTop = localStorage.getItem(itemId + '_top_rel');
+    const storedRelativeLeft = localStorage.getItem(itemId + '_left_rel');
 
-        // =================================================================
-        // MANUELLER LAYOUT MODUS (DRAG & DROP) - KORRIGIERT
-        // =================================================================
-        function toggleManualLayout(enable, shouldSave = true) {
-            const body = document.getElementById('body-root');
-            DRAGGABLE_ITEMS.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
+    if (storedRelativeTop !== null && storedRelativeLeft !== null) {
+        
+        const relativeTop = parseFloat(storedRelativeTop);
+        const relativeLeft = parseFloat(storedRelativeLeft);
+        
+        const newTopPx = relativeTop * windowHeight;
+        const newLeftPx = relativeLeft * windowWidth;
+        
+        // **WICHTIG:** Entfernt alle Tailwind-Klassen, die die Positionierung überschreiben könnten.
+        element.classList.remove(
+            'fixed', 'top-4', 'left-4', 'top-8', 'right-8', 'bottom-8', 'right-24', 'draggable-positioning'
+        );
+        
+        // Positionierung auf Fixed setzen (für Verschiebung relativ zum Viewport)
+        element.style.position = 'fixed';
+        element.style.bottom = 'auto';
+        element.style.right = 'auto';
+        
+        // Neue dynamische Position anwenden
+        element.style.top = newTopPx + 'px';
+        element.style.left = newLeftPx + 'px';
+        
+        return true; // Position wurde geladen
+    }
+    return false; // Keine Position im Speicher gefunden
+}
 
-                if (enable) {
-                    el.classList.add('draggable-container');
-                    makeDraggable(el);
-                } else {
-                    el.classList.remove('draggable-container');
-                    el.classList.remove('is-dragging');
-                    removeDraggable(el); 
-                    // Position bleibt erhalten (Styles & Klasse bleiben)
-                }
-            });
-            
-            if (enable) {
-                body.classList.add('manual-layout-mode');
-            } else {
-                body.classList.remove('manual-layout-mode');
+
+// =================================================================
+// Speichert die Position RELATIV zum Fenster
+// =================================================================
+function saveItemPosition(itemId, topPixelString, leftPixelString) {
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+    
+    const topPx = parseFloat(topPixelString);
+    const leftPx = parseFloat(leftPixelString);
+    
+    const relativeTop = topPx / windowHeight;
+    const relativeLeft = leftPx / windowWidth; 
+
+    // Im localStorage als relative Werte speichern.
+    localStorage.setItem(itemId + '_top_rel', relativeTop.toString());
+    localStorage.setItem(itemId + '_left_rel', relativeLeft.toString());
+}
+
+
+// =================================================================
+// KORRIGIERT: Lädt die RELATIVE Position für alle verwalteten Elemente
+// =================================================================
+function loadItemPositions() {
+    // Statt nach einer CSS-Klasse zu suchen, iterieren wir über die IDs
+    // (DRAGGABLE_ITEMS ist das Array, das die IDs aller Buttons enthält, die verschiebbar sein sollen)
+    if (typeof DRAGGABLE_ITEMS !== 'undefined') {
+        DRAGGABLE_ITEMS.forEach(itemId => {
+            const element = document.getElementById(itemId);
+            if (element) {
+                // Die Hilfsfunktion übernimmt das Laden und die dynamische Berechnung
+                loadItemPositionsForElement(element);
             }
+        });
+    } else {
+        // Fallback-Logik, falls DRAGGABLE_ITEMS nicht definiert ist
+        console.warn("DRAGGABLE_ITEMS ist nicht definiert. Dynamische Positionierung funktioniert nur für Elemente mit der Klasse .draggable-container.");
+        document.querySelectorAll('.draggable-container').forEach(element => {
+            loadItemPositionsForElement(element);
+        });
+    }
+}
+
+// =================================================================
+// MANUELLER LAYOUT MODUS (DRAG & DROP) - KORRIGIERT
+// =================================================================
+function toggleManualLayout(enable, shouldSave = true) {
+    const body = document.getElementById('body-root');
+    DRAGGABLE_ITEMS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        if (enable) {
+            el.classList.add('draggable-container');
+            makeDraggable(el);
+        } else {
+            // **KORREKTUR:** Lade die dynamische Position neu, 
+            // um die Inline-Styles nach dem Deaktivieren zu fixieren.
+            loadItemPositionsForElement(el); 
             
-            if (shouldSave) {
-                currentSettings.manualLayout = enable;
-                localStorage.setItem('dashboardSettings', JSON.stringify(currentSettings));
-            }
+            el.classList.remove('draggable-container');
+            el.classList.remove('is-dragging');
+            removeDraggable(el);
         }
+    });
+    
+    if (enable) {
+        body.classList.add('manual-layout-mode');
+    } else {
+        body.classList.remove('manual-layout-mode');
+    }
+    
+    if (shouldSave) {
+        currentSettings.manualLayout = enable;
+        localStorage.setItem('dashboardSettings', JSON.stringify(currentSettings));
+    }
+}
 
 // =================================================================
 // makeDraggable - FIX FÜR BOTTOM-SPRUNG (Explizites 'bottom: auto')
 // =================================================================
 function makeDraggable(element) {
-    removeDraggable(element); 
+    removeDraggable(element);
     element.onmousedown = dragMouseDown;
-    let shiftX = 0, shiftY = 0; 
+    let shiftX = 0, shiftY = 0;
     let initialClickPos = {};
     let hasMoved = false;
 
@@ -1680,11 +1740,9 @@ function makeDraggable(element) {
         e = e || window.event;
         e.preventDefault();
         
-        // 1. Aktuelle visuelle Position holen
         let rect = element.getBoundingClientRect();
 
         // FIX FÜR DEN SPRUNG:
-        // Wir prüfen, ob das Element noch keine inline 'top' Position hat.
         if (!element.style.top) {
             
             // A) Die exakte visuelle Position einfrieren
@@ -1692,12 +1750,11 @@ function makeDraggable(element) {
             const visualLeft = rect.left;
             
             // B) Inline-Styles setzen
-            element.style.position = 'fixed'; 
-            element.style.top = visualTop + 'px'; 
+            element.style.position = 'fixed';
+            element.style.top = visualTop + 'px';
             element.style.left = visualLeft + 'px';
             
             // C) WICHTIG: 'bottom' und 'right' explizit deaktivieren!
-            // Das verhindert, dass die alte CSS-Klasse (bottom-8) gegen den neuen Top-Wert kämpft.
             element.style.bottom = 'auto';
             element.style.right = 'auto';
             
@@ -1705,16 +1762,16 @@ function makeDraggable(element) {
             element.classList.remove('fixed', 'top-8', 'left-8', 'right-8', 'bottom-8', 'right-24');
             element.classList.add('draggable-positioning');
             
-            // E) Reflow erzwingen (Position stabilisieren)
+            // E) Reflow erzwingen
             element.offsetWidth;
             
-            // F) Rect neu lesen, falls sich minimal was verschoben hat (für den Maus-Offset)
+            // F) Rect neu lesen
             rect = element.getBoundingClientRect();
         }
         
         // Maus-Offset berechnen
         shiftX = Math.round(e.clientX - rect.left);
-        shiftY = Math.round(e.clientY - rect.top); 
+        shiftY = Math.round(e.clientY - rect.top);
         
         initialClickPos = { x: e.clientX, y: e.clientY };
         hasMoved = false;
@@ -1722,7 +1779,7 @@ function makeDraggable(element) {
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
         element.classList.add('is-dragging');
-        window.isDragging = true; 
+        window.isDragging = true;
     }
 
     function elementDrag(e) {
@@ -1747,7 +1804,7 @@ function makeDraggable(element) {
                  saveItemPosition(element.id, element.style.top, element.style.left); 
             }
         }
-        window.isDragging = false; 
+        window.isDragging = false;
     }
 }
 
@@ -1761,6 +1818,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadSettings();
     loadItemPositions();
+
+    // ===================================================
+    // Reaktion auf Fenstergrößenänderung hinzufügen
+    // ===================================================
+let resizeTimeout;
+    window.addEventListener('resize', () => {
+        // Verzögerung (Debouncing), um die Performance zu verbessern
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(loadItemPositions, 0); 
+    });
 
     // Lade dynamische Inhalte
     renderQuickDials(getDialsFromLocalStorage());
