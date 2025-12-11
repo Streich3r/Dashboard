@@ -1520,20 +1520,7 @@ window.hideAddModal = () => {
             }
         }
 
-    function updateLightSource() {
-            const overlay = document.getElementById('light-mode-overlay');
-            const brightnessInput = document.getElementById('light-brightness').value; // 0 - 100
-            const warmthInput = document.getElementById('light-warmth').value;       // 0 - 100
-
-            // Basis-Farbberechnung (unverändert)
-            const factor = warmthInput / 100;
-            let r = 255;
-            let g = 255 - (95 * factor);
-            let b = 255 - (195 * factor);
-            const brightFactor = brightnessInput / 100;
-            r = Math.round(r * brightFactor);
-            g = Math.round(g * brightFactor);
-            b = Math.round(b * brightFactor);
+   
 
             overlay.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
             
@@ -1853,4 +1840,5 @@ let resizeTimeout;
 });
 </script>
 </body>
+
 </html>
