@@ -1132,6 +1132,63 @@ body:has(#settings-modal:not(.hidden)) #settings-fixed-container,body:has(#add-m
  #ivy-v13-light-panel {padding:10px 15px 12px!important;gap:5px!important}
 }
 
+
+/* IVY V14: moveable, independently sizeable SEARCH + LINKS workspaces */
+:root {--ivy-v14-search-width:620px;--ivy-v14-links-width:920px;--ivy-v14-links-height:620px}
+#dashboard-container > div > section:first-child,
+body.ivy-mobile-auto #dashboard-container > div > section:first-child {
+ width:min(100%,var(--ivy-v14-search-width))!important;
+ max-width:100%!important;align-self:center!important;position:relative!important;
+ translate:var(--ivy-v14-search-x,0px) var(--ivy-v14-search-y,0px)!important;
+ will-change:auto;flex:0 0 auto!important;
+}
+#dashboard-container > div > section:first-child #search-form {
+ width:100%!important;max-width:100%!important;
+}
+#dashboard-container > div > section:nth-child(2),
+body.ivy-mobile-auto #dashboard-container > div > section:nth-child(2) {
+ width:min(100%,var(--ivy-v14-links-width))!important;
+ max-width:100%!important;align-self:center!important;position:relative!important;
+ height:min(var(--ivy-v14-links-height),100%)!important;
+ max-height:min(var(--ivy-v14-links-height),100%)!important;
+ flex:1 1 auto!important;min-height:0!important;
+ translate:var(--ivy-v14-links-x,0px) var(--ivy-v14-links-y,0px)!important;
+}
+#quick-dials-grid {height:100%!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;}
+.ivy-v14-drag-handle {
+ display:none;position:absolute;right:9px;top:-29px;z-index:210;
+ height:27px;min-width:112px;padding:2px 11px;border:1px solid rgba(102,218,255,.65);
+ border-radius:8px;background:#111e37;color:#d8f6ff;font:600 11px/20px system-ui,sans-serif;
+ box-shadow:0 0 16px rgba(69,194,245,.25);cursor:grab;user-select:none;
+ -webkit-user-select:none;touch-action:none!important;pointer-events:auto!important;
+}
+body.manual-layout-mode .ivy-v14-drag-handle {display:block!important}
+body.manual-layout-mode #dashboard-container > div > section:first-child,
+body.manual-layout-mode #dashboard-container > div > section:nth-child(2) {
+ outline:1px dashed rgba(99,215,255,.68)!important;
+ outline-offset:5px;border-radius:15px;overflow:visible!important;
+}
+body.manual-layout-mode #dashboard-container > div > section:nth-child(2) #quick-dials-grid {
+ overflow-y:auto!important;
+}
+body.manual-layout-mode .ivy-v14-being-dragged {z-index:120!important}
+.ivy-v14-drag-handle:active {cursor:grabbing}
+.ivy-v14-size-section {padding:14px;border:1px solid rgba(115,165,255,.35);border-radius:14px;margin:15px 0;color:#edf2ff;background:rgba(11,19,39,.68)}
+.ivy-v14-size-section h4 {font-size:15px;font-weight:700;color:#a9e8ff;margin-bottom:8px}
+.ivy-v14-size-section label {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-top:12px}
+.ivy-v14-size-section output {color:#9deaff;font-variant-numeric:tabular-nums}
+.ivy-v14-size-section input[type=range]{display:block;width:100%;min-height:30px;accent-color:#61cfff;touch-action:pan-x}
+.ivy-v14-size-section button {background:#293b68;color:#fff;padding:8px 12px;border-radius:10px;font-size:12px;cursor:pointer;margin-top:10px}
+.ivy-v14-size-section p{font-size:12px;color:#aebbd3;line-height:1.5;margin:7px 0 3px}
+@media(max-width:767px) {
+ #dashboard-container > div > section:first-child,
+ body.ivy-mobile-auto #dashboard-container > div > section:first-child {width:min(100%,var(--ivy-v14-search-width))!important}
+ #dashboard-container > div > section:nth-child(2),
+ body.ivy-mobile-auto #dashboard-container > div > section:nth-child(2) {width:min(100%,var(--ivy-v14-links-width))!important}
+ .ivy-v14-drag-handle {top:-30px;right:1px;height:30px;min-width:90px}
+ body.manual-layout-mode #dashboard-container > div {gap:35px!important}
+}
+
 </style>
 </head>
 <body class="ivy-booting" id="body-root">
@@ -1521,7 +1578,7 @@ function getFaviconUrl(url) {
         // =================================================================
         // GLOBALE VARIABLEN & HILFSFUNKTIONEN
         // =================================================================
-        const LOCAL_STORAGE_KEYS = ['profileGifBase64', 'quickDials', 'weatherCity', 'dashboardSettings', 'itemPositions', 'selectedSearchEngineId', 'autofillDisabled', 'ivyWeatherSnapshot'];
+        const LOCAL_STORAGE_KEYS = ['profileGifBase64', 'quickDials', 'weatherCity', 'dashboardSettings', 'itemPositions', 'selectedSearchEngineId', 'autofillDisabled', 'ivyWeatherSnapshot', 'ivyV14Workspace_mobile', 'ivyV14Workspace_desktop'];
         const DRAGGABLE_ITEMS = [
             'weather-fixed-container', 
             'profile-fixed-container', 
@@ -2874,6 +2931,150 @@ function init(){
  });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+</script>
+<script>
+
+/* IVY V14: independent workspace geometry, touch dragging, and per-device persistence */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const scope=()=>window.innerWidth<=767?'mobile':'desktop';
+const names={search:'Suche',links:'Links'};
+const limits={searchWidth:[210,1000],linksWidth:[220,1240],linksHeight:[160,1100]};
+const presets={searchWidth:620,linksWidth:920,linksHeight:620,searchX:0,searchY:0,linksX:0,linksY:0};
+const key=()=>`ivyV14Workspace_${scope()}`;
+const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+let data={...presets},bound=false,oldScope='',resizeToken=0;
+function read(){
+ let saved={};try{saved=JSON.parse(localStorage.getItem(key())||'{}')||{}}catch(e){}
+ return {...presets,...saved};
+}
+function save(){try{localStorage.setItem(key(),JSON.stringify(data))}catch(e){console.warn('IVY workspace could not save',e)}}
+function parts(){const main=$('dashboard-container')?.firstElementChild;
+ return {search:main?.querySelector(':scope > section:first-child'),links:main?.querySelector(':scope > section:nth-child(2)')};
+}
+function visibleArea(){let host=$('dashboard-container')?.firstElementChild;
+ if(!host)return {w:innerWidth,h:innerHeight};
+ const box=host.getBoundingClientRect();return {w:Math.min(innerWidth,box.width),h:Math.min(innerHeight,box.height)};
+}
+function constrain(n,v){
+ const area=visibleArea();const el=parts()[n];if(!el)return {x:0,y:0};
+ const baseX=n==='search'?data.searchX:data.linksX;
+ const baseY=n==='search'?data.searchY:data.linksY;
+ // Relative displacement is constrained to roughly half the available empty space.
+ const xlim=Math.max(0,(area.w-el.offsetWidth)/2);
+ const ylim=Math.max(0,(area.h-el.offsetHeight)/2);
+ return {x:clamp(Number(v?.x??baseX)||0,-xlim,xlim),y:clamp(Number(v?.y??baseY)||0,-ylim,ylim)};
+}
+function apply(){
+ const root=document.documentElement;
+ const w=Math.max(1,innerWidth);
+ const maxSearch=clamp(Number(data.searchWidth)||620,limits.searchWidth[0],limits.searchWidth[1]);
+ const maxLinks=clamp(Number(data.linksWidth)||920,limits.linksWidth[0],limits.linksWidth[1]);
+ const maxHeight=clamp(Number(data.linksHeight)||620,limits.linksHeight[0],limits.linksHeight[1]);
+ root.style.setProperty('--ivy-v14-search-width',Math.min(maxSearch,w-20)+'px');
+ root.style.setProperty('--ivy-v14-links-width',Math.min(maxLinks,w-20)+'px');
+ root.style.setProperty('--ivy-v14-links-height',Math.min(maxHeight,Math.max(140,innerHeight-110))+'px');
+ const selections=parts();
+ for(const n of ['search','links']) {
+  if(!selections[n])continue;
+  const pos=constrain(n);
+  data[n+'X']=pos.x;data[n+'Y']=pos.y;
+  root.style.setProperty('--ivy-v14-'+n+'-x',pos.x+'px');
+  root.style.setProperty('--ivy-v14-'+n+'-y',pos.y+'px');
+ }
+ syncControls();
+}
+function syncControls(){
+ for(const name of Object.keys(limits)){
+  const input=$('ivy-v14-'+name),out=$('ivy-v14-'+name+'-out');
+  if(input && document.activeElement!==input)input.value=String(data[name]);
+  if(out)out.textContent=String(Math.round(Number(data[name])))+' px';
+ }
+}
+function change(name,value){
+ data[name]=clamp(Number(value),...limits[name]);
+ apply();save();
+}
+function resetPositions(){
+ for(const n of ['search','links']){data[n+'X']=0;data[n+'Y']=0}
+ apply();save();
+}
+function resetSizes(){
+ for(const n of Object.keys(limits))data[n]=presets[n];
+ apply();save();
+}
+function mountSettings(){
+ const modal=$('settings-modal')?.firstElementChild;
+ if(!modal||$('ivy-v14-controls'))return;
+ const panel=document.createElement('section');panel.id='ivy-v14-controls';panel.className='ivy-v14-size-section';
+ panel.innerHTML=`<h4>Suchfeld & Link-Container · Position / Größe</h4>
+ <p>Ziehe im manuellen Layoutmodus die Griffe „Suche ziehen“ und „Links ziehen“. Desktop und Mobil speichern getrennte Einstellungen. Nur die Links werden gescrollt.</p>
+ <label for="ivy-v14-searchWidth">Suchfeld-Breite <output id="ivy-v14-searchWidth-out">620 px</output></label>
+ <input id="ivy-v14-searchWidth" type="range" min="210" max="1000" step="10"/>
+ <label for="ivy-v14-linksWidth">Link-Container-Breite <output id="ivy-v14-linksWidth-out">920 px</output></label>
+ <input id="ivy-v14-linksWidth" type="range" min="220" max="1240" step="10"/>
+ <label for="ivy-v14-linksHeight">Link-Container-Höhe <output id="ivy-v14-linksHeight-out">620 px</output></label>
+ <input id="ivy-v14-linksHeight" type="range" min="160" max="1100" step="10"/>
+ <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" id="ivy-v14-reset-position">Positionen zurücksetzen</button><button type="button" id="ivy-v14-reset-size">Größen zurücksetzen</button></div>`;
+ const first=$('ivy-v13-link-size')?.closest('.ivy-v13-section');
+ if(first)first.after(panel);else modal.appendChild(panel);
+ for(const name of Object.keys(limits)){
+  const input=$('ivy-v14-'+name);
+  input.addEventListener('input',()=>change(name,input.value));
+ }
+ $('ivy-v14-reset-position').addEventListener('click',resetPositions);
+ $('ivy-v14-reset-size').addEventListener('click',resetSizes);
+ syncControls();
+}
+function installDrag(section,name){
+ if(section.querySelector(':scope > .ivy-v14-drag-handle'))return;
+ const handle=document.createElement('button');
+ handle.type='button';handle.className='ivy-v14-drag-handle';
+ handle.textContent=name==='search'?'⠿ Suche ziehen':'⠿ Links ziehen';
+ handle.setAttribute('aria-label',name==='search'?'Suchfeld verschieben':'Link-Container verschieben');
+ section.appendChild(handle);
+ let drag=null;
+ handle.addEventListener('pointerdown',event=>{
+  if(!document.body.classList.contains('manual-layout-mode'))return;
+  if(event.button!==undefined&&event.button!==0)return;
+  const modal=$('settings-modal');if(modal&&!modal.classList.contains('hidden'))return;
+  drag={id:event.pointerId,x:event.clientX,y:event.clientY,ox:data[name+'X'],oy:data[name+'Y']};
+  handle.setPointerCapture?.(event.pointerId);
+  section.classList.add('ivy-v14-being-dragged');
+  event.preventDefault();
+ });
+ handle.addEventListener('pointermove',event=>{
+  if(!drag||event.pointerId!==drag.id)return;
+  const pos=constrain(name,{x:drag.ox+event.clientX-drag.x,y:drag.oy+event.clientY-drag.y});
+  data[name+'X']=pos.x;data[name+'Y']=pos.y;
+  document.documentElement.style.setProperty('--ivy-v14-'+name+'-x',pos.x+'px');
+  document.documentElement.style.setProperty('--ivy-v14-'+name+'-y',pos.y+'px');
+  event.preventDefault();
+ });
+ const finish=event=>{
+  if(!drag||event.pointerId!==drag.id)return;
+  drag=null;section.classList.remove('ivy-v14-being-dragged');save();
+ };
+ handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',finish);
+}
+function init(){
+ const selections=parts();if(!selections.search||!selections.links)return;
+ mountSettings();installDrag(selections.search,'search');installDrag(selections.links,'links');
+ oldScope=scope();data=read();apply();bound=true;
+ window.addEventListener('resize',()=>{
+  cancelAnimationFrame(resizeToken);
+  resizeToken=requestAnimationFrame(()=>{
+   if(scope()!==oldScope){oldScope=scope();data=read()}
+   apply();
+  });
+ },{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)apply()});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+window.ivyV14Workspace={resetPositions,resetSizes,apply};
 })();
 
 </script>
