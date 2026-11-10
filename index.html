@@ -3676,6 +3676,12 @@ function place(id,v){const e=elById(id);if(!e)return;
  }
 }
 function relayout(){
+ // V19 writes to the same storage key. Refresh the V18 in-memory snapshot
+ // before applying positions; otherwise it restores the old coordinates.
+ try {
+  const latest=JSON.parse(localStorage.getItem(KEY)||'{}');
+  if(latest && typeof latest==='object' && !Array.isArray(latest)) saved=latest;
+ } catch(e) { console.warn('IVY: Positionsdaten unlesbar',e); }
  const mobile=MOBILE();root.classList.toggle('ivy-v16-mobile-ui',mobile);root.classList.toggle('ivy-v18-mobile',mobile);
  document.body.classList.toggle('ivy-v16-mobile-ui',mobile);
  if(priorMobile!==mobile){priorMobile=mobile;
@@ -3822,7 +3828,7 @@ function placeHandles(){if(!layer)return;const show=enabled();layer.style.displa
 function loop(ts){if(dragging||ts-lastPaint>110){placeHandles();lastPaint=ts}paintId=requestAnimationFrame(loop)}
 function setup(){attach();if(!paintId)loop()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
-window.ivyV19={refresh:placeHandles};
+window.ivyV19={refresh:placeHandles, positions:stored};
 })();
 </script>
 </body>
