@@ -1770,6 +1770,78 @@ body.ivy-v20-hide-search #dashboard-container > div {gap:0 !important;}
 .ivy-v20-settings .ivy-v20-reset{margin-top:9px;border:1px solid #739dc0;
  padding:9px 12px;border-radius:9px;background:#263752;}
 @media(min-width:901px){.ivy-v20-add-link{display:none !important;}}
+
+/* IVY V21 — modal layering, bottom-up mobile tiles, drag handle only */
+.ivy-v20-order {display:none !important;visibility:hidden !important;pointer-events:none !important;}
+#add-modal.hidden,#settings-modal.hidden {display:none !important;}
+#add-modal:not(.hidden),#settings-modal:not(.hidden) {
+ position:fixed !important;
+ inset:0 !important;
+ z-index:2147483640 !important;
+ visibility:visible !important;
+ opacity:1 !important;
+ pointer-events:auto !important;
+ overflow-y:auto !important;
+ display:flex !important;
+ justify-content:center !important;
+ align-items:safe center !important;
+ padding:14px !important;
+ background:rgba(0,0,0,.78) !important;
+ isolation:isolate;
+}
+#add-modal:not(.hidden)>div,#settings-modal:not(.hidden)>div {
+ position:relative !important;
+ max-height:calc(100dvh - 28px) !important;
+ overflow-y:auto !important;
+ pointer-events:auto !important;
+ margin:auto !important;
+}
+/* Grid pseudo-item occupies all unused space ABOVE link tiles, leaving the real
+   first row at the bottom. When the list overflows, this spacer shrinks to 0. */
+body.ivy-v15-links-open #quick-dials-grid {
+ display:grid !important;
+ grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+ grid-template-rows:minmax(0,1fr) !important;
+ grid-auto-rows:max-content !important;
+ align-content:stretch !important;
+ align-items:stretch !important;
+ align-self:stretch !important;
+ justify-content:stretch !important;
+ height:auto !important;
+ flex:1 1 auto !important;
+ min-height:0 !important;
+ overflow-y:auto !important;
+ padding:10px 6px 10px !important;
+ gap:12px !important;
+}
+body.ivy-v15-links-open #quick-dials-grid::before {
+ content:'' !important;
+ display:block !important;
+ grid-column:1/-1 !important;
+ grid-row:1 !important;
+ min-height:0 !important;
+ pointer-events:none !important;
+}
+/* Compact bottom navigation: Back left and Add right; never scroll off-screen. */
+body.ivy-v15-links-open #ivy-v15-links-head {
+ order:3 !important;
+ flex:0 0 auto !important;
+ position:relative !important;
+ z-index:5 !important;
+ width:100% !important;
+ margin:0 !important;
+ padding:10px 10px max(12px,env(safe-area-inset-bottom)) !important;
+ min-height:72px !important;
+}
+body.ivy-v15-links-open #ivy-v20-add-link {display:inline-flex !important;}
+/* Only the drag icon remains for changing order; touch gestures must not select text. */
+#quick-dials-grid .ivy-dial-drag-handle {
+ -webkit-user-select:none !important;
+ user-select:none !important;
+ -webkit-touch-callout:none !important;
+ touch-action:none !important;
+}
+
 </style>
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
 <meta name="theme-color" content="#070b18"/>
@@ -4005,26 +4077,16 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   decorateDials();
  }
  function decorateDials(){
-  const grid=$('quick-dials-grid');if(!grid)return;
-  const cards=Array.from(grid.querySelectorAll(':scope > [data-id]'));
-  cards.forEach((card,i)=>{
-   let group=card.querySelector(':scope > .ivy-v20-order');
-   if(!group){
-    group=document.createElement('div');group.className='ivy-v20-order';
-    for(const [dir,icon,title] of [[-1,'←','Vorheriger Platz'],[1,'→','Nächster Platz']]){
-     const btn=document.createElement('button');btn.type='button';btn.textContent=icon;
-     btn.setAttribute('aria-label',title);btn.dataset.dir=dir;
-     btn.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();reorder(card.dataset.id,Number(btn.dataset.dir));});
-     group.appendChild(btn);
-    }
-    card.appendChild(group);
-   }
-   const buttons=group.querySelectorAll('button');
-   if(buttons[0])buttons[0].disabled=i===0;
-   if(buttons[1])buttons[1].disabled=i===cards.length-1;
-  });
+  // V21: drag handles provide the only ordering control.
+  // Also clean up any V20 arrow controls after a redraw.
+  document.querySelectorAll('#quick-dials-grid .ivy-v20-order').forEach(el=>el.remove());
  }
  const start=()=>{
+  // Move dialogs directly under <body>, outside the link view's stacking context.
+  for(const id of ['add-modal','settings-modal']){
+   const modal=$(id);
+   if(modal && modal.parentElement!==document.body)document.body.appendChild(modal);
+  }
   mountSettings();applyVisibility();decorateDials();
   const grid=$('quick-dials-grid');
   if(grid){
@@ -4043,7 +4105,10 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    requestAnimationFrame(()=>{const g=$('quick-dials-grid');if(g)g.scrollTop=g.scrollHeight;});
   });
   // Back button stays in the lower control dock; add link directly beside it.
-  $('ivy-v20-add-link')?.addEventListener('click',e=>e.stopPropagation());
+  $('ivy-v20-add-link')?.addEventListener('click',e=>{
+   e.stopPropagation();
+   requestAnimationFrame(()=>$('modal-title')?.focus({preventScroll:true}));
+  });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
