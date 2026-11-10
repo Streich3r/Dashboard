@@ -1749,8 +1749,32 @@ body.ivy-v15-links-open #ivy-v15-links-head .ivy-v15-back{
  min-width:105px !important;min-height:46px !important;
 }
 body.ivy-v15-links-open #ivy-v15-links-head{gap:8px !important;}
-body.ivy-v15-links-open #settings-modal:not(.hidden),
-body.ivy-v15-links-open #add-modal:not(.hidden){z-index:9999 !important;}
+/* V21.1: Modal must sit above the mobile fullscreen links layer. */
+html body.ivy-v15-links-open #settings-modal:not(.hidden),
+html body.ivy-v15-links-open #add-modal:not(.hidden) {
+  position:fixed !important;
+  z-index:2147483600 !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  transform:none !important;
+  inset:0 !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow-y:auto !important;
+  padding:12px !important;
+}
+html body.ivy-v15-links-open #add-modal:not(.hidden) > div,
+html body.ivy-v15-links-open #settings-modal:not(.hidden) > div {
+  position:relative !important;
+  z-index:1 !important;
+  max-height:min(88dvh,760px) !important;
+  overflow-y:auto !important;
+  margin:auto !important;
+  overscroll-behavior:contain !important;
+}
+
 /* Device-specific visibility: dialog layers are not affected. */
 body.ivy-v20-hide-weather #weather-fixed-container,
 body.ivy-v20-hide-profile #profile-fixed-container,
@@ -1842,6 +1866,12 @@ body.ivy-v15-links-open #ivy-v20-add-link {display:inline-flex !important;}
  touch-action:none !important;
 }
 
+
+/* IVY V21.1 final stacking-layer guarantee */
+html body.ivy-v15-links-open #add-modal:not(.hidden),
+html body.ivy-v15-links-open #settings-modal:not(.hidden) {
+ z-index:2147483600 !important; position:fixed !important;
+}
 </style>
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
 <meta name="theme-color" content="#070b18"/>
