@@ -1275,9 +1275,128 @@ body.manual-layout-mode .ivy-v14-being-dragged {z-index:120!important}
 @media(min-width:768px){.ivy-v15-mobile-only{display:none!important}}
 @media(prefers-reduced-motion:reduce){#ivy-v15-links-launcher{animation:none!important}}
 
+
+/* IVY V16: genuine device-aware layouts, fullscreen and landscape safe */
+#ivy-v15-links-launcher { pointer-events:auto !important; }
+html.ivy-v16-mobile-ui #ivy-v15-links-launcher {
+  align-items:center !important;
+  justify-content:center !important;
+  gap:12px !important;
+  border-radius:22px !important;
+  border:1px solid rgba(109,230,255,.82) !important;
+  color:#e9faff !important;
+  background:linear-gradient(145deg,rgba(9,19,39,.96),rgba(19,17,50,.96)) !important;
+  box-shadow:0 0 25px rgba(32,203,255,.3),0 0 42px rgba(147,79,255,.2),inset 0 1px 0 rgba(255,255,255,.15) !important;
+  font:700 14px/1.1 system-ui,sans-serif !important;
+  letter-spacing:.2em !important;
+  cursor:pointer !important;
+  animation:ivyV15Breathe 4.8s ease-in-out infinite !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:fixed !important;
+  left:var(--ivy-v16-launch-x,calc(50% - 90px)) !important;
+  top:var(--ivy-v16-launch-y,min(70dvh,calc(100dvh - 140px))) !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:var(--ivy-v16-launch-w,180px) !important;
+  min-width:0 !important;
+  min-height:50px !important;
+  height:var(--ivy-v16-launch-h,62px) !important;
+  translate:none !important;
+  transform:none !important;
+  margin:0 !important;
+  padding:10px 16px !important;
+  z-index:200 !important;
+  touch-action:manipulation;
+  max-width:calc(100vw - 24px) !important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #ivy-v15-links-launcher {display:none !important;visibility:hidden!important;pointer-events:none!important}
+html.ivy-v16-mobile-ui body:not(.ivy-v15-links-open) #dashboard-container > div > section:nth-child(2),
+html.ivy-v16-mobile-ui body:not(.ivy-v15-links-open).ivy-mobile-auto #dashboard-container > div > section:nth-child(2) {display:none!important}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #dashboard-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #dashboard-container > div {
+  overflow:visible !important;
+  pointer-events:auto !important;
+  transform:none !important;
+  visibility:visible !important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #dashboard-container {
+  z-index:2147481999 !important;
+  max-height:none !important;
+  height:100dvh !important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #dashboard-container > div > section:nth-child(2) {
+  display:flex!important;
+  position:fixed!important;
+  left:0!important;top:0!important;right:0!important;bottom:0!important;
+  inset:0!important;
+  transform:none!important;
+  translate:none!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:0!important;
+  max-height:none!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))!important;
+  overflow:hidden!important;
+  z-index:2147482000!important;
+  background:linear-gradient(155deg,#060c1c,#110b24 70%,#090c1c)!important;
+  pointer-events:auto!important;
+  opacity:1!important;
+  visibility:visible!important;
+  box-shadow:none!important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #ivy-v15-links-head {
+  display:flex!important;
+  flex:none!important;
+  align-items:center!important;
+  padding:0 4px 12px!important;
+  min-height:calc(54px + env(safe-area-inset-top))!important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #quick-dials-grid {
+  display:grid!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  width:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  touch-action:pan-y!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  grid-template-columns:repeat(auto-fit,minmax(min(155px,42vw),1fr))!important;
+  align-content:start!important;
+  gap:12px!important;
+}
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #ivy-v13-header,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #weather-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #profile-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #settings-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #import-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #light-mode-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v15-links-open #dashboard-container > div > section:first-child {
+  visibility:hidden!important;pointer-events:none!important;
+}
+html.ivy-v16-mobile-ui .ivy-v15-mobile-only {display:flex !important;}
+html:not(.ivy-v16-mobile-ui) #ivy-v15-links-launcher {display:none!important;}
+/* Support landscape and desktop-site UI on real phones and tablets. */
+html.ivy-v16-mobile-ui body:not(.ivy-v15-links-open) #dashboard-container > div > section:first-child {
+  display:flex!important;visibility:visible!important;pointer-events:auto!important;
+}
+html.ivy-v16-mobile-ui body:not(.ivy-v15-links-open) #dashboard-container > div {min-width:0!important;}
+html.ivy-v16-mobile-ui #ivy-v15-links-launcher .ivy-v15-widget-grip {display:none!important;}
+html.ivy-v16-mobile-ui body.manual-layout-mode #ivy-v15-links-launcher .ivy-v15-widget-grip {
+  display:flex!important;
+  pointer-events:auto!important;
+  touch-action:none!important;
+}
+@media (prefers-reduced-motion:reduce){html.ivy-v16-mobile-ui #ivy-v15-links-launcher{animation:none!important}}
 </style>
 </head>
 <body class="ivy-booting" id="body-root">
+<button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
 <div id="ivy-particles-background"><canvas aria-hidden="true" id="ivy-particles-canvas"></canvas></div>
 <div id="ivy-mobile-toolbar" aria-label="Mobile Dashboard-Leiste">
 <button id="ivy-mobile-weather" type="button" aria-expanded="false" aria-controls="weather-fixed-container" title="Wetterkarte öffnen">☁ <span>Wetter</span></button>
@@ -1335,6 +1454,7 @@ body.manual-layout-mode .ivy-v14-being-dragged {z-index:120!important}
 </form>
 </section>
 <section class="pt-4">
+<div id="ivy-v15-links-head"><button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard" onclick="window.ivyV15Links?.close()">← Zurück</button><span class="ivy-v15-label">IVY · LINKS</span></div>
 <h2 class="text-2xl font-bold text-white mb-4 text-center"></h2>
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="quick-dials-grid">
 <div class="flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 cursor-pointer add-dial-button compensated-p4" id="add-dial-container" onclick="showAddModal()">
@@ -3166,94 +3286,181 @@ window.ivyV14Workspace={resetPositions,resetSizes,apply};
 </script>
 <script>
 
-/* IVY V15: one-tap immersive links and independent mobile dragging */
+/* IVY V16 - reliable fullscreen/landscape links command and draggable touch widgets */
 (()=>{
- 'use strict';
- const $=id=>document.getElementById(id);
- const mobile=()=>window.matchMedia('(max-width:767px)').matches;
- const storeKey='ivyV15MobileWidgets';
- const widgets=['weather-fixed-container','profile-fixed-container','settings-fixed-container','import-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher'];
- const data=(()=>{try{return JSON.parse(localStorage.getItem(storeKey)||'{}')||{}}catch{return {}}})();
- const save=()=>{try{localStorage.setItem(storeKey,JSON.stringify(data))}catch(e){console.warn('mobile positions could not be saved',e)}};
- let isOpen=false;
- const section=()=>$('#dashboard-container')?.firstElementChild?.querySelector(':scope > section:nth-child(2)');
- const updateAria=()=>{const b=$('ivy-v15-links-launcher');if(b)b.setAttribute('aria-expanded',String(isOpen));};
- function openLinks(){if(!mobile())return;isOpen=true;document.body.classList.add('ivy-v15-links-open');updateAria();section()?.querySelector('.ivy-v15-back')?.focus({preventScroll:true});}
- function closeLinks(){isOpen=false;document.body.classList.remove('ivy-v15-links-open');updateAria();if(mobile())$('ivy-v15-links-launcher')?.focus({preventScroll:true});}
- function mount(){
-   const links=section();if(!links)return;
-   const header=document.createElement('div');header.id='ivy-v15-links-head';
-   header.innerHTML='<button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard">← Zurück</button><span class="ivy-v15-label">IVY · LINKS</span>';
-   links.prepend(header);
-   header.querySelector('button').addEventListener('click',closeLinks);
-   const launch=document.createElement('button');launch.id='ivy-v15-links-launcher';launch.type='button';
-   launch.className='ivy-v15-mobile-only';launch.setAttribute('aria-controls',links.id||'ivy-v15-links-view');
-   if(!links.id)links.id='ivy-v15-links-view';
-   launch.setAttribute('aria-expanded','false');launch.setAttribute('aria-label','Links im Vollbild öffnen');
-   launch.innerHTML='<span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span>';
-   document.body.appendChild(launch);launch.addEventListener('click',()=>{if(!document.body.classList.contains('manual-layout-mode'))openLinks();});
-   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen){e.preventDefault();closeLinks()}},true);
-   window.addEventListener('resize',()=>{if(!mobile()&&isOpen)closeLinks();requestAnimationFrame(apply)}, {passive:true});
-   widgets.forEach(installWidgetDrag);
-   apply();
-   const reset=document.createElement('button');reset.type='button';reset.id='ivy-v15-reset-mobile';reset.textContent='Mobile Widget-Positionen zurücksetzen';
-   reset.className='ivy-v15-reset';reset.style.cssText='display:block;margin:10px 0;padding:10px 12px;border:1px solid #56c6f1;border-radius:10px;color:white;background:#1d3556';
-   reset.onclick=()=>{for(const id of widgets)delete data[id];save();apply();};
-   const settings=$('ivy-v14-controls')||$('settings-modal')?.firstElementChild;
-   if(settings)settings.appendChild(reset);
+'use strict';
+const $=id=>document.getElementById(id);
+const html=document.documentElement;
+const STORAGE='ivyV15MobileWidgets';
+const widgets=['weather-fixed-container','profile-fixed-container','settings-fixed-container','import-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher'];
+let data={};try{data=JSON.parse(localStorage.getItem(STORAGE)||'{}')||{}}catch(_){}
+const save=()=>{try{localStorage.setItem(STORAGE,JSON.stringify(data))}catch(e){console.warn('IVY mobile positions',e)}};
+let open=false,raf=0,dragging=false,lastMobile=false;
+const viewport=()=>{
+ const vv=window.visualViewport;
+ return {w:Math.max(1,Math.round(vv?.width||window.innerWidth)),h:Math.max(1,Math.round(vv?.height||window.innerHeight)),ox:vv?.offsetLeft||0,oy:vv?.offsetTop||0};
+};
+function mobile(){
+ // Fullscreen, rotation and Android's "desktop site" can increase CSS viewport width.
+ // Recognize phones by their physical screen's short side + touch capability as well.
+ const v=viewport();
+ const touch=navigator.maxTouchPoints>0||matchMedia('(pointer:coarse)').matches;
+ const physicalShort=Math.min(screen.width||v.w,screen.height||v.h);
+ return v.w<=767||(touch&&physicalShort<=1000);
+}
+const section=()=>$('#dashboard-container')?.firstElementChild?.querySelector(':scope > section:nth-child(2)');
+const launcher=()=>$('#ivy-v15-links-launcher');
+function syncMode(){
+ const state=mobile();lastMobile=state;
+ html.classList.toggle('ivy-v16-mobile-ui',state);
+ document.body.classList.toggle('ivy-v16-mobile-ui',state);
+ if(!state&&open)closeLinks(false);
+ return state;
+}
+function openLinks(){
+ if(!syncMode())return;
+ open=true;document.body.classList.add('ivy-v15-links-open');
+ launcher()?.setAttribute('aria-expanded','true');
+ section()?.querySelector('.ivy-v15-back')?.focus({preventScroll:true});
+}
+function closeLinks(focus=true){
+ open=false;document.body.classList.remove('ivy-v15-links-open');
+ launcher()?.setAttribute('aria-expanded','false');
+ if(focus&&mobile())launcher()?.focus({preventScroll:true});
+}
+function coordsFor(el,id,v){
+ if(id==='ivy-v15-links-launcher'){
+  const r=el.getBoundingClientRect();
+  const width=Math.min(220,Math.max(136,Math.round(v.w*.38)));
+  const height=Math.min(66,Math.max(50,Math.round(v.h*.087)));
+  html.style.setProperty('--ivy-v16-launch-w',width+'px');
+  html.style.setProperty('--ivy-v16-launch-h',height+'px');
+  // Button defaults to beneath search, but never below the fixed control bar.
+  const search=$('search-form')?.getBoundingClientRect();
+  const weather=$('ivy-v13-header')?.getBoundingClientRect();
+  const searchEnd=search&&search.bottom>0?search.bottom:0;
+  const headerEnd=weather&&weather.bottom>0?weather.bottom:0;
+  let y=Math.max(searchEnd+18,headerEnd+14,v.h*.44);
+  y=Math.min(y,v.h-height-88);
+  y=Math.max(Math.min(15,v.h-height),y);
+  const p=data[id];
+  const x=p?Math.round(p.x*v.w):Math.round((v.w-width)/2);
+  if(p)y=Math.round(p.y*v.h);
+  return {x:Math.max(6,Math.min(v.w-width-6,x)),y:Math.max(6,Math.min(v.h-height-6,y)),w:width,h:height};
  }
- function resetInlinePosition(el){
-   el.style.removeProperty('translate');
- }
- function apply(){
-   for(const id of widgets){const el=$(id);if(!el)continue;
-     if(!mobile()){resetInlinePosition(el);continue;}
-     const p=data[id];
-     if(!p){resetInlinePosition(el);continue;}
-     const vw=innerWidth,vh=innerHeight;
-     // Recalculate from the element's unshifted position to avoid drag drift.
-     el.style.setProperty('translate','0px 0px','important');
-     const rect=el.getBoundingClientRect();
-     const desiredX=Math.max(5,Math.min(vw-rect.width-5,p.x*vw));
-     const desiredY=Math.max(5,Math.min(vh-rect.height-5,p.y*vh));
-     el.style.setProperty('translate',`${Math.round(desiredX-rect.left)}px ${Math.round(desiredY-rect.top)}px`,'important');
+ const r=el.getBoundingClientRect();
+ const w=r.width,h=r.height;
+ const p=data[id];
+ if(!p)return null;
+ return {x:Math.max(5,Math.min(v.w-w-5,p.x*v.w)),y:Math.max(5,Math.min(v.h-h-5,p.y*v.h))};
+}
+function apply(){
+ cancelAnimationFrame(raf);
+ raf=requestAnimationFrame(()=>{
+  if(!syncMode()){
+   for(const id of widgets){const el=$(id);if(!el)continue;el.style.removeProperty('translate')}
+   return;
+  }
+  const v=viewport();
+  for(const id of widgets){
+   const el=$(id);if(!el)continue;
+   if(id==='ivy-v15-links-launcher'){
+    const p=coordsFor(el,id,v);
+    html.style.setProperty('--ivy-v16-launch-x',p.x+'px');
+    html.style.setProperty('--ivy-v16-launch-y',p.y+'px');
+    continue;
    }
+   // Prevent accumulated translations on repeated resize/rotation.
+   el.style.setProperty('translate','none','important');
+   const r=el.getBoundingClientRect();
+   const p=coordsFor(el,id,v);
+   if(p)el.style.setProperty('translate',`${Math.round(p.x-r.left)}px ${Math.round(p.y-r.top)}px`,'important');
+  }
+ });
+}
+function widgetDrag(id){
+ const el=$(id);if(!el||el.querySelector(':scope > .ivy-v15-widget-grip'))return;
+ const grip=document.createElement('span');
+ grip.className='ivy-v15-widget-grip';grip.textContent='⠿ Ziehen';
+ grip.setAttribute('role','button');grip.setAttribute('aria-label',id+' verschieben');
+ el.appendChild(grip);
+ let state=null;
+ grip.addEventListener('pointerdown',e=>{
+  if(!mobile()||!document.body.classList.contains('manual-layout-mode')||open)return;
+  if(e.button!==undefined&&e.button!==0)return;
+  const r=el.getBoundingClientRect();
+  state={id:e.pointerId,sx:e.clientX,sy:e.clientY,x:r.left,y:r.top,w:r.width,h:r.height};
+  try{grip.setPointerCapture(e.pointerId)}catch(_){}
+  dragging=true;e.stopPropagation();e.preventDefault();
+ });
+ grip.addEventListener('pointermove',e=>{
+  if(!state||e.pointerId!==state.id)return;
+  const v=viewport();
+  const x=Math.max(5,Math.min(v.w-state.w-5,state.x+e.clientX-state.sx));
+  const y=Math.max(5,Math.min(v.h-state.h-5,state.y+e.clientY-state.sy));
+  if(id==='ivy-v15-links-launcher'){
+   html.style.setProperty('--ivy-v16-launch-x',Math.round(x)+'px');
+   html.style.setProperty('--ivy-v16-launch-y',Math.round(y)+'px');
+  }else{
+   const current=el.getBoundingClientRect();
+   const t=getComputedStyle(el).translate.split(' ').map(x=>parseFloat(x)||0);
+   el.style.setProperty('translate',`${Math.round(t[0]+x-current.left)}px ${Math.round(t[1]+y-current.top)}px`,'important');
+  }
+  e.stopPropagation();e.preventDefault();
+ });
+ const done=e=>{
+  if(!state||e.pointerId!==state.id)return;
+  const v=viewport(),r=el.getBoundingClientRect();
+  data[id]={x:Math.max(0,Math.min(1,r.left/v.w)),y:Math.max(0,Math.min(1,r.top/v.h))};
+  save();state=null;dragging=false;e.stopPropagation();apply();
+ };
+ grip.addEventListener('pointerup',done);
+ grip.addEventListener('pointercancel',done);
+}
+let mounted=false;
+function mount(){
+ if(mounted)return;
+ const links=section();
+ if(!links)return;
+ mounted=true;
+ if(!links.id)links.id='ivy-v15-links-view';
+ if(!$('#ivy-v15-links-head')){
+  const header=document.createElement('div');header.id='ivy-v15-links-head';
+  header.innerHTML='<button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard">← Zurück</button><span class="ivy-v15-label">IVY · LINKS</span>';
+  links.prepend(header);
+  header.querySelector('button').addEventListener('click',()=>closeLinks());
  }
- function installWidgetDrag(id){
-   const el=$(id);if(!el)return;
-   const handle=document.createElement('span');handle.className='ivy-v15-widget-grip';handle.textContent='⠿ Ziehen';
-   handle.setAttribute('role','button');handle.setAttribute('aria-label',id+' auf Handy verschieben');
-   el.appendChild(handle);
-   let drag=null;
-   handle.addEventListener('pointerdown',e=>{
-     if(!mobile()||!document.body.classList.contains('manual-layout-mode')||isOpen)return;
-     if(e.button!==undefined&&e.button!==0)return;
-     e.stopPropagation();e.preventDefault();
-     const rect=el.getBoundingClientRect();
-     drag={pointer:e.pointerId,ox:e.clientX,oy:e.clientY,x:rect.left,y:rect.top,w:rect.width,h:rect.height};
-     handle.setPointerCapture(e.pointerId);
-   });
-   handle.addEventListener('pointermove',e=>{
-     if(!drag||drag.pointer!==e.pointerId)return;
-     e.stopPropagation();e.preventDefault();
-     const x=Math.max(5,Math.min(innerWidth-drag.w-5,drag.x+(e.clientX-drag.ox)));
-     const y=Math.max(5,Math.min(innerHeight-drag.h-5,drag.y+(e.clientY-drag.oy)));
-     const current=el.getBoundingClientRect();
-     const applied=getComputedStyle(el).translate.split(' ').map(n=>parseFloat(n)||0);
-     const tx=applied[0]+x-current.left,ty=applied[1]+y-current.top;
-     el.style.setProperty('translate',`${tx}px ${ty}px`,'important');
-   });
-   const end=e=>{
-     if(!drag||drag.pointer!==e.pointerId)return;
-     e.stopPropagation();
-     const r=el.getBoundingClientRect();
-     data[id]={x:r.left/Math.max(1,innerWidth),y:r.top/Math.max(1,innerHeight)};
-     save();drag=null;
-   };
-   handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
+ const btn=launcher();
+ if(btn){
+  btn.setAttribute('aria-controls',links.id);
+  btn.addEventListener('click',()=>{if(!document.body.classList.contains('manual-layout-mode'))openLinks()});
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
- window.ivyV15Links={open:openLinks,close:closeLinks};
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&open){e.preventDefault();closeLinks()}},true);
+ const refresh=()=>{if(!dragging)apply()};
+ window.addEventListener('resize',refresh,{passive:true});
+ window.visualViewport?.addEventListener('resize',refresh,{passive:true});
+ window.visualViewport?.addEventListener('scroll',refresh,{passive:true});
+ window.addEventListener('orientationchange',()=>setTimeout(refresh,200),{passive:true});
+ document.addEventListener('fullscreenchange',refresh);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+ for(const id of widgets)widgetDrag(id);
+ const reset=document.createElement('button');
+ reset.type='button';reset.id='ivy-v15-reset-mobile';reset.className='ivy-v15-reset';
+ reset.textContent='Mobile Widget-Positionen zurücksetzen';
+ reset.style.cssText='display:block;margin:10px 0;padding:10px 12px;border:1px solid #56c6f1;border-radius:10px;color:white;background:#1d3556';
+ reset.addEventListener('click',()=>{for(const id of widgets)delete data[id];save();apply()});
+ ($('ivy-v14-controls')||$('settings-modal')?.firstElementChild)?.appendChild(reset);
+ syncMode();apply();
+ requestAnimationFrame(()=>requestAnimationFrame(apply));
+ setTimeout(apply,300);
+}
+// Apply class before DOMContentLoaded so CSS is correct even when a slow resource loads.
+syncMode();
+mount();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});
+// Also schedule mounting independently of DOMContentLoaded, which can be missed by late injected scripts.
+setTimeout(mount,0);
+window.ivyV15Links={open:openLinks,close:closeLinks,refresh:apply};
 })();
 
 </script>
