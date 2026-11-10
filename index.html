@@ -1872,6 +1872,27 @@ html body.ivy-v15-links-open #add-modal:not(.hidden),
 html body.ivy-v15-links-open #settings-modal:not(.hidden) {
  z-index:2147483600 !important; position:fixed !important;
 }
+
+/* IVY V22 — definitive visibility and responsive sizing safeguards */
+#ivy-v22-sizing-notice{font-size:12px;line-height:1.45;color:#8bdfff;padding:9px 11px;border:1px solid rgba(65,199,250,.25);border-radius:10px;background:rgba(19,42,68,.35);}
+html body.ivy-v20-hide-weather #weather-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v20-hide-weather #weather-fixed-container,
+html body.ivy-mobile-auto.ivy-v20-hide-weather #weather-fixed-container,
+html body.ivy-v20-hide-profile #profile-fixed-container,
+html.ivy-v16-mobile-ui body.ivy-v20-hide-profile #profile-fixed-container,
+html body.ivy-mobile-auto.ivy-v20-hide-profile #profile-fixed-container,
+html body.ivy-v20-hide-search #dashboard-container > div > section:first-child {
+  display:none !important;visibility:hidden !important;pointer-events:none !important;
+}
+html body.ivy-v20-hide-search #dashboard-container > div > section:nth-child(2){min-height:0!important;}
+/* Make profile dimensions follow the user setting, not fixed 15vw / 20vw CSS clamps. */
+html #profile-image, html body.ivy-mobile-auto #profile-image {
+  max-width:min(100%,calc(100vw - 160px)) !important;
+  object-fit:cover !important;
+}
+@media(min-width:901px){html #profile-image{max-width:100% !important}}
+/* Prevent stray/legacy manual settings from filling entire screen on small phones. */
+#settings-modal:not(.hidden)>div{max-height:calc(100dvh - 28px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;}
 </style>
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
 <meta name="theme-color" content="#070b18"/>
@@ -3572,6 +3593,33 @@ function applySizes(){
   root.style.setProperty('--ivy-v13-btn',clamp(s.buttonSize,36,80)+'px');
   root.style.setProperty('--ivy-v13-profile',clamp(s.profileSize,44,144)+'px');
   root.style.setProperty('--ivy-v13-weather',clamp(s.weatherSize,160,380)+'px');
+  // Apply measured dimensions as inline important declarations: legacy V10-V18
+  // high-specificity mobile CSS must not override user-selected profile sizes.
+  const mobile=currentDevice()==='mobile';
+  const pw=clamp(s.profileSize,44,144), ww=clamp(s.weatherSize,160,380);
+  const viewport=window.innerWidth||document.documentElement.clientWidth;
+  const image=byId('profile-image'),weather=byId('weather-card');
+  if(image){
+    const safe=Math.max(44,viewport-175);
+    const real=mobile?Math.min(pw,safe):pw;
+    image.style.setProperty('width',real+'px','important');
+    image.style.setProperty('height',real+'px','important');
+    image.style.setProperty('min-width','0px','important');
+  }
+  if(weather){
+    const reserved=mobile?Math.min(pw,Math.max(44,viewport-175))+24:0;
+    const real=Math.max(108,Math.min(ww,viewport-reserved-(mobile?14:24)));
+    weather.style.setProperty('width',real+'px','important');
+    weather.style.setProperty('max-width','100%','important');
+  }
+  for(const selector of ['#settings-fixed-container button','#import-fixed-container button','#light-mode-fixed-container button']){
+    for(const button of document.querySelectorAll(selector)){
+      button.style.setProperty('min-width',clamp(s.buttonSize,36,80)+'px','important');
+      button.style.setProperty('min-height',clamp(s.buttonSize,36,80)+'px','important');
+    }
+  }
+  window.ivyV18?.refresh?.();
+
 }
 function layout(){
  const header=byId('ivy-v13-header');if(!header)return;
@@ -3585,7 +3633,8 @@ function saveSizeControls(){
  const record={...sizeRecord(mode)};
  for(const [id,key] of keys){const el=byId(id);if(el)record[key]=Number(el.value)}
  all[mode]=record;localStorage.setItem(V20SIZEKEY,JSON.stringify(all));
- applySizes();requestAnimationFrame(layout);
+ if(mode===currentDevice())applySizes();
+ requestAnimationFrame(layout);
 }
 window.ivyV13UpdateSizeControls=function(){
  for(const [id] of [['ivy-v13-link-size'],['ivy-v13-icon-size'],['ivy-v13-button-size'],['ivy-v13-profile-size'],['ivy-v13-weather-size']]){
@@ -3601,6 +3650,8 @@ function initSizes(){
   if(byId(id+'-label'))byId(id+'-label').textContent=d[k]+' px';
  }
  applySizes();
+ const help=byId('ivy-v22-sizing-notice');
+ if(help)help.textContent=selectedDevice()===currentDevice()?'Vorschau: Diese Ansicht wird sofort aktualisiert.':'Du bearbeitest das andere Geräteprofil. Die Änderungen siehst du beim Wechsel in dessen Ansicht.';
 }
 window.ivyV20RefreshSizes=initSizes;
 function initHeader(){
@@ -4143,5 +4194,57 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
 </script>
-</body>
+<script>
+/* IVY V22: visibility and profile reliability audit. */
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const KEY='ivyV20DisplayPrefs';
+const mode=()=>matchMedia('(max-width:900px)').matches?'mobile':'desktop';
+const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch{return {}}};
+function visible(){
+ const flags={weather:true,profile:true,search:true,...(read()[mode()]||{})};
+ for(const [name,id] of [['weather','weather-fixed-container'],['profile','profile-fixed-container']]){
+  const el=$(id);if(!el)continue;
+  if(flags[name]){
+   // Do not force display:block: fullscreen mode controls visibility too.
+   el.style.removeProperty('display');el.style.removeProperty('visibility');
+   el.style.removeProperty('pointer-events');el.removeAttribute('aria-hidden');
+  }else{
+   el.style.setProperty('display','none','important');
+   el.style.setProperty('visibility','hidden','important');
+   el.style.setProperty('pointer-events','none','important');
+   el.setAttribute('aria-hidden','true');
+  }
+ }
+ const search=$('dashboard-container')?.firstElementChild?.querySelector(':scope > section:first-child');
+ if(search){
+  if(flags.search){search.style.removeProperty('display');search.style.removeProperty('visibility');search.style.removeProperty('pointer-events');}
+  else{search.style.setProperty('display','none','important');search.style.setProperty('visibility','hidden','important');search.style.setProperty('pointer-events','none','important');}
+ }
+ document.body.classList.toggle('ivy-v20-hide-weather',!flags.weather);
+ document.body.classList.toggle('ivy-v20-hide-profile',!flags.profile);
+ document.body.classList.toggle('ivy-v20-hide-search',!flags.search);
+ window.ivyV18?.refresh?.();
+}
+function init(){
+ const section=$('ivy-v20-device-settings');
+ if(section && !$('ivy-v22-sizing-notice')){
+  const msg=document.createElement('div');msg.id='ivy-v22-sizing-notice';
+  msg.textContent='Die Größen werden getrennt für Desktop und Mobil gespeichert.';
+  section.appendChild(msg);
+ }
+ const controls=['weather','profile','search'].map(x=>$('ivy-v20-visible-'+x)).filter(Boolean);
+ for(const ctrl of controls)ctrl.addEventListener('change',()=>requestAnimationFrame(visible));
+ $('ivy-v20-reset-device')?.addEventListener('click',()=>requestAnimationFrame(visible));
+ $('ivy-v20-editmode')?.addEventListener('change',()=>requestAnimationFrame(()=>window.ivyV20RefreshSizes?.()));
+ // Keep active device profile after switching modes or resizing the viewport.
+ const mq=matchMedia('(max-width:900px)');mq.addEventListener?.('change',()=>{visible();window.ivyV20RefreshSizes?.()});
+ const oldShow=window.showSettingsModal;
+ if(typeof oldShow==='function')window.showSettingsModal=function(...args){const result=oldShow.apply(this,args);window.ivyV20RefreshSizes?.();visible();return result};
+ visible();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script></body>
 </html>
