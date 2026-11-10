@@ -1683,6 +1683,93 @@ html body:not(.manual-layout-mode) .ivy19-drag-portals {
  html body.ivy-light-active .ivy19-drag-portals {display:none!important;pointer-events:none!important;}
 }
 
+
+/* V20: settings cleanup, visible edit affordances and mobile link dock */
+#quick-dials-grid > [data-id] .ivy-dial-drag-handle,
+#quick-dials-grid > [data-id] .ivy-v20-order {
+ opacity:0 !important;
+ pointer-events:none !important;
+ transition:opacity .18s ease,background-color .18s ease !important;
+}
+@media (hover:hover) and (pointer:fine){
+ #quick-dials-grid > [data-id]:is(:hover,:focus-within) .ivy-dial-drag-handle,
+ #quick-dials-grid > [data-id]:is(:hover,:focus-within) .ivy-v20-order{
+  opacity:1 !important;pointer-events:auto !important;
+ }
+}
+@media (hover:none),(pointer:coarse){
+ body.ivy-v15-links-open #quick-dials-grid > [data-id] .ivy-dial-drag-handle,
+ body.ivy-v15-links-open #quick-dials-grid > [data-id] .ivy-v20-order {
+  opacity:1 !important;pointer-events:auto !important;
+ }
+}
+#quick-dials-grid > [data-id]:focus-within .ivy-dial-drag-handle,
+#quick-dials-grid > [data-id]:focus-within .ivy-v20-order{
+ opacity:1 !important;pointer-events:auto !important;
+}
+.ivy-v20-order{
+ position:absolute;bottom:6px;left:7px;z-index:25;
+ display:flex;gap:3px;align-items:center;
+}
+.ivy-v20-order button{display:grid;place-items:center;width:29px;height:29px;
+ color:#d3f8ff;border:1px solid #5289bd;border-radius:8px;
+ background:rgba(10,25,57,.87);font-size:16px;cursor:pointer;
+ touch-action:manipulation;user-select:none;-webkit-user-select:none;}
+.ivy-v20-order button:disabled{opacity:.23;cursor:default}
+#quick-dials-grid > [data-id]{user-select:none;-webkit-user-select:none;}
+#quick-dials-grid > [data-id] a{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+body.ivy-v15-links-open #ivy-v15-links-view{
+ display:flex !important;flex-direction:column !important;
+}
+body.ivy-v15-links-open #ivy-v15-links-head{
+ order:3 !important;position:relative !important;
+ flex:0 0 auto !important;min-height:72px !important;
+ width:100% !important;
+ padding:10px max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) !important;
+ background:linear-gradient(90deg,rgba(9,21,43,.98),rgba(28,18,57,.97)) !important;
+ border-top:1px solid rgba(97,217,255,.4) !important;
+ border-bottom:0 !important;
+ z-index:6 !important;
+}
+body.ivy-v15-links-open #quick-dials-grid{
+ order:1 !important;align-content:end !important;
+ padding-bottom:22px !important;
+}
+body.ivy-v15-links-open #add-dial-container{display:none !important;}
+.ivy-v20-add-link{display:none !important;}
+body.ivy-v15-links-open .ivy-v20-add-link{
+ display:inline-flex !important;justify-content:center;align-items:center;
+ min-height:46px;padding:9px 14px;
+ color:#d9faff;background:rgba(34,53,91,.84);
+ border:1px solid rgba(103,217,255,.55);
+ border-radius:14px;white-space:nowrap;font-size:13px;font-weight:700;
+ box-shadow:0 0 18px rgba(56,184,255,.15);
+}
+body.ivy-v15-links-open #ivy-v15-links-head .ivy-v15-back{
+ min-width:105px !important;min-height:46px !important;
+}
+body.ivy-v15-links-open #ivy-v15-links-head{gap:8px !important;}
+body.ivy-v15-links-open #settings-modal:not(.hidden),
+body.ivy-v15-links-open #add-modal:not(.hidden){z-index:9999 !important;}
+/* Device-specific visibility: dialog layers are not affected. */
+body.ivy-v20-hide-weather #weather-fixed-container,
+body.ivy-v20-hide-profile #profile-fixed-container,
+body.ivy-v20-hide-search #dashboard-container > div > section:first-child{
+ display:none !important;visibility:hidden !important;pointer-events:none !important;
+}
+body.ivy-v20-hide-search #dashboard-container > div {gap:0 !important;}
+.ivy-v20-settings{padding:15px;border:1px solid rgba(92,170,255,.35);
+ border-radius:15px;background:rgba(21,33,60,.66);margin:14px 0;color:#e5f1ff;}
+.ivy-v20-settings h4{font-size:15px;font-weight:750;color:#8de8ff;margin-bottom:8px;}
+.ivy-v20-settings p{font-size:12px;opacity:.7;line-height:1.45;margin:7px 0;}
+.ivy-v20-settings select{background:#1e2b49;color:white;border:1px solid #6586af;
+ padding:9px 12px;border-radius:10px;max-width:100%;}
+.ivy-v20-settings .ivy-v20-line{display:flex;align-items:center;gap:10px;justify-content:space-between;
+ padding:10px 0;border-bottom:1px solid rgba(140,175,210,.13);}
+.ivy-v20-settings input[type=checkbox]{width:19px;height:19px;accent-color:#53c6ff;flex:none;}
+.ivy-v20-settings .ivy-v20-reset{margin-top:9px;border:1px solid #739dc0;
+ padding:9px 12px;border-radius:9px;background:#263752;}
+@media(min-width:901px){.ivy-v20-add-link{display:none !important;}}
 </style>
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
 <meta name="theme-color" content="#070b18"/>
@@ -1752,7 +1839,7 @@ html body:not(.manual-layout-mode) .ivy19-drag-portals {
 </form>
 </section>
 <section class="pt-4">
-<div id="ivy-v15-links-head"><button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard" onclick="window.ivyV15Links?.close()">← Zurück</button><span class="ivy-v15-label">IVY · LINKS</span></div>
+<div id="ivy-v15-links-head"><button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard" onclick="window.ivyV15Links?.close()">← Zurück</button><button type="button" id="ivy-v20-add-link" class="ivy-v20-add-link" onclick="window.showAddModal()" aria-label="Link hinzufügen">＋ Link hinzufügen</button></div>
 <h2 class="text-2xl font-bold text-white mb-4 text-center"></h2>
 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="quick-dials-grid">
 <div class="flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 cursor-pointer add-dial-button compensated-p4" id="add-dial-container" onclick="showAddModal()">
@@ -2950,7 +3037,7 @@ window.hideAddModal = () => {
         // IMPORT / EXPORT FUNKTIONEN
         // =================================================================
 
-        const IVY_POSITION_KEY=/(?:_(?:desktop|mobile))?_(?:top|left)_rel$|^ivyV14Workspace_(?:mobile|desktop)$|^ivyV15MobileWidgets$|^ivyV18MobileLayout$/;
+        const IVY_POSITION_KEY=/(?:_(?:desktop|mobile))?_(?:top|left)_rel$|^ivyV14Workspace_(?:mobile|desktop)$|^ivyV15MobileWidgets$|^ivyV18MobileLayout$|^ivyV20DeviceSizes$|^ivyV20DisplayPrefs$/;
         function ivyBackupData(){
             const data={};
             const keys=[...new Set([...LOCAL_STORAGE_KEYS,...Object.keys(localStorage).filter(k=>IVY_POSITION_KEY.test(k))])];
@@ -2958,7 +3045,7 @@ window.hideAddModal = () => {
             return data;
         }
         function ivyDownloadBackup(name='IVY_Dashboard_Backup.json'){
-            const data={format:'ivy-dashboard-backup',version:9,createdAt:new Date().toISOString(),data:ivyBackupData()};
+            const data={format:'ivy-dashboard-backup',version:20,createdAt:new Date().toISOString(),data:ivyBackupData()};
             const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
             const url=URL.createObjectURL(blob);
             const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
@@ -3370,10 +3457,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 const sizeDefaults={tileSize:160,iconSize:44,buttonSize:44,profileSize:80,weatherSize:224};
 const byId=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||a));
-function sizes(){return {...sizeDefaults,...(window.currentSettings||{})};}
+const V20SIZEKEY='ivyV20DeviceSizes';
+const currentDevice=()=>window.matchMedia('(max-width:900px)').matches?'mobile':'desktop';
+const selectedDevice=()=>window.ivyV20SelectedMode||currentDevice();
+function sizeRecord(mode){try{return JSON.parse(localStorage.getItem(V20SIZEKEY)||'{}')[mode]||{}}catch(e){return {}}}
+function sizes(){return {...sizeDefaults,...(window.currentSettings||{}),...sizeRecord(currentDevice())};}
 function applySizes(){
   const d=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
-  const s={...sizeDefaults,...d};const root=document.documentElement;
+  const s={...sizeDefaults,...d,...sizeRecord(currentDevice())};const root=document.documentElement;
   root.style.setProperty('--ivy-v13-tile',clamp(s.tileSize,100,260)+'px');
   root.style.setProperty('--ivy-v13-icon',clamp(s.iconSize,20,112)+'px');
   root.style.setProperty('--ivy-v13-btn',clamp(s.buttonSize,36,80)+'px');
@@ -3387,12 +3478,11 @@ function layout(){
  document.documentElement.style.setProperty('--ivy-v13-header-h',Math.ceil(rect.height+4)+'px');
 }
 function saveSizeControls(){
- const d=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
- for(const [id,k] of [['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize']]) {
-  const el=byId(id);if(el)d[k]=Number(el.value);
- }
- localStorage.setItem('dashboardSettings',JSON.stringify(d));
- try{Object.assign(currentSettings,d)}catch(e){}
+ const mode=selectedDevice(), keys=[['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize']];
+ let all={};try{all=JSON.parse(localStorage.getItem(V20SIZEKEY)||'{}')||{}}catch(e){}
+ const record={...sizeRecord(mode)};
+ for(const [id,key] of keys){const el=byId(id);if(el)record[key]=Number(el.value)}
+ all[mode]=record;localStorage.setItem(V20SIZEKEY,JSON.stringify(all));
  applySizes();requestAnimationFrame(layout);
 }
 window.ivyV13UpdateSizeControls=function(){
@@ -3402,13 +3492,15 @@ window.ivyV13UpdateSizeControls=function(){
  saveSizeControls();
 };
 function initSizes(){
- const d=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
+ const shared=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
+ const d={...sizeDefaults,...shared,...sizeRecord(selectedDevice())};
  for(const [id,k] of [['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize']]){
-  if(byId(id))byId(id).value=d[k]??sizeDefaults[k];
-  if(byId(id+'-label'))byId(id+'-label').textContent=(d[k]??sizeDefaults[k])+' px';
+  if(byId(id))byId(id).value=d[k];
+  if(byId(id+'-label'))byId(id+'-label').textContent=d[k]+' px';
  }
  applySizes();
 }
+window.ivyV20RefreshSizes=initSizes;
 function initHeader(){
  const header=document.createElement('div');header.id='ivy-v13-header';
  const weather=byId('weather-fixed-container'),profile=byId('profile-fixed-container');
@@ -3705,7 +3797,7 @@ function relayout(){
 function schedule(){cancelAnimationFrame(scheduled);scheduled=requestAnimationFrame(relayout)}
 function openLinks(){if(!MOBILE()||document.body.classList.contains('manual-layout-mode'))return;
  opened=true;document.body.classList.add('ivy-v15-links-open');$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','true');
- const grid=$('quick-dials-grid');if(grid)grid.scrollTop=0;
+ const grid=$('quick-dials-grid');if(grid){requestAnimationFrame(()=>{grid.scrollTop=grid.scrollHeight;});}
 }
 function closeLinks(refocus=true){opened=false;document.body.classList.remove('ivy-v15-links-open');$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','false');if(refocus&&MOBILE())$('ivy-v15-links-launcher')?.focus({preventScroll:true})}
 function installGrip(id){const el=elById(id);if(!el)return;
@@ -3846,6 +3938,115 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => console.warn('IVY offline cache:', err));
   });
 }
+</script>
+
+<script>
+/* IVY V20: shared design, per-mode layout, bidirectional link ordering. */
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const K='ivyV20DisplayPrefs', SIZEK='ivyV20DeviceSizes';
+ const modeNow=()=>matchMedia('(max-width:900px)').matches?'mobile':'desktop';
+ const defaults={weather:true,profile:true,search:true};
+ const prefs=()=>{try{return JSON.parse(localStorage.getItem(K)||'{}')||{}}catch{return {}}};
+ const get=m=>({...defaults,...(prefs()[m]||{})});
+ const getEditMode=()=>window.ivyV20SelectedMode||modeNow();
+ const applyVisibility=()=>{
+  const d=get(modeNow());
+  for(const name of ['weather','profile','search'])document.body.classList.toggle('ivy-v20-hide-'+name,!d[name]);
+ };
+ function updateUI(){
+  const m=getEditMode(),d=get(m);
+  if($('ivy-v20-editmode'))$('ivy-v20-editmode').value=m;
+  for(const name of ['weather','profile','search'])if($('ivy-v20-visible-'+name))$('ivy-v20-visible-'+name).checked=d[name];
+  window.ivyV20RefreshSizes?.();
+ }
+ function saveCheckbox(){
+  const m=getEditMode(),all=prefs(),d=get(m);
+  for(const name of ['weather','profile','search'])d[name]=!!$('ivy-v20-visible-'+name)?.checked;
+  all[m]=d;localStorage.setItem(K,JSON.stringify(all));applyVisibility();
+ }
+ function mountSettings(){
+  const settings=$('settings-modal')?.firstElementChild;
+  if(!settings||$('ivy-v20-device-settings'))return;
+  // Keep old inputs in DOM for previous versions' save routines, but do not expose duplicate sizing controls.
+  for(const id of ['setting-weather-width','setting-profile-size','setting-quickdial-size']){
+   const input=$(id);if(input){const row=input.closest('div.flex')||input.parentElement;if(row)row.style.display='none';}
+  }
+  const box=document.createElement('section');box.id='ivy-v20-device-settings';box.className='ivy-v20-settings';
+  box.innerHTML=`<h4>Geräteprofile & Sichtbarkeit</h4>
+   <p>Farben und Glow bleiben gemeinsam. Positionen, Größen und sichtbare Widgets sind pro Ansichtsmodus getrennt.</p>
+   <label for="ivy-v20-editmode">Einstellungen bearbeiten für</label>
+   <select id="ivy-v20-editmode"><option value="desktop">Desktop-Ansicht</option><option value="mobile">Mobil-Ansicht</option></select>
+   <label class="ivy-v20-line" for="ivy-v20-visible-weather">Wetter anzeigen <input type="checkbox" id="ivy-v20-visible-weather" checked></label>
+   <label class="ivy-v20-line" for="ivy-v20-visible-profile">Profil anzeigen <input type="checkbox" id="ivy-v20-visible-profile" checked></label>
+   <label class="ivy-v20-line" for="ivy-v20-visible-search">Schnellsuche anzeigen <input type="checkbox" id="ivy-v20-visible-search" checked></label>
+   <p>Die fünf Größenregler weiter unten speichern automatisch für den hier gewählten Modus. Die Größe des Suchfelds und des Link-Bereichs bleibt separat einstellbar.</p>
+   <button class="ivy-v20-reset" type="button" id="ivy-v20-reset-device">Sichtbarkeit dieses Profils zurücksetzen</button>`;
+  const size=$('ivy-v13-link-size')?.closest('.ivy-v13-section');
+  if(size)size.before(box);else settings.appendChild(box);
+  $('ivy-v20-editmode').addEventListener('change',e=>{window.ivyV20SelectedMode=e.target.value;updateUI();});
+  for(const name of ['weather','profile','search'])$('ivy-v20-visible-'+name).addEventListener('change',saveCheckbox);
+  $('ivy-v20-reset-device').addEventListener('click',()=>{
+   const m=getEditMode(),all=prefs();delete all[m];localStorage.setItem(K,JSON.stringify(all));
+   updateUI();applyVisibility();
+  });
+  window.ivyV20SelectedMode=modeNow();updateUI();
+ }
+ // Smooth bidirectional move controls as alternative to pointer sorting.
+ function reorder(id,dir){
+  const ds=window.getDialsFromLocalStorage?.()||JSON.parse(localStorage.getItem('quickDials')||'[]');
+  const i=ds.findIndex(d=>String(d.id)===String(id));
+  const j=i+dir;
+  if(i<0||j<0||j>=ds.length)return;
+  [ds[i],ds[j]]=[ds[j],ds[i]];
+  localStorage.setItem('quickDials',JSON.stringify(ds));
+  window.renderQuickDials?.(ds);
+  decorateDials();
+ }
+ function decorateDials(){
+  const grid=$('quick-dials-grid');if(!grid)return;
+  const cards=Array.from(grid.querySelectorAll(':scope > [data-id]'));
+  cards.forEach((card,i)=>{
+   let group=card.querySelector(':scope > .ivy-v20-order');
+   if(!group){
+    group=document.createElement('div');group.className='ivy-v20-order';
+    for(const [dir,icon,title] of [[-1,'←','Vorheriger Platz'],[1,'→','Nächster Platz']]){
+     const btn=document.createElement('button');btn.type='button';btn.textContent=icon;
+     btn.setAttribute('aria-label',title);btn.dataset.dir=dir;
+     btn.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();reorder(card.dataset.id,Number(btn.dataset.dir));});
+     group.appendChild(btn);
+    }
+    card.appendChild(group);
+   }
+   const buttons=group.querySelectorAll('button');
+   if(buttons[0])buttons[0].disabled=i===0;
+   if(buttons[1])buttons[1].disabled=i===cards.length-1;
+  });
+ }
+ const start=()=>{
+  mountSettings();applyVisibility();decorateDials();
+  const grid=$('quick-dials-grid');
+  if(grid){
+   let pending=false;
+   new MutationObserver(()=>{
+    if(pending)return;pending=true;
+    requestAnimationFrame(()=>{pending=false;decorateDials();});
+   }).observe(grid,{childList:true});
+  }
+  const mql=matchMedia('(max-width:900px)');
+  mql.addEventListener?.('change',()=>{
+   applyVisibility();window.ivyV20SelectedMode=modeNow();updateUI();
+  });
+  // Recalculate after link full-screen opens; short lists start at the bottom.
+  $('ivy-v15-links-launcher')?.addEventListener('click',()=>{
+   requestAnimationFrame(()=>{const g=$('quick-dials-grid');if(g)g.scrollTop=g.scrollHeight;});
+  });
+  // Back button stays in the lower control dock; add link directly beside it.
+  $('ivy-v20-add-link')?.addEventListener('click',e=>e.stopPropagation());
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
 </script>
 </body>
 </html>
