@@ -1645,6 +1645,44 @@ html.ivy-v16-mobile-ui body:not(.ivy-v15-links-open).ivy-mobile-auto #dashboard-
  html #ivy-v15-links-launcher {display:none!important;visibility:hidden!important;pointer-events:none!important}
 }
 
+
+/* IVY V19: one drag UI, only while manual layout is enabled. */
+html body:not(.manual-layout-mode) :is(.ivy18-grip,.ivy-v17-grip,.ivy-v15-widget-grip,.ivy-drag-handle,.ivy-v14-drag-handle),
+html body:not(.manual-layout-mode) .ivy19-drag-portals {
+ display:none!important;visibility:hidden!important;pointer-events:none!important;
+}
+@media (max-width:900px) {
+ /* Legacy drag handles must never fight the canonical mobile controller. */
+ html body.manual-layout-mode .ivy18-grip,
+ html body.manual-layout-mode .ivy-v17-grip,
+ html body.manual-layout-mode .ivy-v15-widget-grip,
+ html body.manual-layout-mode .ivy-drag-handle,
+ html body.manual-layout-mode .ivy-v14-drag-handle,
+ html body :is(.ivy18-grip,.ivy-v17-grip,.ivy-v15-widget-grip,.ivy-drag-handle,.ivy-v14-drag-handle) {
+   display:none!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html body.manual-layout-mode .ivy19-drag-portals {
+  display:block!important;visibility:visible!important;pointer-events:none!important;
+ }
+ html body:not(.manual-layout-mode) .ivy19-drag-portals {display:none!important;}
+ .ivy19-drag-portals {position:fixed!important;inset:0!important;z-index:900!important;pointer-events:none!important;isolation:isolate;}
+ .ivy19-drag-portals button {
+   position:fixed!important;display:flex!important;align-items:center!important;justify-content:center!important;
+   width:38px!important;height:38px!important;border-radius:12px!important;
+   border:1px solid rgba(71,224,255,.85)!important;
+   background:linear-gradient(145deg,rgba(12,39,67,.98),rgba(42,25,86,.98))!important;
+   box-shadow:0 0 15px rgba(56,211,255,.33),inset 0 1px rgba(255,255,255,.14)!important;
+   color:#e8fbff!important;font-size:23px!important;font-weight:600!important;
+   padding:0!important;touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;
+   -webkit-touch-callout:none!important;pointer-events:auto!important;cursor:grab!important;
+ }
+ .ivy19-drag-portals button:active {cursor:grabbing!important;background:#25477c!important;}
+ html body:has(#settings-modal:not(.hidden)) .ivy19-drag-portals,
+ html body:has(#add-modal:not(.hidden)) .ivy19-drag-portals,
+ html body.ivy-v15-links-open .ivy19-drag-portals,
+ html body.ivy-light-active .ivy19-drag-portals {display:none!important;pointer-events:none!important;}
+}
+
 </style>
 </head>
 <body class="ivy-booting" id="body-root">
@@ -3712,6 +3750,80 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 setTimeout(setup,0);
 })();
 
+</script>
+<script>
+/* IVY V19: canonical touch drags for every mobile widget; one shared position store. */
+(()=>{
+'use strict';
+const KEY='ivyV18MobileLayout';
+const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','import-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy19-search'];
+const $=id=>document.getElementById(id);
+const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const search=()=>$('dashboard-container')?.firstElementChild?.querySelector(':scope > section:first-child');
+const target=id=>id==='ivy19-search'?search():$(id);
+let layer=null, dragging=null, paintId=0, lastPaint=0;
+function enabled(){return isMobile()&&document.body.classList.contains('manual-layout-mode')&&!document.body.classList.contains('ivy-v15-links-open')&&!document.body.classList.contains('ivy-light-active')&&$('settings-modal')?.classList.contains('hidden')&&$('add-modal')?.classList.contains('hidden')}
+function viewport(){return {w:Math.max(1,innerWidth),h:Math.max(1,innerHeight)}}
+function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(_){return {}}}
+function save(id,box){const v=viewport();const state=stored();const canon=id==='ivy19-search'?'ivy18-search':id;state[canon]={x:clamp(box.left/v.w,0,1),y:clamp(box.top/v.h,0,1)};try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn('IVY: Position konnte nicht gespeichert werden',e)}}
+function setXY(id,x,y){const t=target(id);if(!t)return;
+ if(id==='ivy19-search'){
+  document.documentElement.style.setProperty('--ivy18-search-left',Math.round(x)+'px');
+  document.documentElement.style.setProperty('--ivy18-search-top',Math.round(y)+'px');
+ } else if(id==='ivy-v15-links-launcher'){
+  document.documentElement.style.setProperty('--ivy18-launch-left',Math.round(x)+'px');
+  document.documentElement.style.setProperty('--ivy18-launch-top',Math.round(y)+'px');
+  t.style.setProperty('left',Math.round(x)+'px','important');t.style.setProperty('top',Math.round(y)+'px','important');
+ }else{
+  t.style.setProperty('position','fixed','important');
+  t.style.setProperty('right','auto','important');t.style.setProperty('bottom','auto','important');
+  t.style.setProperty('left',Math.round(x)+'px','important');t.style.setProperty('top',Math.round(y)+'px','important');
+  t.style.setProperty('transform','none','important');t.style.setProperty('translate','none','important');
+ }
+}
+function attach(){if(layer)return;
+ layer=document.createElement('div');layer.className='ivy19-drag-portals';layer.setAttribute('aria-label','Mobiles Layout bearbeiten');document.body.appendChild(layer);
+ for(const id of IDS){const t=target(id);if(!t)continue;
+ const grip=document.createElement('button');grip.type='button';grip.dataset.ivyTarget=id;grip.textContent='⠿';grip.setAttribute('aria-label',({ 'weather-fixed-container':'Wetterkarte','profile-fixed-container':'Profilkarte','settings-fixed-container':'Einstellungen','import-fixed-container':'Import und Export','light-mode-fixed-container':'Helligkeitsbutton','ivy-v15-links-launcher':'Links-Button','ivy19-search':'Suchfeld'}[id]||'Element')+' verschieben');
+ layer.appendChild(grip);
+ grip.addEventListener('pointerdown',ev=>{
+  if(!enabled()||(ev.button!==undefined&&ev.button!==0))return;
+  const box=t.getBoundingClientRect();dragging={id,pointer:ev.pointerId,startX:ev.clientX,startY:ev.clientY,x:box.left,y:box.top,width:box.width,height:box.height};
+  grip.setPointerCapture(ev.pointerId);ev.preventDefault();ev.stopPropagation();
+ });
+ grip.addEventListener('pointermove',ev=>{
+  if(!dragging||dragging.id!==id||dragging.pointer!==ev.pointerId)return;
+  const v=viewport(),x=clamp(dragging.x+ev.clientX-dragging.startX,4,Math.max(4,v.w-dragging.width-4));
+  const y=clamp(dragging.y+ev.clientY-dragging.startY,4,Math.max(4,v.h-dragging.height-4));
+  setXY(id,x,y);placeHandles();ev.preventDefault();ev.stopPropagation();
+ });
+ const done=ev=>{
+  if(!dragging||dragging.id!==id||dragging.pointer!==ev.pointerId)return;
+  save(id,t.getBoundingClientRect());dragging=null;
+  try{if(grip.hasPointerCapture(ev.pointerId))grip.releasePointerCapture(ev.pointerId)}catch(_){}
+  window.ivyV18?.refresh?.();placeHandles();ev.preventDefault();ev.stopPropagation();
+ };
+ grip.addEventListener('pointerup',done);grip.addEventListener('pointercancel',done);
+ grip.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
+ }
+}
+function placeHandles(){if(!layer)return;const show=enabled();layer.style.display=show?'block':'none';if(!show)return;
+ const v=viewport();for(const grip of layer.querySelectorAll('button[data-ivy-target]')){
+  const t=target(grip.dataset.ivyTarget),r=t?.getBoundingClientRect();if(!r||r.width<1||r.height<1){grip.style.display='none';continue}
+  grip.style.display='flex';
+  // Above each toolbar control: avoids stealing its normal click/tap area.
+  const control=['settings-fixed-container','import-fixed-container','light-mode-fixed-container'].includes(grip.dataset.ivyTarget);
+  const x=clamp(r.right-36,4,Math.max(4,v.w-42));
+  const y=clamp(control?r.top-41:r.top+4,4,Math.max(4,v.h-42));
+  grip.style.left=Math.round(x)+'px';grip.style.top=Math.round(y)+'px';
+ }
+}
+function loop(ts){if(dragging||ts-lastPaint>110){placeHandles();lastPaint=ts}paintId=requestAnimationFrame(loop)}
+function setup(){attach();if(!paintId)loop()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+window.ivyV19={refresh:placeHandles};
+})();
 </script>
 </body>
 </html>
