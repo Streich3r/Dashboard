@@ -4816,5 +4816,260 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+
+<style id="ivy-v26-weather-style">
+/* IVY V26 weather card: modern sci-fi weather, decoupled mobile size, no provider/status text */
+#ivy-weather-status{display:none!important}
+#ivy-v13-header #profile-fixed-container{z-index:2!important}
+#ivy-v13-header #weather-fixed-container{z-index:1!important}
+@media (max-width:900px){
+  #ivy-v13-header{display:block!important;padding:calc(10px + env(safe-area-inset-top)) 12px 8px!important;min-height:0!important}
+  #ivy-v13-header>#weather-fixed-container{display:block!important;max-width:calc(100vw - 24px)!important}
+  #ivy-v13-header>#profile-fixed-container{position:absolute!important;right:12px!important;top:calc(10px + env(safe-area-inset-top))!important;left:auto!important;bottom:auto!important;max-width:none!important;pointer-events:auto!important}
+  #ivy-v13-header #weather-card{width:min(var(--ivy-v13-weather),calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important}
+  #ivy-v13-header #profile-image{max-width:min(var(--ivy-v13-profile),26vw)!important;max-height:min(var(--ivy-v13-profile),26vw)!important}
+}
+#ivy-weather-scene{
+  --ivy-sun-x:78%;
+  --ivy-sun-y:24%;
+  --ivy-accent-a:rgba(67,226,255,.30);
+  --ivy-accent-b:rgba(147,92,255,.24);
+  position:relative!important;
+  overflow:hidden!important;
+  border-radius:15px!important;
+  background:
+    radial-gradient(circle at var(--ivy-sun-x) var(--ivy-sun-y), rgba(255,232,164,.92), rgba(255,193,97,.42) 11%, rgba(255,140,0,0) 29%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 36%),
+    linear-gradient(150deg,#0b1430 0%, #0f2552 38%, #1a3d73 55%, #412768 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 0 0 1px rgba(114,149,255,.26),0 18px 42px rgba(0,0,0,.34),0 0 48px rgba(123,86,255,.16)!important;
+}
+#ivy-weather-scene[data-phase="dawn"]{
+  background:
+    radial-gradient(circle at var(--ivy-sun-x) var(--ivy-sun-y), rgba(255,242,180,.95), rgba(255,176,110,.46) 10%, rgba(255,140,0,0) 28%),
+    linear-gradient(180deg, rgba(255,214,168,.13), rgba(255,255,255,0) 42%),
+    linear-gradient(160deg,#23143e 0%, #4d296b 30%, #cf6d6f 66%, #ffb675 100%)!important;
+}
+#ivy-weather-scene[data-phase="day"]{
+  background:
+    radial-gradient(circle at var(--ivy-sun-x) var(--ivy-sun-y), rgba(255,239,171,.95), rgba(255,206,110,.38) 12%, rgba(255,140,0,0) 28%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 36%),
+    linear-gradient(155deg,#122b5d 0%, #1e5d9d 46%, #6d58a8 100%)!important;
+}
+#ivy-weather-scene[data-phase="dusk"]{
+  background:
+    radial-gradient(circle at var(--ivy-sun-x) var(--ivy-sun-y), rgba(255,231,170,.96), rgba(255,145,105,.42) 11%, rgba(255,140,0,0) 28%),
+    linear-gradient(180deg, rgba(255,185,116,.13), rgba(255,255,255,0) 40%),
+    linear-gradient(160deg,#0b1532 0%, #352563 34%, #804078 62%, #ff9f67 100%)!important;
+}
+#ivy-weather-scene[data-phase="night"]{
+  background:
+    radial-gradient(circle at var(--ivy-sun-x) var(--ivy-sun-y), rgba(189,214,255,.92), rgba(139,176,255,.23) 10%, rgba(120,170,255,0) 24%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 38%),
+    linear-gradient(155deg,#070b21 0%, #0d1735 48%, #241a48 100%)!important;
+}
+.ivy-weather-grid,.ivy-weather-aurora,.ivy-weather-haze,.ivy-weather-lightning,.ivy-weather-snow{position:absolute;inset:0;pointer-events:none}
+.ivy-weather-grid{opacity:.42;background:
+ linear-gradient(rgba(66,221,255,.06) 1px, transparent 1px),
+ linear-gradient(90deg, rgba(66,221,255,.06) 1px, transparent 1px);
+ background-size:24px 24px;
+ mask-image:linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.08));
+ transform:perspective(280px) rotateX(74deg) scale(1.28) translateY(38%);
+ transform-origin:bottom center;
+ filter:drop-shadow(0 0 12px rgba(77,230,255,.12));
+}
+.ivy-weather-aurora{inset:-10% -12% auto -12%;height:74%;opacity:.62;filter:blur(18px);background:linear-gradient(90deg, rgba(0,0,0,0), rgba(72,240,255,.18), rgba(167,93,255,.25), rgba(0,0,0,0));animation:ivyV26Aurora 12s ease-in-out infinite alternate}
+.ivy-weather-haze{top:auto;height:46%;background:radial-gradient(circle at 50% 110%, rgba(196,226,255,.35), rgba(196,226,255,0) 55%),linear-gradient(to top, rgba(190,196,255,.16), rgba(190,196,255,0));opacity:.78}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-stars{opacity:.66!important}
+#ivy-weather-scene[data-phase="day"] .ivy-weather-stars{opacity:.08!important}
+#ivy-weather-scene[data-phase="dawn"] .ivy-weather-stars,
+#ivy-weather-scene[data-phase="dusk"] .ivy-weather-stars{opacity:.25!important}
+.ivy-weather-stars{mix-blend-mode:screen!important;background-size:29px 31px!important;animation:ivyWStars 18s linear infinite!important}
+.ivy-weather-orb{right:auto!important;top:auto!important;left:calc(var(--ivy-sun-x) - 38px)!important;transform:translate(-50%,0)!important;width:76px!important;height:76px!important;opacity:.96;box-shadow:0 0 34px rgba(255,211,122,.48),0 0 80px rgba(255,173,75,.18)!important;transition:left .9s ease, top .9s ease, box-shadow .6s ease, opacity .6s ease!important}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-orb{width:54px!important;height:54px!important;box-shadow:0 0 28px rgba(181,211,255,.42),0 0 68px rgba(120,170,255,.12)!important}
+.ivy-weather-cloud{background:linear-gradient(180deg, rgba(239,247,255,.50), rgba(200,216,247,.32))!important;backdrop-filter:blur(4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 20px rgba(178,212,255,.08)!important}
+#ivy-weather-scene[data-mode="storm"] .ivy-weather-cloud,
+#ivy-weather-scene[data-mode="rain"] .ivy-weather-cloud,
+#ivy-weather-scene[data-mode="fog"] .ivy-weather-cloud{background:linear-gradient(180deg, rgba(202,216,247,.46), rgba(163,179,215,.26))!important}
+#ivy-weather-scene[data-mode="clouds"] .ivy-weather-cloud{opacity:.85!important}
+#ivy-weather-scene[data-mode="clear"] .ivy-weather-cloud{opacity:.46!important}
+#ivy-weather-scene[data-mode="fog"] .ivy-weather-cloud{opacity:.95!important;filter:blur(3px)!important}
+.ivy-weather-rain{opacity:0!important;background:repeating-linear-gradient(104deg, transparent 0 16px, rgba(152,226,255,.46) 16px 18px, transparent 18px 32px)!important;background-size:100px 96px!important;animation:ivyWRain .9s linear infinite!important;mix-blend-mode:screen}
+#ivy-weather-scene[data-mode="rain"] .ivy-weather-rain{opacity:.62!important}
+#ivy-weather-scene[data-mode="storm"] .ivy-weather-rain{opacity:.76!important;filter:brightness(1.18)}
+.ivy-weather-snow{opacity:0;background-image:radial-gradient(circle, rgba(255,255,255,.92) 0 1.4px, transparent 1.8px),radial-gradient(circle, rgba(216,241,255,.82) 0 1px, transparent 1.4px);background-size:24px 24px, 36px 36px;background-position:0 0, 12px 8px;animation:ivyV26Snow 9s linear infinite}
+#ivy-weather-scene[data-mode="snow"] .ivy-weather-snow{opacity:.78}
+.ivy-weather-lightning{opacity:0;background:radial-gradient(circle at 62% 22%, rgba(255,255,255,.86), rgba(170,206,255,.14) 28%, transparent 60%);mix-blend-mode:screen}
+#ivy-weather-scene[data-mode="storm"] .ivy-weather-lightning{animation:ivyV26Lightning 4.4s linear infinite}
+#ivy-weather-scene[data-mode="fog"] .ivy-weather-haze{opacity:.98;background:linear-gradient(to top, rgba(225,238,255,.26), rgba(225,238,255,.08) 55%, rgba(225,238,255,0)), radial-gradient(circle at 50% 88%, rgba(219,236,255,.38), rgba(219,236,255,0) 58%)}
+.ivy-weather-data{inset:12px 12px 16px!important;z-index:4!important}
+.ivy-weather-city{font-size:12px!important;font-weight:650!important;letter-spacing:.04em!important;text-transform:uppercase!important;color:#dff0ff!important}
+.ivy-weather-temp{font-size:42px!important;text-shadow:0 0 18px rgba(151,210,255,.24)!important}
+.ivy-weather-condition{font-size:13px!important;font-weight:600!important;color:#f4f8ff!important}
+.ivy-weather-stats{font-size:11px!important;color:#d8ebff!important}
+@keyframes ivyV26Aurora{0%{transform:translateX(-4%) skewX(-10deg)}100%{transform:translateX(6%) skewX(6deg)}}
+@keyframes ivyV26Snow{to{background-position:0 180px, 12px 220px}}
+@keyframes ivyV26Lightning{0%,84%,100%{opacity:0}85%,86%{opacity:.65}86.5%,87.5%{opacity:0}88%{opacity:.95}89.5%{opacity:0}}
+</style>
+<script id="ivy-v26-weather-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||a));
+const device=()=>window.matchMedia('(max-width:900px)').matches?'mobile':'desktop';
+const selectedDevice=()=>window.ivyV20SelectedMode||device();
+const SIZE_KEY='ivyV20DeviceSizes';
+const META_KEY='ivyWeatherEnhancedMetaV26';
+let enhancedTimer=0, enhancedReq=0;
+function sizeRecord(mode){try{return JSON.parse(localStorage.getItem(SIZE_KEY)||'{}')[mode]||{}}catch(e){return {}}}
+function ensureWeatherLayers(){
+  const scene=$('ivy-weather-scene');
+  if(!scene) return;
+  const data=scene.querySelector('.ivy-weather-data');
+  if(!data) return;
+  const ensure=(cls,before=data)=>{let el=scene.querySelector('.'+cls);if(!el){el=document.createElement('div');el.className=cls;scene.insertBefore(el,before);}return el};
+  ensure('ivy-weather-grid');
+  ensure('ivy-weather-aurora');
+  ensure('ivy-weather-haze');
+  ensure('ivy-weather-snow');
+  ensure('ivy-weather-lightning');
+  const status=$('ivy-weather-status');if(status){status.textContent='';status.style.display='none';}
+}
+function applyWeatherLayout(){
+  const mode=device();
+  const record=sizeRecord(mode);
+  const weatherHolder=$('weather-fixed-container'), weather=$('weather-card'), scene=$('ivy-weather-scene'), city=$('weather-city-input'), header=$('ivy-v13-header'), profile=$('profile-fixed-container');
+  if(!weatherHolder||!weather||!scene) return;
+  const widthRequested=record.weatherSize ?? 224;
+  const heightRequested=record.weatherHeight ?? (mode==='mobile'?178:284);
+  const profileSize=record.profileSize ?? 80;
+  const vw=window.innerWidth||document.documentElement.clientWidth;
+  const vh=window.innerHeight||document.documentElement.clientHeight;
+  const maxW = mode==='mobile' ? Math.max(160, Math.min(460, vw-24)) : 460;
+  const maxH = mode==='mobile' ? Math.max(175, Math.min(540, vh-320)) : 540;
+  const realW=clamp(widthRequested,160,maxW);
+  const realH=clamp(heightRequested,175,maxH);
+  weatherHolder.style.setProperty('width', realW+'px','important');
+  weatherHolder.style.setProperty('max-width', mode==='mobile'?'calc(100vw - 24px)':'460px','important');
+  weatherHolder.style.setProperty('min-width', '0px','important');
+  weatherHolder.style.setProperty('flex', '0 0 auto','important');
+  weather.style.setProperty('width', realW+'px','important');
+  weather.style.setProperty('max-width', mode==='mobile'?'calc(100vw - 24px)':'460px','important');
+  weather.style.setProperty('height', realH+'px','important');
+  weather.style.setProperty('display', 'flex','important');
+  weather.style.setProperty('flex-direction', 'column','important');
+  scene.style.setProperty('height', Math.max(96, realH-44)+'px','important');
+  scene.style.setProperty('flex', '1 1 auto','important');
+  if(city) city.style.setProperty('flex', '0 0 auto','important');
+  if(header && mode==='mobile'){
+    header.style.setProperty('min-height', Math.max(realH+18, Math.min(profileSize, Math.round(vw*0.26))+24)+'px','important');
+  }
+  if(profile && mode==='mobile'){
+    profile.style.setProperty('position','absolute','important');
+    profile.style.setProperty('right','12px','important');
+    profile.style.setProperty('top','calc(10px + env(safe-area-inset-top))','important');
+    profile.style.setProperty('left','auto','important');
+    profile.style.setProperty('bottom','auto','important');
+  }
+  const widthControl=$('ivy-v13-weather-size');
+  if(widthControl){widthControl.max=String(maxW); if(Number(widthControl.value)>maxW) widthControl.value=String(maxW); const lab=$('ivy-v13-weather-size-label'); if(lab) lab.textContent=realW+' px';}
+  const heightControl=$('ivy-v25-weather-height');
+  if(heightControl){heightControl.max=String(maxH); if(Number(heightControl.value)>maxH) heightControl.value=String(maxH); const lab=$('ivy-v25-weather-height-label'); if(lab) lab.textContent=realH+' px';}
+}
+function weatherMode(code){
+  code=Number(code);
+  if([95,96,99].includes(code)) return 'storm';
+  if([71,73,75,77,85,86].includes(code)) return 'snow';
+  if([45,48].includes(code)) return 'fog';
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return 'rain';
+  if([1,2,3].includes(code)) return 'clouds';
+  return 'clear';
+}
+function solarPhase(now,sunrise,sunset){
+  const n=now?.getTime?.()||Date.now(), sr=sunrise?.getTime?.(), ss=sunset?.getTime?.();
+  if(!Number.isFinite(sr)||!Number.isFinite(ss)||ss<=sr){
+    const h=(new Date(n)).getHours();
+    if(h<6||h>=21) return {phase:'night', progress:0.82, alt:18};
+    if(h<8) return {phase:'dawn', progress:0.12, alt:42};
+    if(h>=18) return {phase:'dusk', progress:0.88, alt:44};
+    const t=(h-8)/10; return {phase:'day', progress:t, alt:18+Math.sin(t*Math.PI)*52};
+  }
+  if(n<sr) return {phase:'night', progress:0.14, alt:18};
+  if(n>ss) return {phase:'night', progress:0.86, alt:18};
+  const t=(n-sr)/(ss-sr);
+  const phase=t<0.12?'dawn':(t>0.86?'dusk':'day');
+  return {phase, progress:t, alt:20+Math.sin(t*Math.PI)*52};
+}
+function parseDate(v){const d=new Date(v); return Number.isFinite(d.getTime())?d:null}
+function currentWeatherMetaFromSnapshot(){
+  try{
+    const snap=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null');
+    if(!snap||!snap.current) return null;
+    return {city:snap.city, weather_code:snap.current.weather_code, is_day:snap.current.is_day, time:snap.current.time};
+  }catch(e){return null}
+}
+function applyEnhancedVisual(meta){
+  const scene=$('ivy-weather-scene'); const orb=$('ivy-weather-orb'); if(!scene||!orb) return;
+  ensureWeatherLayers();
+  const snap=currentWeatherMetaFromSnapshot()||{};
+  const code = Number(meta?.weather_code ?? snap.weather_code ?? 0);
+  const mode = weatherMode(code);
+  const phaseData = solarPhase(parseDate(meta?.currentTime)||new Date(), parseDate(meta?.sunrise), parseDate(meta?.sunset));
+  scene.dataset.mode = mode;
+  scene.dataset.phase = Number(meta?.is_day ?? snap.is_day ?? (phaseData.phase==='night'?0:1))===1 ? phaseData.phase : 'night';
+  const x=12 + phaseData.progress*76;
+  const y=phaseData.phase==='night' ? 18 : Math.max(12, 74-phaseData.alt);
+  scene.style.setProperty('--ivy-sun-x', x.toFixed(1)+'%');
+  scene.style.setProperty('--ivy-sun-y', y.toFixed(1)+'%');
+  orb.style.setProperty('top', y.toFixed(1)+'%','important');
+  if(mode==='storm') orb.style.setProperty('opacity','0.45','important');
+  else orb.style.removeProperty('opacity');
+  const status=$('ivy-weather-status'); if(status){status.textContent=''; status.style.display='none';}
+}
+async function fetchEnhanced(city){
+  city=String(city||'').trim(); if(city.length<2) return;
+  const req=++enhancedReq;
+  try{
+    const controller=new AbortController(); const timeout=setTimeout(()=>controller.abort(),10000);
+    const geoRes=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=de&format=json',{signal:controller.signal,cache:'no-store'});
+    if(!geoRes.ok) throw new Error('geo '+geoRes.status);
+    const geoData=await geoRes.json(); const geo=geoData.results?.[0]; if(!geo) throw new Error('no geo');
+    const url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(geo.latitude)+'&longitude='+encodeURIComponent(geo.longitude)+'&current=weather_code,is_day&daily=sunrise,sunset&forecast_days=1&timezone=auto';
+    const res=await fetch(url,{signal:controller.signal,cache:'no-store'}); clearTimeout(timeout);
+    if(!res.ok) throw new Error('weather '+res.status);
+    const data=await res.json();
+    if(req!==enhancedReq) return;
+    const meta={city:geo.name, latitude:geo.latitude, longitude:geo.longitude, timezone:data.timezone, sunrise:data.daily?.sunrise?.[0], sunset:data.daily?.sunset?.[0], currentTime:(data.current&&data.current.time)||new Date().toISOString(), weather_code:data.current?.weather_code, is_day:data.current?.is_day};
+    localStorage.setItem(META_KEY, JSON.stringify(meta));
+    applyEnhancedVisual(meta);
+  }catch(e){
+    try{const meta=JSON.parse(localStorage.getItem(META_KEY)||'null'); if(meta) applyEnhancedVisual(meta)}catch(_){ }
+  }
+}
+function scheduleEnhanced(city){ clearTimeout(enhancedTimer); enhancedTimer=setTimeout(()=>fetchEnhanced(city), 550); }
+function bootEnhanced(){
+  ensureWeatherLayers();
+  applyWeatherLayout();
+  const input=$('weather-city-input');
+  const existing=input?.value?.trim()||localStorage.getItem('weatherCity')||'';
+  if(existing) scheduleEnhanced(existing);
+  input?.addEventListener('input',e=>scheduleEnhanced(e.target.value),{passive:true});
+  input?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fetchEnhanced(input.value)}});
+  const temp=$('ivy-weather-temp'); if(temp) new MutationObserver(()=>{
+    try{const meta=JSON.parse(localStorage.getItem(META_KEY)||'null'); if(meta) applyEnhancedVisual(meta);}
+    catch(e){}
+  }).observe(temp,{childList:true,subtree:true,characterData:true});
+}
+const wrapped1=window.ivyV13UpdateSizeControls;
+if(typeof wrapped1==='function') window.ivyV13UpdateSizeControls=function(...args){const r=wrapped1.apply(this,args); setTimeout(applyWeatherLayout,0); return r;};
+const wrapped2=window.ivyV20RefreshSizes;
+if(typeof wrapped2==='function') window.ivyV20RefreshSizes=function(...args){const r=wrapped2.apply(this,args); setTimeout(applyWeatherLayout,0); return r;};
+window.addEventListener('resize',()=>requestAnimationFrame(applyWeatherLayout),{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(applyWeatherLayout,250),{passive:true});
+['ivy-v13-profile-size','ivy-v13-weather-size','ivy-v25-weather-height'].forEach(id=>document.addEventListener('input',e=>{if(e.target&&e.target.id===id) setTimeout(applyWeatherLayout,0);},true));
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bootEnhanced, {once:true}); else bootEnhanced();
+setTimeout(()=>{applyWeatherLayout(); try{const meta=JSON.parse(localStorage.getItem(META_KEY)||'null'); if(meta) applyEnhancedVisual(meta);}catch(e){}}, 80);
+})();
+</script>
+
 </body>
 </html>
