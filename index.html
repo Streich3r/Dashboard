@@ -1964,6 +1964,123 @@ html #profile-image, html body.ivy-mobile-auto #profile-image {
 <link rel="manifest" href="./manifest.json"/>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png"/>
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png"/>
+<style id="ivy-v23-patch">
+/* IVY V23 – Mobile Weather, Links and Light (final overrides) */
+#ivy-weather-scene {cursor:pointer;touch-action:manipulation}
+#ivy-weather-scene:focus-visible {outline:2px solid #64e5ff;outline-offset:2px}
+#weather-card .ivy-weather-scene::after{content:'↗ WetterOnline';position:absolute;z-index:4;top:6px;left:8px;color:#ebfaff;font-size:9px;letter-spacing:.02em;border:1px solid rgba(170,227,255,.28);border-radius:20px;background:rgba(7,19,39,.5);padding:3px 6px;pointer-events:none}
+.ivy-weather-scene{transition:background .8s ease!important}
+.ivy-weather-scene[data-mode='partly']{background:linear-gradient(145deg,#155183,#487d9f,#7b5689)}
+.ivy-weather-scene[data-mode='cloudy']{background:linear-gradient(160deg,#233955,#4a5674,#2a3656)}
+.ivy-weather-scene[data-mode='fog']{background:linear-gradient(160deg,#425675,#657f96,#39445f)}
+.ivy-weather-scene[data-mode='drizzle'],.ivy-weather-scene[data-mode='showers']{background:linear-gradient(145deg,#1a365a,#335b78,#1b335b)}
+.ivy-weather-scene[data-mode='snow']{background:linear-gradient(160deg,#2d5a81,#789bb9,#495c91)}
+.ivy-weather-scene[data-mode='sleet']{background:linear-gradient(155deg,#2a4772,#586f9b,#31466a)}
+.ivy-weather-scene[data-mode='storm']{background:linear-gradient(170deg,#10132d,#262849 50%,#322247)}
+.ivy-weather-scene[data-mode='wind']{background:linear-gradient(145deg,#225d74,#3c7c86,#54628e)}
+.ivy-weather-scene[data-mode='cloudy'] .ivy-weather-orb,.ivy-weather-scene[data-mode='fog'] .ivy-weather-orb,.ivy-weather-scene[data-mode='storm'] .ivy-weather-orb{opacity:.15}
+.ivy-weather-scene[data-mode='night'] .ivy-weather-stars{opacity:.75}
+.ivy-weather-scene[data-mode='clear'] .ivy-weather-stars,.ivy-weather-scene[data-mode='partly'] .ivy-weather-stars{opacity:.05}
+.ivy-weather-scene[data-mode='fog'] .ivy-weather-cloud{opacity:.75;filter:blur(7px);background:rgba(236,246,255,.68)}
+.ivy-weather-scene[data-mode='wind'] .ivy-weather-cloud,.ivy-weather-scene[data-windy='true'] .ivy-weather-cloud{animation-duration:4s}
+.ivy-weather-scene[data-mode='snow'] .ivy-weather-cloud,.ivy-weather-scene[data-mode='sleet'] .ivy-weather-cloud{background:rgba(252,253,255,.7)}
+.ivy-weather-scene[data-mode='snow'] .ivy-weather-rain,.ivy-weather-scene[data-mode='sleet'] .ivy-weather-rain {opacity:0}
+.ivy-v23-particles,.ivy-v23-fog,.ivy-v23-flash,.ivy-v23-rays {position:absolute;inset:0;pointer-events:none}
+.ivy-v23-particles{z-index:0;opacity:0;background-repeat:repeat;will-change:background-position}
+.ivy-weather-scene[data-mode='snow'] .ivy-v23-particles,.ivy-weather-scene[data-mode='sleet'] .ivy-v23-particles{opacity:.8;background-image:radial-gradient(circle,rgba(255,255,255,.95) 1.5px,transparent 2px),radial-gradient(circle,rgba(240,251,255,.78) 1px,transparent 2px);background-size:39px 43px,65px 73px;animation:ivyV23Snow 8s linear infinite}
+.ivy-weather-scene[data-mode='sleet'] .ivy-v23-particles{animation-duration:4s}
+.ivy-weather-scene[data-mode='drizzle'] .ivy-weather-rain{opacity:.22;animation-duration:1.8s}
+.ivy-weather-scene[data-mode='showers'] .ivy-weather-rain{opacity:.8;animation-duration:.65s}
+.ivy-weather-scene[data-mode='rain'] .ivy-weather-rain{opacity:.5;animation-duration:1.1s}
+.ivy-weather-scene[data-mode='fog'] .ivy-v23-fog{opacity:.6;background:linear-gradient(90deg,transparent,rgba(221,239,255,.36),transparent);width:160%;animation:ivyV23Fog 12s ease-in-out infinite alternate}
+.ivy-weather-scene[data-mode='storm'] .ivy-v23-flash{animation:ivyV23Lightning 8s infinite;z-index:1}
+.ivy-weather-scene[data-mode='clear'] .ivy-v23-rays,.ivy-weather-scene[data-mode='partly'] .ivy-v23-rays{opacity:.45;background:repeating-conic-gradient(from 12deg at 77% 24%,rgba(255,237,163,.27) 0deg 7deg,transparent 10deg 32deg);animation:ivyV23Rays 24s linear infinite}
+@keyframes ivyV23Snow{to{background-position:15px 86px,-15px 146px}}
+@keyframes ivyV23Fog{from{transform:translateX(-20%)}to{transform:translateX(8%)}}
+@keyframes ivyV23Lightning{0%,88%,91%,95%,100%{background:transparent}89%,93%{background:rgba(230,244,255,.43)}}
+@keyframes ivyV23Rays{to{transform:rotate(12deg)}}
+/* There is precisely one light renderer now. It is independent of other overlays. */
+#light-mode-overlay,#ivy-v13-light {display:none!important;visibility:hidden!important;pointer-events:none!important}
+#ivy-v23-light{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483646!important;display:none!important;align-items:flex-end!important;justify-content:center!important;isolation:isolate!important;overflow:hidden!important;box-sizing:border-box!important;opacity:1!important;filter:none!important;backdrop-filter:none!important;transform:none!important;touch-action:auto!important;pointer-events:auto!important;background-color:#fff!important}
+#ivy-v23-light.ivy-open{display:flex!important}
+#ivy-v23-light *{box-sizing:border-box}
+#ivy-v23-light-close{position:absolute;right:max(13px,env(safe-area-inset-right));top:max(13px,env(safe-area-inset-top));z-index:2;min-height:48px;border-radius:999px;padding:10px 18px;color:#fff;font-weight:700;background:#10192b;border:1px solid #8ad9ff;touch-action:manipulation}
+#ivy-v23-light-panel{position:relative;z-index:2;width:min(94vw,430px);margin-bottom:max(20px,env(safe-area-inset-bottom));display:grid;gap:11px;border-radius:20px;background:rgba(238,244,255,.96);color:#102039;padding:16px 19px 20px;box-shadow:0 12px 38px #0003;font:14px system-ui,sans-serif}
+#ivy-v23-light-panel h3{font-size:13px;font-weight:800;text-align:center;letter-spacing:.10em}
+#ivy-v23-light-panel label{display:flex;justify-content:space-between;font-size:13px;font-weight:700}
+#ivy-v23-light-panel output{font-variant-numeric:tabular-nums}
+#ivy-v23-light-panel input[type='range']{display:block;width:100%;height:37px;min-height:37px;accent-color:#2759cb;touch-action:pan-x;user-select:none;pointer-events:auto}
+#ivy-v23-light-panel small{font-size:11px;color:#324b67;text-align:center}
+@media(max-width:900px){
+  /* Mobile link view is a full-screen dock: columns responsive, not configurable width/height. */
+  html body.ivy-v15-links-open #quick-dials-grid,
+  html.ivy-v16-mobile-ui body.ivy-v15-links-open #quick-dials-grid,
+  html body.ivy-mobile-auto.ivy-v15-links-open #quick-dials-grid {
+     display:grid!important;grid-template-columns:repeat(var(--ivy-v23-columns,3),minmax(0,1fr))!important;
+     grid-template-rows:none!important;grid-auto-rows:max-content!important;
+     align-content:start!important;align-items:start!important;
+     gap:9px!important;padding:0 6px 10px!important;
+     overflow-y:auto!important;overflow-x:hidden!important;
+     scroll-behavior:auto!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important;
+     touch-action:pan-y!important;scrollbar-width:thin!important;
+  }
+  html body.ivy-v15-links-open #quick-dials-grid::before,
+  html.ivy-v16-mobile-ui body.ivy-v15-links-open #quick-dials-grid::before{
+     content:''!important;display:block!important;grid-column:1/-1!important;
+     grid-row:1!important;height:var(--ivy-v23-topspace,55dvh)!important;
+     min-height:var(--ivy-v23-topspace,55dvh)!important;max-height:none!important;pointer-events:none!important;
+  }
+  html body.ivy-v15-links-open #quick-dials-grid > [data-id],
+  html.ivy-v16-mobile-ui body.ivy-v15-links-open #quick-dials-grid > [data-id]{
+     min-width:0!important;max-width:100%!important;width:100%!important;
+     height:auto!important;min-height:94px!important;
+     padding:0!important;margin:0!important;border-radius:12px!important;
+     overflow:hidden!important;transform:none!important;
+  }
+  html body.ivy-v15-links-open #quick-dials-grid > [data-id] a{min-width:0!important;width:100%!important;min-height:94px!important;height:auto!important;padding:23px 4px 7px!important;gap:3px!important}
+  html body.ivy-v15-links-open #quick-dials-grid > [data-id] .quick-dial-icon{
+    width:clamp(30px,11vw,52px)!important;height:clamp(30px,11vw,52px)!important;margin:0!important;
+  }
+  html body.ivy-v15-links-open #quick-dials-grid > [data-id] a span{
+    font-size:clamp(10px,2.7vw,13px)!important;line-height:1.25!important;
+    overflow:hidden!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    word-break:break-word;padding:0 2px!important;
+  }
+  /* Preserve drag sorting + editing; don't overlay the icon with controls. */
+  html body.ivy-v15-links-open #quick-dials-grid .edit-button,
+  html body.ivy-v15-links-open #quick-dials-grid .delete-button {
+     width:25px!important;height:25px!important;min-width:25px!important;min-height:25px!important;
+     top:2px!important;padding:4px!important;
+  }
+  html body.ivy-v15-links-open #quick-dials-grid .edit-button{right:28px!important}
+  html body.ivy-v15-links-open #quick-dials-grid .delete-button{right:2px!important}
+  html body.ivy-v15-links-open #quick-dials-grid .ivy-dial-drag-handle{left:3px!important;top:2px!important;width:27px!important;height:27px!important;min-width:27px!important;min-height:27px!important}
+  html body.ivy-v15-links-open #add-dial-container{display:none!important}
+  #ivy-v14-linksWidth,#ivy-v14-linksHeight,#ivy-v14-linksWidth-out,#ivy-v14-linksHeight-out{display:none!important}
+  .ivy-v23-mobile-hide{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){.ivy-v23-particles,.ivy-v23-fog,.ivy-v23-flash,.ivy-v23-rays{animation:none!important}}
+/* Show only atmospheric elements that match the current weather. */
+.ivy-weather-scene[data-mode='rain'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='showers'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='drizzle'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='snow'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='sleet'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='storm'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='fog'] .ivy-weather-orb,
+.ivy-weather-scene[data-mode='cloudy'] .ivy-weather-orb {opacity:0!important}
+.ivy-weather-scene[data-mode='clear'] .ivy-weather-cloud {opacity:.12}
+.ivy-weather-scene[data-mode='night'] .ivy-weather-cloud {opacity:.2}
+.ivy-weather-scene[data-mode='storm'] .ivy-weather-cloud {background:rgba(153,171,202,.8);filter:blur(1.5px)}
+.ivy-weather-scene[data-mode='snow'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='sleet'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='rain'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='drizzle'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='showers'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='fog'] .ivy-weather-stars,
+.ivy-weather-scene[data-mode='storm'] .ivy-weather-stars {opacity:0}
+
+</style>
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -4332,5 +4449,164 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
-</script></body>
+</script><script id="ivy-v23-runtime">
+/* IVY V23 fixes: small, isolated final layer. Original storage & dashboard logic intact. */
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const mobile=()=>matchMedia('(max-width:900px)').matches;
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
+
+ // --- 1. One genuine light mode. Both endpoints are explicitly RGB-bound. ---
+ function installLight(){
+   if($('ivy-v23-light'))return;
+   const legacy=$('ivy-v13-light');
+   if(legacy)legacy.classList.remove('ivy-open');
+   const el=document.createElement('div');
+   el.id='ivy-v23-light';el.setAttribute('aria-hidden','true');
+   el.innerHTML='<button type="button" id="ivy-v23-light-close">✕ Schließen</button><div id="ivy-v23-light-panel"><h3>IVY · LICHTMODUS</h3><label for="ivy-v23-brightness">Helligkeit <output id="ivy-v23-brightness-value">100 %</output></label><input id="ivy-v23-brightness" type="range" min="0" max="100" step="1" value="100"><label for="ivy-v23-warmth">Farbtemperatur <output id="ivy-v23-warmth-value">0 %</output></label><input id="ivy-v23-warmth" type="range" min="0" max="100" step="1" value="0"><small>0 % Schwarz · 100 % Weiß (bei neutraler Farbtemperatur)</small></div>';
+   document.body.append(el);
+   const bright=$('ivy-v23-brightness'),warm=$('ivy-v23-warmth');
+   function paint(){
+     const b=clamp(bright.value,0,100),w=clamp(warm.value,0,100)/100;
+     const c=[255,255-95*w,255-195*w].map(x=>Math.round(x*b/100));
+     const color=`rgb(${c.join(', ')})`;
+     el.style.setProperty('background',color,'important');
+     el.style.setProperty('background-color',color,'important');
+     el.dataset.brightness=String(b);
+     $('ivy-v23-brightness-value').textContent=b+' %';
+     $('ivy-v23-warmth-value').textContent=Math.round(w*100)+' %';
+   }
+   bright.addEventListener('input',paint,{passive:true});warm.addEventListener('input',paint,{passive:true});
+   function toggle(force){
+     const open=typeof force==='boolean'?force:!el.classList.contains('ivy-open');
+     legacy?.classList.remove('ivy-open');
+     $('light-mode-overlay')?.classList.add('hidden');
+     el.classList.toggle('ivy-open',open);el.setAttribute('aria-hidden',String(!open));
+     document.body.classList.toggle('ivy-light-active',open);
+     if(open){paint();$('ivy-v23-light-close').focus({preventScroll:true});}
+     return open;
+   }
+   $('ivy-v23-light-close').addEventListener('click',()=>toggle(false));
+   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&el.classList.contains('ivy-open')){e.preventDefault();toggle(false)}},true);
+   // Keep every existing light button wired up to the single implementation.
+   window.toggleLightMode=toggle;window.updateLightSource=paint;
+   window.ivyV23Light={paint,toggle,getColor:()=>getComputedStyle(el).backgroundColor};
+   paint();
+ }
+
+ // --- 2. Weather animations per WMO group, without remote image assets. ---
+ const scene=$('ivy-weather-scene'),card=$('weather-card'),cityInput=$('weather-city-input');
+ const createWeatherLayers=()=>{
+   if(!scene||scene.querySelector('.ivy-v23-particles'))return;
+   ['ivy-v23-rays','ivy-v23-fog','ivy-v23-particles','ivy-v23-flash'].forEach(c=>{const d=document.createElement('div');d.className=c;d.setAttribute('aria-hidden','true');scene.insertBefore(d,scene.querySelector('.ivy-weather-data'))});
+ };
+ function modeFor(code,isDay,wind){
+   if([95,96,99].includes(code))return 'storm';
+   if([56,57,66,67].includes(code))return 'sleet';
+   if([71,73,75,77,85,86].includes(code))return 'snow';
+   if([80,81,82].includes(code))return 'showers';
+   if([61,63,65].includes(code))return 'rain';
+   if([51,53,55].includes(code))return 'drizzle';
+   if([45,48].includes(code))return 'fog';
+   if(code===3)return 'cloudy';
+   if(code===1||code===2)return 'partly';
+   if(code===0&&wind>=43)return 'wind';
+   return isDay?'clear':'night';
+ }
+ const weatherDescriptions={clear:'Sonnig',night:'Klare Nacht',partly:'Leicht bewölkt',cloudy:'Bedeckt',fog:'Nebel',rain:'Regen',drizzle:'Nieselregen',showers:'Regenschauer',snow:'Schneefall',sleet:'Schneeregen',storm:'Gewitter',wind:'Windig'};
+ function enhanceWeather(snapshot){
+   if(!snapshot||!scene)return;
+   createWeatherLayers();
+   const c=snapshot.current||{},mode=modeFor(Number(c.weather_code),Number(c.is_day)===1,Number(c.wind_speed_10m));
+   if(scene.dataset.mode!==mode)scene.dataset.mode=mode;
+   const windy=String(Number(c.wind_speed_10m)>=30);if(scene.dataset.windy!==windy)scene.dataset.windy=windy;
+   const desc=$('ivy-weather-condition');if(desc)desc.textContent=weatherDescriptions[mode]||'Wetter';
+ }
+ // The original fetch and cache routines still update these nodes. Observe only
+ // weather changes so cached and live snapshots both get the same effects.
+ function updateFromCache(){try{const snap=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null');if(snap)enhanceWeather(snap)}catch(_){}}
+ createWeatherLayers();
+ if(scene){new MutationObserver(()=>updateFromCache()).observe(scene,{attributes:true,attributeFilter:['data-mode']});}
+ // After new data is fetched, original script writes the snapshot to localStorage;
+ // response mode and text are reconciled via the following value observer.
+ const temp=$('ivy-weather-temp');
+ if(temp)new MutationObserver(()=>updateFromCache()).observe(temp,{childList:true,characterData:true,subtree:true});
+ updateFromCache();
+
+ // WetterOnline deep link derived from the city the user actually typed.
+ // Its website may normalize city slugs or resolve ambiguous names itself.
+ function citySlug(city){return String(city||'').split(',')[0].trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}
+ function weatherURL(){
+   const city=cityInput?.value.trim()||localStorage.getItem('weatherCity')||'';
+   const slug=citySlug(city);
+   return slug?'https://www.wetteronline.ch/wetter/'+encodeURIComponent(slug):'https://www.wetteronline.ch/';
+ }
+ // Native anchor allows browser/PWA to open the page and use the back action.
+ if(scene){
+   const a=document.createElement('a');a.id='ivy-v23-weather-link';a.textContent='WetterOnline öffnen';
+   a.setAttribute('aria-label','WetterOnline für die eingetragene Stadt öffnen');a.href=weatherURL();
+   a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');
+   a.style.cssText='position:absolute;inset:0;z-index:3;font-size:0;cursor:pointer';
+   scene.insertBefore(a,scene.querySelector('.ivy-weather-data'));
+   const sync=()=>{a.href=weatherURL();a.title='WetterOnline: '+(cityInput?.value.trim()||'Startseite')};
+   cityInput?.addEventListener('input',sync,{passive:true});
+   a.addEventListener('pointerdown',sync,{passive:true});a.addEventListener('focus',sync);
+   sync();
+ }
+
+ // --- 3. Mobile grid: always three or more columns, row order rises upwards. ---
+ const grid=$('quick-dials-grid');
+ function columns(){const w=window.innerWidth;return w<440?3:w<600?4:w<750?5:6}
+ let layoutPending=false,lastCount=-1,lastCols=0;
+ function layoutLinks(forceBottom=false){
+   if(!grid||!mobile())return;
+   const visible=document.body.classList.contains('ivy-v15-links-open');
+   const cols=columns(),tiles=[...grid.querySelectorAll(':scope > [data-id]')];
+   const rows=Math.ceil(tiles.length/cols);
+   grid.style.setProperty('--ivy-v23-columns',cols);
+   // Spacer above newest row allows the topmost links to be pulled all the way
+   // down to the same thumb-reachable area as the lowest row.
+   const rowHeight=tiles[0]?.getBoundingClientRect().height||110;
+   const height=grid.clientHeight||Math.max(220,window.innerHeight-115);
+   const space=Math.max(60,Math.round(height-rowHeight-25));
+   grid.style.setProperty('--ivy-v23-topspace',space+'px');
+   tiles.forEach((tile,i)=>{
+     const row=rows-1-Math.floor(i/cols);
+     tile.style.setProperty('grid-row',String(row+2),'important');
+     tile.style.setProperty('grid-column',String(i%cols+1),'important');
+   });
+   const add=$('add-dial-container');if(add){add.style.removeProperty('grid-row');add.style.removeProperty('grid-column')}
+   // On each opening/reordering/resize return to the lowest row by default.
+   if(visible&&(forceBottom||lastCount!==tiles.length||lastCols!==cols))
+     requestAnimationFrame(()=>{grid.scrollTop=grid.scrollHeight-grid.clientHeight});
+   lastCount=tiles.length;lastCols=cols;
+ }
+ function scheduleLinks(forceBottom=false){
+   if(layoutPending)return;layoutPending=true;
+   requestAnimationFrame(()=>{layoutPending=false;layoutLinks(forceBottom)});
+ }
+ if(grid){
+   new MutationObserver(()=>scheduleLinks(true)).observe(grid,{childList:true});
+   $('ivy-v15-links-launcher')?.addEventListener('click',()=>requestAnimationFrame(()=>scheduleLinks(true)));
+   window.addEventListener('resize',()=>scheduleLinks(false),{passive:true});
+   window.addEventListener('orientationchange',()=>setTimeout(()=>scheduleLinks(true),250),{passive:true});
+   const originalOpen=window.ivyV15Links?.open;
+   if(originalOpen){window.ivyV15Links.open=function(...args){const r=originalOpen.apply(this,args);requestAnimationFrame(()=>scheduleLinks(true));return r}}
+   window.ivyV23Links={layout:()=>layoutLinks(true),columns};
+ }
+ function toggleMobileSettings(){
+   const panel=$('ivy-v14-controls');if(!panel)return;
+   for(const id of ['ivy-v14-linksWidth','ivy-v14-linksHeight']){
+     const input=$(id);const label=panel.querySelector(`label[for="${id}"]`);
+     for(const el of [input,label])if(el)el.classList.toggle('ivy-v23-mobile-hide',mobile());
+   }
+ }
+ function begin(){installLight();scheduleLinks(true);toggleMobileSettings()}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',begin,{once:true});else begin();
+ window.addEventListener('resize',toggleMobileSettings,{passive:true});
+})();
+
+</script>
+</body>
 </html>
