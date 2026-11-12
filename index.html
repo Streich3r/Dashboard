@@ -2011,7 +2011,6 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 /* IVY V23 – Mobile Weather, Links and Light (final overrides) */
 #ivy-weather-scene {cursor:pointer;touch-action:manipulation}
 #ivy-weather-scene:focus-visible {outline:2px solid #64e5ff;outline-offset:2px}
-#weather-card .ivy-weather-scene::after{content:'↗ WetterOnline';position:absolute;z-index:4;top:6px;left:8px;color:#ebfaff;font-size:9px;letter-spacing:.02em;border:1px solid rgba(170,227,255,.28);border-radius:20px;background:rgba(7,19,39,.5);padding:3px 6px;pointer-events:none}
 .ivy-weather-scene{transition:background .8s ease!important}
 .ivy-weather-scene[data-mode='partly']{background:linear-gradient(145deg,#155183,#487d9f,#7b5689)}
 .ivy-weather-scene[data-mode='cloudy']{background:linear-gradient(160deg,#233955,#4a5674,#2a3656)}
@@ -2123,6 +2122,12 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 .ivy-weather-scene[data-mode='fog'] .ivy-weather-stars,
 .ivy-weather-scene[data-mode='storm'] .ivy-weather-stars {opacity:0}
 
+</style>
+<style id="ivy-v25-weather-compact">
+#weather-card[data-ivy-compact="true"] .ivy-weather-data{inset:4px 7px 8px!important}
+#weather-card[data-ivy-compact="true"] .ivy-weather-temp{font-size:clamp(24px,8vw,32px)!important}
+#weather-card[data-ivy-compact="true"] .ivy-weather-stats{font-size:10px!important;margin-top:1px!important}
+#weather-card[data-ivy-compact="true"] .ivy-weather-city{font-size:11px!important}
 </style>
 </head>
 <body class="ivy-booting" id="body-root">
@@ -2364,7 +2369,9 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 <label for="ivy-v13-profile-size">Profilbild-Größe <output id="ivy-v13-profile-size-label">80 px</output></label>
 <input type="range" id="ivy-v13-profile-size" min="44" max="144" step="4" value="80" oninput="ivyV13UpdateSizeControls()" />
 <label for="ivy-v13-weather-size">Wetterkarte-Breite <output id="ivy-v13-weather-size-label">224 px</output></label>
-<input type="range" id="ivy-v13-weather-size" min="160" max="380" step="10" value="224" oninput="ivyV13UpdateSizeControls()" />
+<input type="range" id="ivy-v13-weather-size" min="160" max="460" step="5" value="224" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v25-weather-height">Wetterkarte-Höhe <output id="ivy-v25-weather-height-label">284 px</output></label>
+<input type="range" id="ivy-v25-weather-height" min="175" max="540" step="1" value="284" oninput="ivyV13UpdateSizeControls()" />
 <p class="ivy-v13-note">Die Größen passen sich automatisch an den verfügbaren Platz an. Die bestehenden Designfarben bleiben erhalten.</p>
 </div>
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
@@ -2684,7 +2691,7 @@ const accentIcons = [
             allDialContainers.forEach((el) => {
                 // Steuere den "Link hinzufügen"-Button separat
                 if (el.id === 'add-dial-container') {
-                     if (settings.hideAddDialButton) {
+                     if (settings.hideAddDialButton && !window.matchMedia('(max-width:900px)').matches) {
                          el.classList.add('hidden');
                      } else {
                          el.classList.remove('hidden');
@@ -3874,26 +3881,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* IVY V13 layout, sizes, isolated light renderer */
 (function(){
 'use strict';
-const sizeDefaults={tileSize:160,iconSize:44,buttonSize:44,profileSize:80,weatherSize:224};
+const sizeDefaults={tileSize:160,iconSize:44,buttonSize:44,profileSize:80,weatherSize:224,weatherHeight:284};
+const defaultForDevice=mode=>({...sizeDefaults,weatherHeight:mode==='mobile'?178:284});
 const byId=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,Number(v)||a));
 const V20SIZEKEY='ivyV20DeviceSizes';
 const currentDevice=()=>window.matchMedia('(max-width:900px)').matches?'mobile':'desktop';
 const selectedDevice=()=>window.ivyV20SelectedMode||currentDevice();
 function sizeRecord(mode){try{return JSON.parse(localStorage.getItem(V20SIZEKEY)||'{}')[mode]||{}}catch(e){return {}}}
-function sizes(){return {...sizeDefaults,...(window.currentSettings||{}),...sizeRecord(currentDevice())};}
+function sizes(){return {...defaultForDevice(currentDevice()),...(window.currentSettings||{}),...sizeRecord(currentDevice())};}
 function applySizes(){
   const d=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
-  const s={...sizeDefaults,...d,...sizeRecord(currentDevice())};const root=document.documentElement;
+  const s={...defaultForDevice(currentDevice()),...d,...sizeRecord(currentDevice())};const root=document.documentElement;
   root.style.setProperty('--ivy-v13-tile',clamp(s.tileSize,100,260)+'px');
   root.style.setProperty('--ivy-v13-icon',clamp(s.iconSize,20,112)+'px');
   root.style.setProperty('--ivy-v13-btn',clamp(s.buttonSize,36,80)+'px');
   root.style.setProperty('--ivy-v13-profile',clamp(s.profileSize,44,144)+'px');
-  root.style.setProperty('--ivy-v13-weather',clamp(s.weatherSize,160,380)+'px');
+  root.style.setProperty('--ivy-v13-weather',clamp(s.weatherSize,160,460)+'px');
+  root.style.setProperty('--ivy-v25-weather-height',clamp(s.weatherHeight,175,540)+'px');
   // Apply measured dimensions as inline important declarations: legacy V10-V18
   // high-specificity mobile CSS must not override user-selected profile sizes.
   const mobile=currentDevice()==='mobile';
-  const pw=clamp(s.profileSize,44,144), ww=clamp(s.weatherSize,160,380);
+  const pw=clamp(s.profileSize,44,144), ww=clamp(s.weatherSize,160,460);
+  const wh=mobile?Math.min(clamp(s.weatherHeight,175,540),Math.max(175,window.innerHeight-320)):clamp(s.weatherHeight,175,540);
   const viewport=window.innerWidth||document.documentElement.clientWidth;
   const image=byId('profile-image'),weather=byId('weather-card');
   if(image){
@@ -3904,10 +3914,37 @@ function applySizes(){
     image.style.setProperty('min-width','0px','important');
   }
   if(weather){
+    // The parent is a flex item; sizing only #weather-card left it shrinkable
+    // despite the CSS width setting. Size both together and reserve the profile.
     const reserved=mobile?Math.min(pw,Math.max(44,viewport-175))+24:0;
-    const real=Math.max(108,Math.min(ww,viewport-reserved-(mobile?14:24)));
+    const available=Math.max(105,viewport-reserved-(mobile?24:40));
+    const real=Math.min(ww,available);
+    const holder=byId('weather-fixed-container');
+    if(holder){
+      holder.style.setProperty('width',real+'px','important');
+      holder.style.setProperty('min-width','0px','important');
+      holder.style.setProperty('max-width',real+'px','important');
+      holder.style.setProperty('flex','0 0 '+real+'px','important');
+    }
     weather.style.setProperty('width',real+'px','important');
-    weather.style.setProperty('max-width','100%','important');
+    weather.style.setProperty('max-width',real+'px','important');
+    weather.style.setProperty('box-sizing','border-box','important');
+    // A real card-height control, not another fixed CSS viewport height.
+    weather.dataset.ivyCompact=wh<=205?'true':'false';
+    weather.style.setProperty('height',wh+'px','important');
+    weather.style.setProperty('min-height','0','important');
+    weather.style.setProperty('display','flex','important');
+    weather.style.setProperty('flex-direction','column','important');
+    const scene=byId('ivy-weather-scene');
+    if(scene){
+      scene.style.setProperty('height',Math.max(82,wh-53)+'px','important');
+      scene.style.setProperty('min-height','0','important');
+      scene.style.setProperty('flex','1 1 auto','important');
+    }
+    const city=byId('weather-city-input');
+    if(city)city.style.setProperty('flex','0 0 auto','important');
+    const widthOutput=byId('ivy-v13-weather-size-label');
+    if(widthOutput&&selectedDevice()===currentDevice())widthOutput.textContent=Math.round(real)+' px'+(real<ww?' (max. Gerät)':'');
   }
   for(const selector of ['#settings-fixed-container button','#import-fixed-container button','#light-mode-fixed-container button']){
     for(const button of document.querySelectorAll(selector)){
@@ -3916,7 +3953,59 @@ function applySizes(){
     }
   }
   window.ivyV18?.refresh?.();
-
+  requestAnimationFrame(()=>{reflowMobileWeather();layout()});
+}
+function reflowMobileWeather(){
+  const weather=byId('weather-fixed-container');
+  const search=byId('dashboard-container')?.firstElementChild?.querySelector(':scope > section:first-child');
+  const launcher=byId('ivy-v15-links-launcher');
+  if(!weather||!search)return;
+  // Undo only offsets introduced by this routine, leaving user positioning intact.
+  const restore=el=>{
+    if(!el||el.dataset.ivyV25OldTop===undefined)return;
+    const old=el.dataset.ivyV25OldTop,priority=el.dataset.ivyV25OldPriority||'';
+    if(old)el.style.setProperty('top',old,priority);else el.style.removeProperty('top');
+    delete el.dataset.ivyV25OldTop;delete el.dataset.ivyV25OldPriority;
+  };
+  restore(search);restore(launcher);
+  const oldLeft=search.dataset.ivyV25OldLeft;
+  if(oldLeft!==undefined){
+    if(oldLeft)search.style.setProperty('left',oldLeft,search.dataset.ivyV25OldLeftPriority||'');
+    else search.style.removeProperty('left');
+    delete search.dataset.ivyV25OldLeft;delete search.dataset.ivyV25OldLeftPriority;
+  }
+  if(currentDevice()!=='mobile'){
+    const wr=weather.getBoundingClientRect(), sr=search.getBoundingClientRect();
+    const overlapping=sr.left<wr.right+12&&sr.right>wr.left&&sr.top<wr.bottom&&sr.bottom>wr.top;
+    if(overlapping){
+      const dx=Math.ceil(wr.right+18-sr.left);
+      if(sr.right+dx<window.innerWidth-18){
+        search.dataset.ivyV25OldLeft=search.style.getPropertyValue('left');
+        search.dataset.ivyV25OldLeftPriority=search.style.getPropertyPriority('left');
+        const oldX=parseFloat(getComputedStyle(search).left)||0;
+        search.style.setProperty('left',Math.ceil(oldX+dx)+'px','important');
+      }else{
+        search.dataset.ivyV25OldTop=search.style.getPropertyValue('top');
+        search.dataset.ivyV25OldPriority=search.style.getPropertyPriority('top');
+        const oldY=parseFloat(getComputedStyle(search).top)||0;
+        search.style.setProperty('top',Math.ceil(oldY+wr.bottom+20-sr.top)+'px','important');
+      }
+    }
+    return;
+  }
+  const weatherBottom=weather.getBoundingClientRect().bottom;
+  const searchBox=search.getBoundingClientRect();
+  if(searchBox.top>=weatherBottom+20)return;
+  const forceTop=(el,top)=>{
+    if(!el)return;
+    el.dataset.ivyV25OldTop=el.style.getPropertyValue('top');
+    el.dataset.ivyV25OldPriority=el.style.getPropertyPriority('top');
+    el.style.setProperty('top',Math.ceil(top)+'px','important');
+  };
+  const top=weatherBottom+25;
+  forceTop(search,top);
+  if(launcher&&launcher.getBoundingClientRect().height>0)
+    forceTop(launcher,top+searchBox.height+20);
 }
 function layout(){
  const header=byId('ivy-v13-header');if(!header)return;
@@ -3925,7 +4014,14 @@ function layout(){
  document.documentElement.style.setProperty('--ivy-v13-header-h',Math.ceil(rect.height+4)+'px');
 }
 function saveSizeControls(){
- const mode=selectedDevice(), keys=[['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize']];
+ const mode=selectedDevice();
+ if(mode==='mobile'&&mode===currentDevice()){
+   const limit=byId('ivy-v13-weather-size');
+   const pw=clamp(byId('ivy-v13-profile-size')?.value||80,44,144);
+   const vw=window.innerWidth||document.documentElement.clientWidth;
+   if(limit)limit.max=String(Math.max(160,Math.min(460,vw-Math.min(pw,Math.max(44,vw-175))-24-24)));
+ }
+ const keys=[['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize'],['ivy-v25-weather-height','weatherHeight']];
  let all={};try{all=JSON.parse(localStorage.getItem(V20SIZEKEY)||'{}')||{}}catch(e){}
  const record={...sizeRecord(mode)};
  for(const [id,key] of keys){const el=byId(id);if(el)record[key]=Number(el.value)}
@@ -3934,20 +4030,38 @@ function saveSizeControls(){
  requestAnimationFrame(layout);
 }
 window.ivyV13UpdateSizeControls=function(){
- for(const [id] of [['ivy-v13-link-size'],['ivy-v13-icon-size'],['ivy-v13-button-size'],['ivy-v13-profile-size'],['ivy-v13-weather-size']]){
+ for(const [id] of [['ivy-v13-link-size'],['ivy-v13-icon-size'],['ivy-v13-button-size'],['ivy-v13-profile-size'],['ivy-v13-weather-size'],['ivy-v25-weather-height']]){
   const el=byId(id),lab=byId(id+'-label');if(el&&lab)lab.textContent=el.value+' px';
  }
  saveSizeControls();
 };
 function initSizes(){
  const shared=JSON.parse(localStorage.getItem('dashboardSettings')||'{}');
- const d={...sizeDefaults,...shared,...sizeRecord(selectedDevice())};
- for(const [id,k] of [['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize']]){
+ const d={...defaultForDevice(selectedDevice()),...shared,...sizeRecord(selectedDevice())};
+ for(const [id,k] of [['ivy-v13-link-size','tileSize'],['ivy-v13-icon-size','iconSize'],['ivy-v13-button-size','buttonSize'],['ivy-v13-profile-size','profileSize'],['ivy-v13-weather-size','weatherSize'],['ivy-v25-weather-height','weatherHeight']]){
   if(byId(id))byId(id).value=d[k];
   if(byId(id+'-label'))byId(id+'-label').textContent=d[k]+' px';
  }
- applySizes();
- const help=byId('ivy-v22-sizing-notice');
+  const widthControl=byId('ivy-v13-weather-size');
+  const heightControl=byId('ivy-v25-weather-height');
+  if(heightControl){
+    const editActualMobile=currentDevice()==='mobile'&&selectedDevice()==='mobile';
+    heightControl.max=editActualMobile?String(Math.max(175,Math.min(540,innerHeight-320))):'540';
+    if(editActualMobile&&Number(heightControl.value)>Number(heightControl.max))heightControl.value=heightControl.max;
+  }
+  if(widthControl){
+    // Prevent a dead slider area on narrow phones where the profile reserves space.
+    const onActualMobile=currentDevice()==='mobile'&&selectedDevice()==='mobile';
+    const vw=window.innerWidth||document.documentElement.clientWidth;
+    const pw=clamp(d.profileSize,44,144);
+    const reserved=Math.min(pw,Math.max(44,vw-175))+24;
+    widthControl.max=onActualMobile?String(Math.max(160,Math.min(460,vw-reserved-24))):'460';
+    if(onActualMobile&&Number(widthControl.value)>Number(widthControl.max))widthControl.value=widthControl.max;
+  }
+  const hideAddRow=byId('setting-hide-add-dial')?.closest('div.flex');
+  if(hideAddRow)hideAddRow.style.display=selectedDevice()==='mobile'?'none':'';
+  applySizes();
+  const help=byId('ivy-v22-sizing-notice');
  if(help)help.textContent=selectedDevice()===currentDevice()?'Vorschau: Diese Ansicht wird sofort aktualisiert.':'Du bearbeitest das andere Geräteprofil. Die Änderungen siehst du beim Wechsel in dessen Ansicht.';
 }
 window.ivyV20RefreshSizes=initSizes;
@@ -3959,7 +4073,7 @@ function initHeader(){
  document.body.appendChild(header);header.append(weather,profile);
  const resizeObserver=new ResizeObserver(()=>requestAnimationFrame(layout));
  resizeObserver.observe(header);resizeObserver.observe(weather);resizeObserver.observe(profile);
- window.addEventListener('resize',()=>requestAnimationFrame(layout),{passive:true});
+ window.addEventListener('resize',()=>{requestAnimationFrame(layout);applySizes();},{passive:true});
  window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(layout),{passive:true});
  requestAnimationFrame(layout);
 }
