@@ -1955,6 +1955,49 @@ html #profile-image, html body.ivy-mobile-auto #profile-image {
 }
 #quick-dials-grid .ivy-dial-drag-handle {touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important;}
 
+
+/* IVY V24 — Search-engine icon monochrome option (affects images, not labels). */
+body.ivy-search-icons-gray #current-search-icon,
+body.ivy-search-icons-gray #search-engine-menu .ivy-engine-option img,
+body.ivy-search-icons-gray #search-engine-menu .ivy-icon-fallback,
+body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
+  filter:grayscale(1) !important;
+}
+#search-engine-menu .ivy-engine-gray-setting {
+  margin:4px 4px 10px!important;
+  padding:8px 10px!important;
+  background:rgba(111,137,205,.10)!important;
+  border:1px solid rgba(134,158,235,.20)!important;
+  border-radius:10px!important;
+}
+#search-engine-menu .ivy-engine-gray-label {
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:12px!important;min-height:36px!important;
+  font:500 13px/1.4 system-ui,sans-serif!important;color:#e9eefc!important;
+  cursor:pointer!important;user-select:none!important;
+}
+#search-engine-menu #ivy-search-gray-toggle {
+  position:absolute!important;width:1px!important;height:1px!important;
+  overflow:hidden!important;opacity:0!important;pointer-events:none!important;
+}
+#search-engine-menu .ivy-engine-gray-track {
+  display:block!important;flex:0 0 38px!important;width:38px!important;height:22px!important;
+  border-radius:999px!important;background:#3d4762!important;
+  border:1px solid rgba(177,190,222,.5)!important;
+  position:relative!important;transition:background .18s ease!important;
+}
+#search-engine-menu .ivy-engine-gray-track::before {
+  content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
+  border-radius:50%;background:#e9f1ff;box-shadow:0 0 3px rgba(0,0,0,.35);
+  transition:transform .18s ease;
+}
+#search-engine-menu #ivy-search-gray-toggle:checked + .ivy-engine-gray-track {background:#6275c4!important}
+#search-engine-menu #ivy-search-gray-toggle:checked + .ivy-engine-gray-track::before {transform:translateX(16px)}
+#search-engine-menu #ivy-search-gray-toggle:focus-visible + .ivy-engine-gray-track {outline:2px solid #80eaff;outline-offset:3px}
+/* The tile's own vertical scroll remains enabled; drag only after a hold. */
+#quick-dials-grid [data-id] {touch-action:pan-y!important;}
+#quick-dials-grid [data-id] .ivy-dial-drag-handle {touch-action:none!important;}
+
 </style>
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
 <meta name="theme-color" content="#070b18"/>
@@ -2134,6 +2177,13 @@ html #profile-image, html body.ivy-mobile-auto #profile-image {
 </button>
 <div class="hidden absolute left-0 top-[calc(100%+14px)] w-56 rounded-2xl shadow-2xl z-50 p-2 space-y-1 dynamic-border" id="search-engine-menu">
 <h4 class="text-xs text-white/60 px-2 pt-1 pb-2 border-b border-gray-700">Wähle Suchmaschine</h4>
+<div class="ivy-engine-gray-setting">
+  <label class="ivy-engine-gray-label" for="ivy-search-gray-toggle">
+    <span>Icons in Graustufen</span>
+    <input type="checkbox" id="ivy-search-gray-toggle" aria-label="Suchmaschinen-Icons grau darstellen">
+    <span class="ivy-engine-gray-track" aria-hidden="true"></span>
+  </label>
+</div>
 </div>
 </div>
 
@@ -2888,6 +2938,7 @@ function initSearch() {
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', 'off');
     renderSearchEngineMenu();
+    ivyInitSearchGrayMode();
     updateSearchEngine(getSelectedSearchEngineId(), false); 
 }
 
@@ -2951,6 +3002,25 @@ function ivyLoadEngineIcon(img,engine){
         img.onerror=null;img.classList.add('ivy-icon-missing');
     };
     img.src=urls[0];
+}
+// IVY V24 – persistent grayscale filter; original favicons and URLs stay untouched.
+const IVY_SEARCH_GRAY_KEY = 'ivySearchGrayIcons';
+function ivyApplySearchGrayMode(enabled) {
+    document.body.classList.toggle('ivy-search-icons-gray', Boolean(enabled));
+    const toggle = document.getElementById('ivy-search-gray-toggle');
+    if (toggle) toggle.checked = Boolean(enabled);
+    try { localStorage.setItem(IVY_SEARCH_GRAY_KEY, enabled ? '1' : '0'); } catch (_) {}
+}
+function ivyInitSearchGrayMode() {
+    const toggle = document.getElementById('ivy-search-gray-toggle');
+    if (!toggle) return;
+    let enabled = false;
+    try { enabled = localStorage.getItem(IVY_SEARCH_GRAY_KEY) === '1'; } catch (_) {}
+    ivyApplySearchGrayMode(enabled);
+    if (!toggle.dataset.ivyGrayBound) {
+        toggle.addEventListener('change', () => ivyApplySearchGrayMode(toggle.checked));
+        toggle.dataset.ivyGrayBound = '1';
+    }
 }
 function renderSearchEngineMenu() {
     const menu=document.getElementById('search-engine-menu');
@@ -3606,13 +3676,14 @@ function ivyFallbackDialIcon(img){
 }
 let ivyDialSortActive=false;
 function ivyBindDialDrag(card,handle){
-  // One pointer-based sorter for mouse, pen and touch. Destination order is
-  // determined by the DOM indices, never by a one-sided cursor midpoint test.
-  let drag=null,pressTimer=null,suppressUntil=0;
+  // V24: neither tapping nor beginning a scroll may reorder a tile.
+  // A deliberate hold arms sorting. The dedicated grip supports vertical drag;
+  // swiping the tile itself stays native scrolling on mobile.
+  const HOLD_MS = 170, CARD_HOLD_MS = 220, SLOP_PX = 9;
+  let drag=null, pressTimer=null, suppressUntil=0;
   card.style.webkitTouchCallout='none';
-  card.style.userSelect='none';
   const grid=()=>document.getElementById('quick-dials-grid');
-  const cards=()=>[...grid().querySelectorAll(':scope > [data-id]')];
+  const cards=()=>[...(grid()?.querySelectorAll(':scope > [data-id]') || [])];
   function hitTarget(x,y){
     for(const el of cards()){
       if(el===card)continue;
@@ -3621,33 +3692,52 @@ function ivyBindDialDrag(card,handle){
     }
     return null;
   }
-  function clearTarget(){
-    grid()?.querySelectorAll('.ivy-dial-target').forEach(el=>el.classList.remove('ivy-dial-target'));
+  function clearTarget(){grid()?.querySelectorAll('.ivy-dial-target').forEach(el=>el.classList.remove('ivy-dial-target'));}
+  function clearTimer(){if(pressTimer!==null){clearTimeout(pressTimer);pressTimer=null;}}
+  function releaseCapture(d){
+    if(!d)return;
+    const el=d.fromHandle?handle:card;
+    try{if(el.hasPointerCapture(d.id))el.releasePointerCapture(d.id);}catch(_){}
   }
-  function activate(event){
+  function activate(){
     if(!drag||drag.active)return;
     drag.active=true;
     card.classList.add('ivy-dial-moving');
-    try{(drag.handle?handle:card).setPointerCapture(drag.id)}catch(_){}
-    event?.preventDefault?.();
+    const el=drag.fromHandle?handle:card;
+    try{el.setPointerCapture(drag.id);}catch(_){}
   }
   function down(e,fromHandle){
-    if((e.button!==undefined&&e.button!==0)||drag)return;
+    if((e.button!==undefined&&e.button!==0)||drag||performance.now()<suppressUntil)return;
     if(!fromHandle&&e.target.closest?.('button,input,select,textarea'))return;
-    drag={id:e.pointerId,x:e.clientX,y:e.clientY,active:false,handle:fromHandle,target:null};
-    if(fromHandle){activate(e);e.stopPropagation();}
-    else if(e.pointerType==='touch'){
-      pressTimer=setTimeout(()=>activate(),320);
-    }
+    drag={id:e.pointerId,x:e.clientX,y:e.clientY,active:false,fromHandle,
+          target:null,hasMoved:false,latestX:e.clientX,latestY:e.clientY};
+    // Do not preventDefault() before the hold: taps and scrolling keep working.
+    clearTimer();
+    pressTimer=setTimeout(activate,fromHandle?HOLD_MS:CARD_HOLD_MS);
+    // Attach window listeners only for this gesture (no leaks on dial re-render).
+    window.addEventListener('pointerup',lostUp);
+    window.addEventListener('pointercancel',lostCancel);
+    if(fromHandle)e.stopPropagation();
+  }
+  function discard(){
+    clearTimer();releaseCapture(drag);drag=null;
+    window.removeEventListener('pointerup',lostUp);
+    window.removeEventListener('pointercancel',lostCancel);
+    clearTarget();card.classList.remove('ivy-dial-moving');
   }
   function move(e){
     if(!drag||e.pointerId!==drag.id)return;
+    const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    drag.latestX=e.clientX;drag.latestY=e.clientY;
     if(!drag.active){
-      if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>10){
-        clearTimeout(pressTimer);drag=null;
-      }
+      // Finger movement before 170/220 ms means scroll/gesture, never a sort.
+      if(Math.hypot(dx,dy)>SLOP_PX)discard();
       return;
     }
+    // On the normal tile (not its grip), downward/upward scroll wins.
+    if(!drag.fromHandle&&!drag.hasMoved&&e.pointerType==='touch'&&
+       Math.abs(dy)>SLOP_PX&&Math.abs(dy)>Math.abs(dx)*1.2){discard();return;}
+    drag.hasMoved=drag.hasMoved||Math.hypot(dx,dy)>SLOP_PX;
     const destination=hitTarget(e.clientX,e.clientY);
     if(destination!==drag.target){
       clearTarget();drag.target=destination;
@@ -3657,40 +3747,44 @@ function ivyBindDialDrag(card,handle){
   }
   function up(e,cancel=false){
     if(!drag||e.pointerId!==drag.id)return;
-    clearTimeout(pressTimer);
-    const active=drag.active;
-    const destination=!cancel&&active?(hitTarget(e.clientX,e.clientY)||drag.target):null;
-    clearTarget();card.classList.remove('ivy-dial-moving');
-    drag=null;
-    if(active){
-      suppressUntil=performance.now()+600;
+    const d=drag;
+    const destination=(!cancel&&d.active&&d.hasMoved)?(hitTarget(e.clientX,e.clientY)||d.target):null;
+    discard();
+    if(d.active){
+      // Prevent opening the link after a deliberate long press or reorder.
+      suppressUntil=performance.now()+650;
       if(destination&&destination!==card){
         const ordered=cards();
         const from=ordered.indexOf(card),to=ordered.indexOf(destination);
-        // A->B and B->A work identically; move after a later card,
-        // before an earlier card. This is independent of drag direction.
         if(from>=0&&to>=0){
-          if(from<to)destination.after(card);
-          else destination.before(card);
+          if(from<to)destination.after(card);else destination.before(card);
           ivyPersistDialOrder();
+          window.ivyV23Links?.layout?.();
         }
       }
-      e.preventDefault();e.stopPropagation();
+      if(e.cancelable)e.preventDefault();
+      e.stopPropagation();
     }
   }
   handle.addEventListener('pointerdown',e=>down(e,true));
+  card.addEventListener('pointerdown',e=>{
+    if(e.target.closest?.('.ivy-dial-drag-handle'))return;
+    down(e,false);
+  });
   handle.addEventListener('pointermove',move);
   card.addEventListener('pointermove',move);
   handle.addEventListener('pointerup',e=>up(e));
   card.addEventListener('pointerup',e=>up(e));
   handle.addEventListener('pointercancel',e=>up(e,true));
   card.addEventListener('pointercancel',e=>up(e,true));
-  card.addEventListener('pointerdown',e=>{
-    if(e.target.closest?.('.ivy-dial-drag-handle'))return;
-    down(e,false);
+  function lostUp(e){up(e)}
+  function lostCancel(e){up(e,true)}
+  card.addEventListener('contextmenu',e=>{
+    if(drag?.active||performance.now()<suppressUntil){e.preventDefault();e.stopPropagation();}
   });
-  card.addEventListener('contextmenu',e=>{if(drag?.active||performance.now()<suppressUntil){e.preventDefault();e.stopPropagation()}});
-  card.addEventListener('click',e=>{if(performance.now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation()}},true);
+  card.addEventListener('click',e=>{
+    if(performance.now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation();}
+  },true);
   handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
 }
 
