@@ -3,7 +3,7 @@
    After this one-time migration, changing index.html does not require
    changing a cache version number. */
 
-const CACHE_NAME = 'ivy-dashboard-shell-auto-v1';
+const CACHE_NAME = 'ivy-dashboard-shell-auto-v2';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -83,9 +83,9 @@ self.addEventListener('fetch', event => {
 });
 
 
-/* IVY update notification – compare the cached home document with the live one.
-   Works on GitHub Pages without manually bumping CACHE_NAME on each HTML edit.
-   A check does not replace the user's current running page or offline cache. */
+/* IVY V31: report only a real difference between the currently cached HTML
+   and the live server document, identified by a content hash. The page
+   remembers the exact version the user accepted, avoiding repeat prompts. */
 self.addEventListener('message', event => {
   if (event.data?.type !== 'IVY_DASHBOARD_CHECK_UPDATE') return;
   event.waitUntil((async () => {
@@ -97,10 +97,13 @@ self.addEventListener('message', event => {
       if (!response.ok || response.type !== 'basic') return;
       const [before, after] = await Promise.all([cached.text(), response.text()]);
       if (before === after) return;
-      const clients = await self.clients.matchAll({type:'window',includeUncontrolled:false});
-      for (const client of clients) client.postMessage({type:'IVY_DASHBOARD_UPDATE_AVAILABLE'});
+      const bytes=new TextEncoder().encode(after);
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      const hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+      // Notify only the tab that requested the update check.
+      event.source?.postMessage({type:'IVY_DASHBOARD_UPDATE_AVAILABLE',hash});
     } catch (error) {
-      // Offline/unreachable origin: no false update alert.
+      // No notification on failure or offline.
     }
   })());
 });

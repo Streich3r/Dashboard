@@ -5410,47 +5410,54 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <button id="ivy-update-later" type="button">Später</button>
   </div>
 </div>
-<script id="ivy-update-monitor-v1">
+<script id="ivy-update-monitor-v2">
 (() => {
   'use strict';
   if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
-  const popup = document.getElementById('ivy-update-popup');
+  const popup=document.getElementById('ivy-update-popup');
   if (!popup) return;
-  let dismissed = false;
-  let busy = false;
-  let controllerReady = !!navigator.serviceWorker.controller;
-  const show = () => { if (!dismissed && !busy) popup.hidden = false; };
-  document.getElementById('ivy-update-later')?.addEventListener('click', () => {
-    dismissed = true; popup.hidden = true;
+  const APPLIED_KEY='ivy.dashboard.update.appliedHash.v2';
+  let dismissed=false, busy=false, pendingHash=null, checking=false;
+  const later=document.getElementById('ivy-update-later');
+  const apply=document.getElementById('ivy-update-apply');
+  const description=popup.querySelector('.ivy-update-description');
+  function show(hash){
+    if (!hash || hash===localStorage.getItem(APPLIED_KEY) || dismissed || busy) return;
+    pendingHash=hash;
+    popup.hidden=false;
+  }
+  later?.addEventListener('click',()=>{dismissed=true;popup.hidden=true;});
+  apply?.addEventListener('click',()=>{
+    if(busy || !pendingHash) return;
+    busy=true;popup.hidden=true;
+    // Only suppress this exact remote document. Future HTML updates get a new hash.
+    localStorage.setItem(APPLIED_KEY,pendingHash);
+    description.textContent='Neue Version wird geladen …';
+    // The unique URL also avoids browser HTTP cache and intermediary stale documents.
+    const url=new URL(location.href);
+    url.searchParams.set('ivy_refresh',String(Date.now()));
+    location.replace(url.href);
   });
-  document.getElementById('ivy-update-apply')?.addEventListener('click', () => {
-    if (busy) return;
-    busy = true;
-    popup.querySelector('.ivy-update-description').textContent = 'Die neue Version wird geladen …';
-    // Existing user settings and data in localStorage/IndexedDB are preserved.
-    location.reload();
+  navigator.serviceWorker.addEventListener('message',event=>{
+    if(event.data?.type==='IVY_DASHBOARD_UPDATE_AVAILABLE' && typeof event.data.hash==='string') show(event.data.hash);
   });
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data?.type === 'IVY_DASHBOARD_UPDATE_AVAILABLE') show();
-  });
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (controllerReady) show(); // A replaced SW can also mean an update.
-    controllerReady = true;
-  });
-  const check = async () => {
-    if (dismissed || busy || !navigator.onLine || document.hidden) return;
-    try {
-      const reg = await navigator.serviceWorker.getRegistration('./');
-      if (reg) {
-        reg.update().catch(() => {});
-        const worker = navigator.serviceWorker.controller || reg.active;
+  // A service worker can update independently of the HTML: never show a false alert here.
+  const check=async()=>{
+    if(checking || busy || dismissed || !navigator.onLine || document.hidden) return;
+    checking=true;
+    try{
+      const reg=await navigator.serviceWorker.getRegistration('./');
+      if(reg){
+        await reg.update().catch(()=>{});
+        const worker=navigator.serviceWorker.controller||reg.active;
         worker?.postMessage({type:'IVY_DASHBOARD_CHECK_UPDATE'});
       }
-    } catch (error) {console.debug('IVY Updateprüfung:',error)}
+    }catch(err){console.debug('IVY Updateprüfung:',err)}
+    finally{checking=false;}
   };
-  window.addEventListener('load', () => {setTimeout(check, 2500);setInterval(check, 5*60*1000);});
-  window.addEventListener('online', check);
-  document.addEventListener('visibilitychange', () => {if(!document.hidden) check();});
+  window.addEventListener('load',()=>{setTimeout(check,2500);setInterval(check,5*60*1000);});
+  window.addEventListener('online',check);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
 })();
 </script>
 
