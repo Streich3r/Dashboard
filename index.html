@@ -2231,6 +2231,166 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
  #ivy-weather-scene .ivy28-flake{transform:translateY(95px)}
 }
 </style>
+
+<style id="ivy-sci-fi-weather-v29">
+/* IVY Sci-Fi Weather V29
+   Cleaner celestial body + refined cloud design */
+#ivy-weather-scene{
+  --ivy-cloud-main: linear-gradient(180deg, rgba(244,250,255,.90) 0%, rgba(217,233,251,.76) 42%, rgba(155,189,225,.48) 100%);
+  --ivy-cloud-storm: linear-gradient(180deg, rgba(197,212,232,.92) 0%, rgba(142,164,197,.84) 44%, rgba(78,98,132,.72) 100%);
+}
+
+/* Main sun / moon base */
+#ivy-weather-scene .ivy-weather-orb{
+  width:58px!important;
+  height:58px!important;
+  border-radius:50%!important;
+  overflow:visible!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  background:radial-gradient(circle at 34% 32%, #fffde9 0%, #ffe6a0 38%, #ffbb67 74%, #ff9f58 100%)!important;
+  box-shadow:0 0 14px rgba(255,213,129,.72),0 0 32px rgba(255,198,92,.42),0 0 68px rgba(255,198,92,.14)!important;
+}
+#ivy-weather-scene .ivy-weather-orb::after{
+  content:"";
+  position:absolute;
+  inset:-12px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,235,170,.20) 0%, rgba(255,215,131,.10) 42%, transparent 72%);
+  z-index:-1;
+  pointer-events:none;
+}
+#ivy-weather-scene .ivy-weather-orb::before{
+  content:"";
+  display:none;
+  position:absolute;
+  width:92%;
+  height:92%;
+  left:28%;
+  top:-2%;
+  border-radius:50%;
+  background:linear-gradient(160deg,#050a1b,#111d3c 60%,#2b2059);
+  box-shadow:-8px 0 18px rgba(5,10,27,.30);
+  pointer-events:none;
+}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-orb{
+  width:46px!important;
+  height:46px!important;
+  border-color:rgba(211,231,255,.22)!important;
+  background:radial-gradient(circle at 30% 28%, #ffffff 0%, #edf4ff 34%, #c6d9ff 62%, #8ca7e7 100%)!important;
+  box-shadow:0 0 10px rgba(199,224,255,.56),0 0 24px rgba(139,188,255,.38),0 0 56px rgba(124,180,255,.16)!important;
+}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-orb::after{
+  inset:-10px;
+  background:radial-gradient(circle, rgba(188,221,255,.14) 0%, rgba(117,182,255,.08) 46%, transparent 76%);
+}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-orb::before{display:block;}
+#ivy-weather-scene .ivy-v27-moonshade{display:none!important;}
+
+/* Fine tune orb visibility under cloud cover */
+#ivy-weather-scene[data-weather="cloudy"],
+#ivy-weather-scene[data-weather="storm"]{--ivy-orb-dim:.10!important}
+#ivy-weather-scene[data-weather="rain"],
+#ivy-weather-scene[data-weather="showers"]{--ivy-orb-dim:.16!important}
+#ivy-weather-scene[data-weather="snow"],
+#ivy-weather-scene[data-weather="fog"]{--ivy-orb-dim:.22!important}
+#ivy-weather-scene[data-phase="night"][data-weather="cloudy"] .ivy-weather-orb,
+#ivy-weather-scene[data-phase="night"][data-weather="rain"] .ivy-weather-orb,
+#ivy-weather-scene[data-phase="night"][data-weather="showers"] .ivy-weather-orb,
+#ivy-weather-scene[data-phase="night"][data-weather="storm"] .ivy-weather-orb{
+  opacity:.18!important;
+}
+
+/* Cleaner, more elegant clouds */
+#ivy-weather-scene .ivy-weather-cloud{
+  z-index:2!important;
+  width:102px!important;
+  height:24px!important;
+  top:57px!important;
+  right:6%!important;
+  opacity:.62!important;
+  border-radius:999px!important;
+  background:var(--ivy-cloud-main)!important;
+  filter:none!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.58),
+    inset 0 -4px 8px rgba(90,126,168,.18),
+    0 8px 18px rgba(8,22,46,.12)!important;
+  animation:ivy29CloudA calc(var(--ivy-weather-wind-speed,11s) * 1.0) ease-in-out infinite alternate!important;
+}
+#ivy-weather-scene .ivy-weather-cloud::before,
+#ivy-weather-scene .ivy-weather-cloud::after{
+  content:"";
+  position:absolute;
+  bottom:7px;
+  background:inherit;
+  border-radius:50%;
+  box-shadow:inherit;
+}
+#ivy-weather-scene .ivy-weather-cloud::before{
+  width:36px;
+  height:36px;
+  left:15px;
+}
+#ivy-weather-scene .ivy-weather-cloud::after{
+  width:44px;
+  height:28px;
+  left:46px;
+  bottom:10px;
+  border-radius:52% 48% 48% 42%;
+}
+#ivy-weather-scene .ivy-weather-cloud.cloud-b{
+  width:76px!important;
+  height:18px!important;
+  top:98px!important;
+  right:35%!important;
+  opacity:.40!important;
+  transform:scale(.94)!important;
+  animation:ivy29CloudB calc(var(--ivy-weather-wind-speed,11s) * 1.28) ease-in-out infinite alternate!important;
+}
+#ivy-weather-scene .ivy-weather-cloud.cloud-b::before{width:28px;height:28px;left:10px;bottom:5px}
+#ivy-weather-scene .ivy-weather-cloud.cloud-b::after{width:30px;height:20px;left:34px;bottom:8px}
+
+#ivy-weather-scene[data-weather="clear"] .ivy-weather-cloud{opacity:.07!important}
+#ivy-weather-scene[data-weather="partly"] .ivy-weather-cloud{opacity:.46!important}
+#ivy-weather-scene[data-weather="cloudy"] .ivy-weather-cloud{opacity:.78!important}
+#ivy-weather-scene[data-weather="rain"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="showers"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="storm"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="snow"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="fog"] .ivy-weather-cloud{
+  background:var(--ivy-cloud-storm)!important;
+}
+#ivy-weather-scene[data-weather="fog"] .ivy-weather-cloud{
+  opacity:.68!important;
+  filter:blur(3px)!important;
+}
+#ivy-weather-scene[data-phase="night"] .ivy-weather-cloud{
+  background:linear-gradient(180deg, rgba(223,236,255,.54) 0%, rgba(165,190,227,.42) 48%, rgba(103,128,170,.32) 100%)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -3px 7px rgba(67,95,134,.24),
+    0 8px 16px rgba(4,11,28,.22)!important;
+}
+
+@keyframes ivy29CloudA {
+  0%   {transform:translate3d(14px, 0, 0)}
+  100% {transform:translate3d(-20px, -2px, 0)}
+}
+@keyframes ivy29CloudB {
+  0%   {transform:translate3d(-10px, 0, 0) scale(.94)}
+  100% {transform:translate3d(16px, 2px, 0) scale(.97)}
+}
+
+/* Small polish for readability and a more premium card look */
+#ivy-weather-scene .ivy-weather-city,
+#ivy-weather-scene .ivy-weather-temp,
+#ivy-weather-scene .ivy-weather-condition,
+#ivy-weather-scene .ivy-weather-stats,
+#ivy-weather-scene #ivy-v27-sun-times{
+  text-shadow:0 1px 10px rgba(5,11,24,.52)!important;
+}
+</style>
+
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
