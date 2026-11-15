@@ -5454,5 +5454,116 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+<style id="ivy-weather-v30-astral">
+/* IVY V30: vector atmospheric clouds + physically grounded sky coordinates */
+#ivy-weather-scene .ivy-weather-orb,
+#ivy-weather-scene .ivy-v27-moonshade,
+#ivy-weather-scene .ivy-v27-sunrays,
+#ivy-weather-scene .ivy-weather-cloud,
+#ivy-weather-scene .ivy-weather-stars,
+#ivy-weather-scene .ivy-v23-particles {display:none!important}
+#ivy-weather-scene .ivy30-sky-body{position:absolute;z-index:1;inset:0;pointer-events:none;overflow:hidden}
+#ivy-weather-scene .ivy30-orb{position:absolute;width:48px;height:48px;left:50%;top:25%;transform:translate(-50%,-50%);opacity:0;transition:opacity .8s ease,left 60s linear,top 60s linear;will-change:left,top;}
+#ivy-weather-scene .ivy30-sun{border-radius:50%;width:45px;height:45px;background:radial-gradient(circle at 33% 29%,#fffdf1 0%,#ffeba9 28%,#ffce85 69%,#ed9f6b 100%);box-shadow:0 0 14px 3px rgba(255,217,150,.43),0 0 46px 10px rgba(247,185,109,.16),0 0 78px 20px rgba(255,199,120,.07)}
+#ivy-weather-scene .ivy30-sun::before{content:"";position:absolute;inset:-22px;border-radius:50%;background:radial-gradient(circle,rgba(255,221,158,.13),transparent 67%);pointer-events:none}
+#ivy-weather-scene .ivy30-moon{width:45px;height:45px;filter:drop-shadow(0 0 9px rgba(185,218,255,.48)) drop-shadow(0 0 22px rgba(109,179,255,.17))}
+#ivy-weather-scene .ivy30-moon svg{width:100%;height:100%;overflow:visible}
+#ivy-weather-scene .ivy30-cloud-field{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;mask-image:linear-gradient(to bottom,#000 0%,#000 66%,transparent 96%)}
+#ivy-weather-scene .ivy30-cloud{position:absolute;width:clamp(105px,47%,166px);height:auto;opacity:var(--cloud-opacity,.7);transform:translate3d(0,0,0);animation:ivy30CloudDrift var(--drift-time,22s) ease-in-out infinite alternate;will-change:transform;filter:drop-shadow(0 9px 14px rgba(4,12,31,.14))}
+#ivy-weather-scene .ivy30-cloud svg{display:block;width:100%;height:auto;overflow:visible}
+#ivy-weather-scene .ivy30-cloud.c1{right:5%;top:12%;--drift-time:22s;--cloud-opacity:.80}
+#ivy-weather-scene .ivy30-cloud.c2{right:36%;top:33%;width:33%;--drift-time:30s;--cloud-opacity:.46;animation-delay:-12s}
+#ivy-weather-scene .ivy30-cloud.c3{right:-17%;top:38%;width:44%;--drift-time:35s;--cloud-opacity:.28;animation-delay:-19s}
+#ivy-weather-scene[data-weather="clear"] .ivy30-cloud{opacity:.035!important}
+#ivy-weather-scene[data-weather="partly"] .ivy30-cloud.c1{opacity:.62}
+#ivy-weather-scene[data-weather="partly"] .ivy30-cloud.c2{opacity:.32}
+#ivy-weather-scene[data-weather="cloudy"] .ivy30-cloud.c1,
+#ivy-weather-scene[data-weather="rain"] .ivy30-cloud.c1,
+#ivy-weather-scene[data-weather="snow"] .ivy30-cloud.c1,
+#ivy-weather-scene[data-weather="storm"] .ivy30-cloud.c1{opacity:.95}
+#ivy-weather-scene[data-weather="fog"] .ivy30-cloud{filter:blur(3px)!important}
+#ivy-weather-scene[data-phase="night"] .ivy30-cloud{opacity:calc(var(--cloud-opacity,.7) * .79);filter:drop-shadow(0 7px 15px rgba(4,10,30,.29))}
+#ivy-weather-scene[data-weather="storm"] .ivy30-cloud,
+#ivy-weather-scene[data-weather="rain"] .ivy30-cloud{filter:brightness(.71) saturate(.8) drop-shadow(0 9px 16px rgba(4,10,30,.3))}
+#ivy-weather-scene .ivy30-cloud svg .c-edge{opacity:.72}
+@keyframes ivy30CloudDrift{0%{transform:translate3d(-13px,1px,0)}100%{transform:translate3d(17px,-3px,0)}}
+@media(prefers-reduced-motion:reduce){#ivy-weather-scene .ivy30-cloud{animation:none!important}#ivy-weather-scene .ivy30-orb{transition:none!important}}
+</style>
+<script id="ivy-weather-v30-astronomy">
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const rad=Math.PI/180;
+ function norm(x){return (x%360+360)%360}
+ function moonPosition(lat,lon,now){
+  // Low-precision lunar ephemeris: ecliptic longitude/latitude -> RA/declination -> horizontal coordinates.
+  const jd=now/86400000+2440587.5,d=jd-2451545;
+  const L=(218.316+13.176396*d)*rad,M=(134.963+13.064993*d)*rad,F=(93.272+13.229350*d)*rad;
+  const l=L+6.289*rad*Math.sin(M),b=5.128*rad*Math.sin(F),e=(23.4397-.0000004*d)*rad;
+  const ra=Math.atan2(Math.sin(l)*Math.cos(e)-Math.tan(b)*Math.sin(e),Math.cos(l));
+  const dec=Math.asin(Math.sin(b)*Math.cos(e)+Math.cos(b)*Math.sin(e)*Math.sin(l));
+  const gmst=norm(280.46061837+360.98564736629*(jd-2451545));
+  const ha=norm(gmst+lon-ra/rad)*rad,phi=lat*rad;
+  const alt=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(ha))/rad;
+  const az=norm(Math.atan2(Math.sin(ha),Math.cos(ha)*Math.sin(phi)-Math.tan(dec)*Math.cos(phi))/rad+180);
+  return {altitude:alt,azimuth:az};
+ }
+ function moonPhase(t){return (((t-Date.UTC(2000,0,6,18,14))/(86400000*29.530588853))%1+1)%1}
+ function moonLitPath(k){
+  const R=21,C=24,n=50,left=[],right=[];
+  for(let i=0;i<=n;i++){
+   const y=-R+2*R*i/n,edge=Math.sqrt(Math.max(0,R*R-y*y));
+   if(k<=.5){left.push([C+(1-4*k)*edge,C+y]);right.push([C+edge,C+y]);}
+   else{left.push([C-edge,C+y]);right.push([C+(4*k-3)*edge,C+y]);}
+  }
+  const ps=[...right,...left.reverse()];
+  return 'M'+ps.map(([x,y])=>x.toFixed(2)+' '+y.toFixed(2)).join('L')+'Z';
+ }
+ const CLOUDS=[
+  'M4 70 C8 59 21 55 33 57 C34 43 44 34 56 36 C65 21 78 20 90 28 C99 16 116 22 121 34 C138 28 151 39 153 51 C165 50 177 60 178 70 C176 81 163 84 150 83 L29 82 C15 81 7 79 4 70Z',
+  'M6 70 C12 60 23 58 34 59 C35 48 46 43 56 46 C65 29 79 27 91 37 C101 32 113 36 119 45 C128 42 138 48 140 57 C156 52 169 59 172 70 C170 78 160 82 146 82 L30 81 C15 80 7 77 6 70Z',
+  'M7 72 C12 63 24 60 36 61 C37 53 47 47 59 48 C70 37 84 39 93 45 C105 38 120 44 125 55 C144 50 158 60 162 69 C165 80 150 84 137 83 L32 82 C19 82 10 78 7 72Z'
+ ];
+ function cloudSvg(index){
+  const id='ivy30cloudgrad'+index;
+  return `<svg viewBox="0 0 184 102" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2=".20" y2="1"><stop offset="0" stop-color="#e3f5ff" stop-opacity=".89"/><stop offset=".45" stop-color="#c5dff7" stop-opacity=".74"/><stop offset="1" stop-color="#648caf" stop-opacity=".24"/></linearGradient></defs><path d="${CLOUDS[index]}" fill="url(#${id})"/><path class="c-edge" d="M22 65 Q39 60 52 62 M82 42 Q102 36 117 51 M132 65 Q147 62 158 70" fill="none" stroke="#f1fcff" stroke-opacity=".24" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+ }
+ function skyCoordinates(pos){
+  // 2D southern-sky projection: east on the left, west on the right.
+  const a=pos.azimuth*rad,alt=pos.altitude;
+  return {x:Math.max(7,Math.min(93,50-43*Math.sin(a))),y:Math.max(10,Math.min(88,85-76*Math.sin(Math.min(90,Math.max(0,alt))*rad)))};
+ }
+ function init(){
+  const scene=$('ivy-weather-scene');if(!scene||scene.dataset.ivy30Ready)return;
+  scene.dataset.ivy30Ready='1';
+  const data=scene.querySelector('.ivy-weather-data');if(!data)return;
+  const bodies=document.createElement('div');bodies.className='ivy30-sky-body';bodies.setAttribute('aria-hidden','true');
+  const sun=document.createElement('div');sun.className='ivy30-orb ivy30-sun';sun.setAttribute('aria-hidden','true');
+  const moon=document.createElement('div');moon.className='ivy30-orb ivy30-moon';moon.setAttribute('aria-hidden','true');
+  moon.innerHTML='<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="ivy30moonlight" x1=".18" y1=".18" x2=".9" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset=".52" stop-color="#d5e8ff"/><stop offset="1" stop-color="#94b2e7"/></linearGradient></defs><path class="ivy30-lit" fill="url(#ivy30moonlight)"/></svg>';
+  bodies.append(sun,moon);scene.insertBefore(bodies,data);
+  const field=document.createElement('div');field.className='ivy30-cloud-field';field.setAttribute('aria-hidden','true');
+  CLOUDS.forEach((_,i)=>{const div=document.createElement('div');div.className='ivy30-cloud c'+(i+1);div.innerHTML=cloudSvg(i);field.append(div)});
+  scene.insertBefore(field,data);
+  function update(){
+   let cache=null;try{cache=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null')}catch(_){}
+   if(!cache||!Number.isFinite(Number(cache.latitude))||!Number.isFinite(Number(cache.longitude))){sun.style.opacity='0';moon.style.opacity='0';return}
+   const now=Date.now(),lat=Number(cache.latitude),lon=Number(cache.longitude);
+   const sunPos=window.ivyV27Weather?.solarPosition?.(lat,lon,now),moonPos=moonPosition(lat,lon,now);
+   const weather=scene.dataset.weather||'clear';
+   const cloudOcclusion={clear:1,partly:.90,cloudy:.27,rain:.13,showers:.13,drizzle:.36,snow:.24,sleet:.20,storm:.08,fog:.14}[weather]??.84;
+   function move(el,pos){if(!pos||pos.altitude<=0){el.style.opacity='0';return false}const c=skyCoordinates(pos);el.style.left=c.x+'%';el.style.top=c.y+'%';el.style.opacity=String(cloudOcclusion);return true}
+   move(sun,sunPos);
+   move(moon,moonPos);
+   const k=moonPhase(now);moon.querySelector('.ivy30-lit').setAttribute('d',moonLitPath(k));
+  }
+  update();setInterval(update,60*1000);
+  const old=window.ivyV27Weather?.renderSnapshot;
+  if(typeof old==='function')window.ivyV27Weather.renderSnapshot=function(...args){const r=old.apply(this,args);update();return r};
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()},{passive:true});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
 </body>
 </html>
