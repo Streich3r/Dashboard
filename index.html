@@ -2405,6 +2405,9 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 @media(max-width:600px){#ivy-update-popup{left:12px;right:12px;bottom:max(12px,calc(env(safe-area-inset-bottom) + 12px));max-width:none}}
 </style>
 
+<style id="ivy-weather-location-visibility-v32">
+body.ivy-hide-weather-location #weather-city-input { display: none !important; }
+</style>
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -2612,6 +2615,11 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
 <label class="text-white" for="setting-hide-add-dial">"Link hinzufügen"-Button ausblenden:</label>
 <input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-hide-add-dial" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Wetter</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-weather-location-visible">Standort-Suchfeld unter der Wetterkarte anzeigen</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-weather-location-visible" onchange="liveUpdateSettings()" type="checkbox" checked/>
 </div>
 <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Größen &amp; Layout</h4>
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
@@ -2895,6 +2903,7 @@ function readIvySearchControls(s){
             hideQuickDialBackgrounds: false,
             hideAddDialButton: false, 
             saveSearchEngineId: true, 
+            weatherLocationVisible: true,
             weatherModuleWidth: 'w-56',
             profileModuleSize: 'w-20 h-20',
             quickDialImageSize: 'w-10 h-10',
@@ -2906,6 +2915,7 @@ function readIvySearchControls(s){
         let currentSettings = {...defaultSettings};
 
         function applySettings(settings) {
+            document.body.classList.toggle('ivy-hide-weather-location', settings.weatherLocationVisible === false);
             const root = document.documentElement;
             root.style.setProperty('--primary-color', settings.primaryColor);
             root.style.setProperty('--secondary-color', settings.secondaryColor);
@@ -3078,6 +3088,7 @@ const accentIcons = [
                 document.getElementById('setting-manual-layout').checked = currentSettings.manualLayout; 
 
                 // --- Größen & Layout ---
+                document.getElementById('setting-weather-location-visible').checked = currentSettings.weatherLocationVisible !== false;
                 document.getElementById('setting-weather-width').value = currentSettings.weatherModuleWidth;
                 document.getElementById('setting-profile-size').value = currentSettings.profileModuleSize;
                 document.getElementById('setting-quickdial-size').value = currentSettings.quickDialImageSize;
@@ -3111,6 +3122,7 @@ const accentIcons = [
             currentSettings.saveSearchEngineId = document.getElementById('setting-save-search-engine-id').checked; 
             currentSettings.manualLayout = document.getElementById('setting-manual-layout').checked; 
             
+            currentSettings.weatherLocationVisible = document.getElementById('setting-weather-location-visible').checked;
             currentSettings.weatherModuleWidth = document.getElementById('setting-weather-width').value;
             currentSettings.profileModuleSize = document.getElementById('setting-profile-size').value;
             currentSettings.quickDialImageSize = document.getElementById('setting-quickdial-size').value;
@@ -3136,6 +3148,7 @@ const accentIcons = [
             currentSettings.hideAddDialButton = document.getElementById('setting-hide-add-dial').checked;
             currentSettings.saveSearchEngineId = document.getElementById('setting-save-search-engine-id').checked; 
             
+            currentSettings.weatherLocationVisible = document.getElementById('setting-weather-location-visible').checked;
             currentSettings.weatherModuleWidth = document.getElementById('setting-weather-width').value;
             currentSettings.profileModuleSize = document.getElementById('setting-profile-size').value;
             currentSettings.quickDialImageSize = document.getElementById('setting-quickdial-size').value;
