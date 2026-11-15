@@ -2129,6 +2129,108 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 #weather-card[data-ivy-compact="true"] .ivy-weather-stats{font-size:10px!important;margin-top:1px!important}
 #weather-card[data-ivy-compact="true"] .ivy-weather-city{font-size:11px!important}
 </style>
+<style id="ivy-sci-fi-weather-v28">
+/* IVY Sci-Fi Weather V28: weather-specific atmospheric animation without floating dots. */
+#ivy-weather-scene .ivy-weather-stars,
+#ivy-weather-scene .ivy-v23-particles,
+#ivy-weather-scene .ivy-weather-snow {
+ background-image:none!important;
+}
+#ivy-weather-scene .ivy-weather-stars,
+#ivy-weather-scene .ivy-v23-particles {display:none!important;animation:none!important;opacity:0!important}
+/* Two layers of soft drifting cloud silhouettes. Pseudo-parts shape the clouds, not particles. */
+#ivy-weather-scene .ivy-weather-cloud {
+ width:116px;height:33px;border-radius:45% 49% 38% 40% / 75% 75% 45% 45%;
+ background:linear-gradient(180deg,rgba(234,249,255,.76),rgba(174,208,237,.46))!important;
+ box-shadow:inset 0 4px 11px rgba(255,255,255,.20),0 10px 23px rgba(10,28,57,.16)!important;
+ filter:blur(2.2px)!important;top:55px;right:3%;
+ animation:ivy28CloudA var(--ivy-weather-wind-speed,12s) ease-in-out infinite alternate!important;
+ transform:translate3d(0,0,0);will-change:transform;
+}
+#ivy-weather-scene .ivy-weather-cloud::before {
+ content:"";position:absolute;left:19%;bottom:8px;width:48px;height:40px;
+ border-radius:52% 55% 35% 30%;background:inherit;
+}
+#ivy-weather-scene .ivy-weather-cloud::after {
+ content:"";position:absolute;left:48%;bottom:4px;width:47px;height:35px;
+ border-radius:55% 55% 40% 36%;background:inherit;
+}
+#ivy-weather-scene .ivy-weather-cloud.cloud-b {
+ top:93px;right:35%;width:94px;height:29px;opacity:.65;
+ animation:ivy28CloudB calc(var(--ivy-weather-wind-speed,12s) * 1.45) ease-in-out infinite alternate!important;
+}
+#ivy-weather-scene[data-weather="storm"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="rain"] .ivy-weather-cloud,
+#ivy-weather-scene[data-weather="showers"] .ivy-weather-cloud {
+ background:linear-gradient(180deg,rgba(159,181,217,.92),rgba(86,114,158,.68))!important;
+ filter:blur(2px)!important;
+}
+#ivy-weather-scene[data-weather="fog"] .ivy-weather-cloud{filter:blur(9px)!important}
+#ivy-weather-scene[data-weather="clear"] .ivy-weather-cloud{opacity:.12!important}
+@keyframes ivy28CloudA {0%{transform:translate3d(16px,1px,0)}100%{transform:translate3d(-27px,-4px,0)}}
+@keyframes ivy28CloudB {0%{transform:translate3d(-15px,1px,0) scale(.77)}100%{transform:translate3d(27px,6px,0) scale(.81)}}
+/* Rain = fine diagonal falling streaks, never white circles. */
+#ivy-weather-scene .ivy-weather-rain {
+ z-index:3!important;opacity:0!important;inset:-55% -10% 0!important;
+ background-image:repeating-linear-gradient(108deg,transparent 0 19px,rgba(148,225,255,.49) 20px 20.8px,transparent 22px 43px)!important;
+ background-size:123px 170px!important;
+ mask-image:repeating-linear-gradient(to bottom,transparent 0 5px,#000 7px 21px,transparent 26px 53px);
+ animation:ivy28Rain .72s linear infinite!important;will-change:transform;
+}
+#ivy-weather-scene[data-weather="drizzle"] .ivy-weather-rain{opacity:.25!important;animation-duration:1.65s!important}
+#ivy-weather-scene[data-weather="rain"] .ivy-weather-rain{opacity:.55!important;animation-duration:.85s!important}
+#ivy-weather-scene[data-weather="showers"] .ivy-weather-rain{opacity:.82!important;animation-duration:.48s!important}
+#ivy-weather-scene[data-weather="storm"] .ivy-weather-rain{opacity:.88!important;animation-duration:.42s!important}
+#ivy-weather-scene[data-weather="sleet"] .ivy-weather-rain{opacity:.33!important;animation-duration:.64s!important}
+@keyframes ivy28Rain {from{transform:translate3d(-22px,-35px,0)}to{transform:translate3d(6px,110px,0)}}
+/* Independent falling snowflake shapes; no dot textures. */
+#ivy-weather-scene .ivy-weather-snow {z-index:3!important;opacity:0!important;animation:none!important;overflow:hidden;pointer-events:none}
+#ivy-weather-scene[data-weather="snow"] .ivy-weather-snow{opacity:1!important}
+#ivy-weather-scene[data-weather="sleet"] .ivy-weather-snow{opacity:.5!important}
+#ivy-weather-scene .ivy28-flake{
+ position:absolute;left:var(--fx);top:-24px;display:block;line-height:1;
+ color:rgba(224,245,255,var(--fo));font-size:var(--fs);
+ text-shadow:0 0 8px rgba(143,219,255,.45);
+ animation:ivy28SnowFall var(--ft) linear var(--fd) infinite;
+ will-change:transform;user-select:none;
+}
+@keyframes ivy28SnowFall{
+ from{transform:translate3d(0,-25px,0) rotate(0deg)}
+ to{transform:translate3d(var(--drift),290px,0) rotate(125deg)}
+}
+/* The lightning is an angular bolt, never an expanding circular flash. */
+#ivy-weather-scene .ivy-weather-lightning{z-index:4!important;background:none!important;opacity:0!important;animation:none!important}
+#ivy-weather-scene .ivy28-bolt {
+ position:absolute;left:61%;top:5%;width:27%;height:72%;
+ filter:drop-shadow(0 0 7px rgba(155,223,255,.95));opacity:0;
+}
+#ivy-weather-scene[data-weather="storm"] .ivy28-bolt{animation:ivy28Bolt 6.8s infinite!important}
+#ivy-weather-scene[data-weather="storm"] .ivy-weather-lightning{animation:ivy28Flash 6.8s infinite!important}
+@keyframes ivy28Bolt{0%,81%,83%,85%,87%,100%{opacity:0}81.5%,82.5%,85.5%{opacity:1}}
+@keyframes ivy28Flash{0%,81%,83%,85%,87%,100%{opacity:0;box-shadow:none}81.5%,82.5%,85.5%{opacity:1;box-shadow:inset 0 0 64px rgba(178,211,255,.21)}}
+/* Fine elongated wind sweeps and drifting translucent fog. */
+#ivy-weather-scene .ivy-v27-wind {
+ background:repeating-linear-gradient(175deg,transparent 0 26px,rgba(140,226,255,.25) 27px,transparent 29px 60px)!important;
+ opacity:0!important;animation:ivy28Wind 2.8s linear infinite!important;
+ mask-image:linear-gradient(90deg,transparent 5%,#000 26%,#000 73%,transparent 98%)!important;
+}
+#ivy-weather-scene[data-windy="true"] .ivy-v27-wind,
+#ivy-weather-scene[data-weather="wind"] .ivy-v27-wind {opacity:.65!important}
+@keyframes ivy28Wind {to{transform:translateX(36px)}}
+#ivy-weather-scene[data-weather="fog"] .ivy-weather-haze {
+ background:linear-gradient(to top,rgba(202,231,246,.38),rgba(179,218,244,.08) 65%,transparent)!important;
+ animation:ivy28Fog 13s ease-in-out infinite alternate!important;
+}
+@keyframes ivy28Fog {from{transform:translateX(-9%);opacity:.46}to{transform:translateX(9%);opacity:.9}}
+/* Lightweight on mobile and accessibility: halt motion if requested. */
+@media(prefers-reduced-motion:reduce){
+ #ivy-weather-scene .ivy-weather-cloud,#ivy-weather-scene .ivy-weather-rain,
+ #ivy-weather-scene .ivy28-flake,#ivy-weather-scene .ivy28-bolt,
+ #ivy-weather-scene .ivy-weather-lightning,#ivy-weather-scene .ivy-v27-wind,
+ #ivy-weather-scene .ivy-weather-haze{animation:none!important}
+ #ivy-weather-scene .ivy28-flake{transform:translateY(95px)}
+}
+</style>
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -5090,6 +5192,39 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 
+</script>
+<script id="ivy-sci-fi-weather-v28-script">
+(() => {
+ function setup(){
+   const scene=document.getElementById('ivy-weather-scene');
+   if(!scene||scene.dataset.ivy28Ready)return;
+   scene.dataset.ivy28Ready='true';
+   let snow=scene.querySelector('.ivy-weather-snow');
+   if(!snow){snow=document.createElement('div');snow.className='ivy-weather-snow';snow.setAttribute('aria-hidden','true');scene.insertBefore(snow,scene.querySelector('.ivy-weather-data'));}
+   // Fixed varied positions make the weather look natural without frequent DOM work.
+   for(let i=0;i<19;i++){
+     const flake=document.createElement('span');flake.className='ivy28-flake';flake.textContent=i%3===0?'✳':'❄';
+     flake.style.setProperty('--fx',(((i*47+13)%97)+1)+'%');
+     flake.style.setProperty('--fs',(i%4===0?11:i%3===0?8:6)+'px');
+     flake.style.setProperty('--fo',(0.40+(i%5)*.12).toFixed(2));
+     flake.style.setProperty('--ft',(6+(i%6)*.83).toFixed(2)+'s');
+     flake.style.setProperty('--fd',(-((i*23)%78)/10).toFixed(1)+'s');
+     flake.style.setProperty('--drift',((i%2?-1:1)*(12+i%5*7))+'px');
+     flake.setAttribute('aria-hidden','true');snow.appendChild(flake);
+   }
+   let lightning=scene.querySelector('.ivy-weather-lightning');
+   if(!lightning){lightning=document.createElement('div');lightning.className='ivy-weather-lightning';lightning.setAttribute('aria-hidden','true');scene.insertBefore(lightning,scene.querySelector('.ivy-weather-data'));}
+   if(!lightning.querySelector('.ivy28-bolt')){
+     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+     svg.setAttribute('class','ivy28-bolt');svg.setAttribute('viewBox','0 0 100 160');svg.setAttribute('aria-hidden','true');
+     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+     path.setAttribute('d','M64 2 L28 67 L51 66 L20 150 L88 53 L60 57 L82 5 Z');
+     path.setAttribute('fill','#e2f8ff');path.setAttribute('stroke','#8bd9ff');path.setAttribute('stroke-width','1.2');
+     svg.appendChild(path);lightning.appendChild(svg);
+   }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+})();
 </script>
 </body>
 </html>
