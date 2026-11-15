@@ -81,3 +81,26 @@ self.addEventListener('fetch', event => {
     }
   })());
 });
+
+
+/* IVY update notification – compare the cached home document with the live one.
+   Works on GitHub Pages without manually bumping CACHE_NAME on each HTML edit.
+   A check does not replace the user's current running page or offline cache. */
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'IVY_DASHBOARD_CHECK_UPDATE') return;
+  event.waitUntil((async () => {
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(indexURL);
+      if (!cached) return;
+      const response = await fetch(indexURL, { cache: 'no-store' });
+      if (!response.ok || response.type !== 'basic') return;
+      const [before, after] = await Promise.all([cached.text(), response.text()]);
+      if (before === after) return;
+      const clients = await self.clients.matchAll({type:'window',includeUncontrolled:false});
+      for (const client of clients) client.postMessage({type:'IVY_DASHBOARD_UPDATE_AVAILABLE'});
+    } catch (error) {
+      // Offline/unreachable origin: no false update alert.
+    }
+  })());
+});

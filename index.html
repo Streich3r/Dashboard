@@ -2391,6 +2391,20 @@ body.ivy-search-icons-gray #search-engine-button .ivy-selected-fallback {
 }
 </style>
 
+
+<style id="ivy-update-ui-v1">
+#ivy-update-popup[hidden]{display:none!important}
+#ivy-update-popup{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,calc(env(safe-area-inset-bottom) + 16px));z-index:2147483000;max-width:min(370px,calc(100vw - 32px));box-sizing:border-box;padding:15px 17px 14px;border-radius:16px;color:#effaff;background:linear-gradient(135deg,rgba(12,25,49,.97),rgba(21,25,56,.98));border:1px solid rgba(85,216,255,.5);box-shadow:0 14px 45px rgba(0,0,0,.45),0 0 28px rgba(0,190,255,.11);font:inherit;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+#ivy-update-popup .ivy-update-heading{font-weight:750;font-size:14px;color:#d9faff;margin:0 0 6px}
+#ivy-update-popup .ivy-update-description{font-size:12px;line-height:1.5;color:#c9daed;margin:0 0 13px}
+#ivy-update-popup .ivy-update-actions{display:flex;gap:8px;flex-wrap:wrap}
+#ivy-update-popup button{border-radius:9px;border:1px solid rgba(111,204,234,.35);cursor:pointer;padding:8px 13px;font-size:12px;font-weight:650;min-height:35px}
+#ivy-update-apply{background:linear-gradient(105deg,#2ac9e4,#8b77f5);color:#071326!important}
+#ivy-update-later{background:rgba(130,170,210,.1);color:#d9eafa}
+#ivy-update-popup button:focus-visible{outline:2px solid white;outline-offset:2px}
+@media(max-width:600px){#ivy-update-popup{left:12px;right:12px;bottom:max(12px,calc(env(safe-area-inset-bottom) + 12px));max-width:none}}
+</style>
+
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -5386,5 +5400,59 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
 })();
 </script>
+
+<!-- IVY Update Monitor: works with the existing sw.js and checks for new index.html content. -->
+<div id="ivy-update-popup" role="status" aria-live="polite" hidden>
+  <p class="ivy-update-heading">✦ IVY Dashboard · Update verfügbar</p>
+  <p class="ivy-update-description">Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?</p>
+  <div class="ivy-update-actions">
+    <button id="ivy-update-apply" type="button">Jetzt aktualisieren</button>
+    <button id="ivy-update-later" type="button">Später</button>
+  </div>
+</div>
+<script id="ivy-update-monitor-v1">
+(() => {
+  'use strict';
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
+  const popup = document.getElementById('ivy-update-popup');
+  if (!popup) return;
+  let dismissed = false;
+  let busy = false;
+  let controllerReady = !!navigator.serviceWorker.controller;
+  const show = () => { if (!dismissed && !busy) popup.hidden = false; };
+  document.getElementById('ivy-update-later')?.addEventListener('click', () => {
+    dismissed = true; popup.hidden = true;
+  });
+  document.getElementById('ivy-update-apply')?.addEventListener('click', () => {
+    if (busy) return;
+    busy = true;
+    popup.querySelector('.ivy-update-description').textContent = 'Die neue Version wird geladen …';
+    // Existing user settings and data in localStorage/IndexedDB are preserved.
+    location.reload();
+  });
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'IVY_DASHBOARD_UPDATE_AVAILABLE') show();
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (controllerReady) show(); // A replaced SW can also mean an update.
+    controllerReady = true;
+  });
+  const check = async () => {
+    if (dismissed || busy || !navigator.onLine || document.hidden) return;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration('./');
+      if (reg) {
+        reg.update().catch(() => {});
+        const worker = navigator.serviceWorker.controller || reg.active;
+        worker?.postMessage({type:'IVY_DASHBOARD_CHECK_UPDATE'});
+      }
+    } catch (error) {console.debug('IVY Updateprüfung:',error)}
+  };
+  window.addEventListener('load', () => {setTimeout(check, 2500);setInterval(check, 5*60*1000);});
+  window.addEventListener('online', check);
+  document.addEventListener('visibilitychange', () => {if(!document.hidden) check();});
+})();
+</script>
+
 </body>
 </html>
