@@ -2,11 +2,13 @@
 
 <html lang="de">
 <head>
+<!-- Keep the previous animated-weather layers hidden while the new WebGL scene loads. -->
+<script id="ivy-v35-first-paint">document.documentElement.classList.add('ivy-natural-boot');setTimeout(()=>document.documentElement.classList.remove('ivy-natural-boot'),8000);</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="34">
-<!-- IVY V34: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
+<meta name="ivy-build" content="35">
+<!-- IVY V35: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 <style>
 
 
@@ -2367,6 +2369,13 @@ body.ivy-hide-weather-location #weather-city-input { display: none !important; }
 }
 </style>
 <style id="ivy-v34-tailwind-static">*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.bottom-8{bottom:2rem}.left-0{left:0px}.left-2{left:0.5rem}.left-8{left:2rem}.right-1{right:0.25rem}.right-12{right:3rem}.right-2{right:0.5rem}.right-24{right:6rem}.right-8{right:2rem}.top-1{top:0.25rem}.top-1\/2{top:50%}.top-8{top:2rem}.top-\[calc\(100\%\+14px\)\]{top:calc(100% + 14px)}.z-20{z-index:20}.z-50{z-index:50}.z-\[100\]{z-index:100}.z-\[101\]{z-index:101}.mx-4{margin-left:1rem;margin-right:1rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mr-3{margin-right:0.75rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-6{margin-top:1.5rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-10{height:2.5rem}.h-12{height:3rem}.h-2{height:0.5rem}.h-20{height:5rem}.h-3{height:0.75rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-8{height:2rem}.h-full{height:100%}.w-10{width:2.5rem}.w-12{width:3rem}.w-20{width:5rem}.w-24{width:6rem}.w-3{width:0.75rem}.w-5{width:1.25rem}.w-56{width:14rem}.w-6{width:1.5rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-5xl{max-width:64rem}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.appearance-none{-webkit-appearance:none;appearance:none}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-6{gap:1.5rem}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-8 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}.overflow-y-auto{overflow-y:auto}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-4{border-width:4px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-none{border-style:none}.border-black\/5{border-color:rgb(0 0 0 / 0.05)}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.border-gray-700{--tw-border-opacity:1;border-color:rgb(55 65 81 / var(--tw-border-opacity, 1))}.border-indigo-500\/80{border-color:rgb(99 102 241 / 0.8)}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-black\/10{background-color:rgb(0 0 0 / 0.1)}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-300{--tw-bg-opacity:1;background-color:rgb(209 213 219 / var(--tw-bg-opacity, 1))}.bg-gray-600{--tw-bg-opacity:1;background-color:rgb(75 85 99 / var(--tw-bg-opacity, 1))}.bg-gray-700{--tw-bg-opacity:1;background-color:rgb(55 65 81 / var(--tw-bg-opacity, 1))}.bg-gray-700\/50{background-color:rgb(55 65 81 / 0.5)}.bg-gray-800{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.bg-gray-900\/50{background-color:rgb(17 24 39 / 0.5)}.bg-indigo-600{--tw-bg-opacity:1;background-color:rgb(79 70 229 / var(--tw-bg-opacity, 1))}.bg-transparent{background-color:transparent}.bg-opacity-70{--tw-bg-opacity:0.7}.object-contain{object-fit:contain}.object-cover{object-fit:cover}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-1{padding-bottom:0.25rem}.pb-10{padding-bottom:2.5rem}.pb-2{padding-bottom:0.5rem}.pb-8{padding-bottom:2rem}.pt-1{padding-top:0.25rem}.pt-32{padding-top:8rem}.pt-4{padding-top:1rem}.pt-8{padding-top:2rem}.text-center{text-align:center}.text-right{text-align:right}.text-2xl{font-size:1.5rem;line-height:2rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.tracking-wider{letter-spacing:0.05em}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.text-indigo-400{--tw-text-opacity:1;color:rgb(129 140 248 / var(--tw-text-opacity, 1))}.text-indigo-600{--tw-text-opacity:1;color:rgb(79 70 229 / var(--tw-text-opacity, 1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-white\/50{color:rgb(255 255 255 / 0.5)}.text-white\/60{color:rgb(255 255 255 / 0.6)}.accent-gray-800{accent-color:#1f2937}.accent-orange-600{accent-color:#ea580c}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-150{transition-duration:150ms}.duration-200{transition-duration:200ms}.duration-300{transition-duration:300ms}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-gray-500:hover{--tw-bg-opacity:1;background-color:rgb(107 114 128 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-700\/50:hover{background-color:rgb(55 65 81 / 0.5)}.hover\:bg-indigo-600\/70:hover{background-color:rgb(79 70 229 / 0.7)}.hover\:bg-indigo-700:hover{--tw-bg-opacity:1;background-color:rgb(67 56 202 / var(--tw-bg-opacity, 1))}.hover\:bg-red-600\/70:hover{background-color:rgb(220 38 38 / 0.7)}.hover\:text-red-300:hover{--tw-text-opacity:1;color:rgb(252 165 165 / var(--tw-text-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-1:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-indigo-400:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(129 140 248 / var(--tw-ring-opacity, 1))}.focus\:ring-indigo-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(99 102 241 / var(--tw-ring-opacity, 1))}.group:hover .group-hover\:opacity-100{opacity:1}@media (min-width: 640px){.sm\:inline{display:inline}.sm\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}@media (min-width: 768px){.md\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width: 1024px){.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.lg\:items-center{align-items:center}}</style>
+<style id="ivy-v35-first-paint-style">
+/* Initial scene is a neutral gradient, not the previous version's animations. */
+html.ivy-natural-boot #ivy-weather-scene>:not(.ivy-natural-canvas):not(.ivy-weather-data):not(#ivy-v23-weather-link),
+#ivy-weather-scene[data-ivy-natural="starting"]>:not(.ivy-natural-canvas):not(.ivy-weather-data):not(#ivy-v23-weather-link){visibility:hidden!important;animation:none!important}
+#ivy-weather-scene>.ivy-natural-canvas{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;z-index:0!important;pointer-events:none!important;opacity:0}
+#ivy-weather-scene.ivy-natural-active>.ivy-natural-canvas{opacity:1}
+</style>
 </head>
 <body class="ivy-booting" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -5386,55 +5395,77 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <button id="ivy-update-later" type="button">Später</button>
   </div>
 </div>
-<script id="ivy-update-monitor-v2">
-(() => {
-  'use strict';
-  if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
-  const popup=document.getElementById('ivy-update-popup');
-  if (!popup) return;
-  const APPLIED_KEY='ivy.dashboard.update.appliedHash.v2';
-  if(new URL(location.href).searchParams.has('ivy_refresh')){const clean=new URL(location.href);clean.searchParams.delete('ivy_refresh');history.replaceState(history.state,'',clean.href);}
-  let dismissed=false, busy=false, pendingHash=null, checking=false;
-  const later=document.getElementById('ivy-update-later');
-  const apply=document.getElementById('ivy-update-apply');
-  const description=popup.querySelector('.ivy-update-description');
-  function show(hash){
-    if (!hash || hash===localStorage.getItem(APPLIED_KEY) || dismissed || busy) return;
-    pendingHash=hash;
-    popup.hidden=false;
-  }
-  later?.addEventListener('click',()=>{dismissed=true;popup.hidden=true;});
-  apply?.addEventListener('click',()=>{
-    if(busy || !pendingHash) return;
-    busy=true;popup.hidden=true;
-    // Only suppress this exact remote document. Future HTML updates get a new hash.
-    localStorage.setItem(APPLIED_KEY,pendingHash);
-    description.textContent='Neue Version wird geladen …';
-    // The unique URL also avoids browser HTTP cache and intermediary stale documents.
-    const url=new URL(location.href);
-    url.searchParams.set('ivy_refresh',String(Date.now()));
-    location.replace(url.href);
-  });
-  navigator.serviceWorker.addEventListener('message',event=>{
-    if(event.data?.type==='IVY_DASHBOARD_UPDATE_AVAILABLE' && typeof event.data.hash==='string') show(event.data.hash);
-  });
-  // A service worker can update independently of the HTML: never show a false alert here.
-  const check=async()=>{
-    if(checking || busy || dismissed || !navigator.onLine || document.hidden) return;
-    checking=true;
-    try{
-      const reg=await navigator.serviceWorker.getRegistration('./');
-      if(reg){
-        await reg.update().catch(()=>{});
-        const worker=navigator.serviceWorker.controller||reg.active;
-        worker?.postMessage({type:'IVY_DASHBOARD_CHECK_UPDATE',clientBuild:'34'});
-      }
-    }catch(err){console.debug('IVY Updateprüfung:',err)}
-    finally{checking=false;}
-  };
-  window.addEventListener('load',()=>{setTimeout(check,10000);setInterval(check,15*60*1000);});
-  window.addEventListener('online',check);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check();});
+<script id="ivy-update-monitor-v35">
+(()=>{
+ 'use strict';
+ if(!/^https?:$/.test(location.protocol))return;
+ const popup=document.getElementById('ivy-update-popup');if(!popup)return;
+ // Built during packaging from index.html with the 64-char signature replaced by zeroes.
+ // Each later HTML change can be detected even if sw.js or the build label is not changed.
+ const CLIENT_SIGNATURE='dacc443e52b8f500c34443bae852b377d107bae5dad4dcb1df17e5861c9f56db';
+ const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
+ const later=document.getElementById('ivy-update-later');
+ const apply=document.getElementById('ivy-update-apply');
+ const description=popup.querySelector('.ivy-update-description');
+ const INITIAL_DESCRIPTION=description.textContent;
+ let busy=false,checking=false,availableHash='',dismissedHash='',lastCheck=0;
+ const here=new URL(location.href);
+ if(here.searchParams.has('ivy_refresh')){
+   here.searchParams.delete('ivy_refresh');
+   history.replaceState(history.state,'',here.href);
+ }
+ const pendingKey='ivy.dashboard.pendingUpdate.v35';
+ try{if(sessionStorage.getItem(pendingKey)===CLIENT_SIGNATURE)sessionStorage.removeItem(pendingKey)}catch(_){}
+ function show(hash,remoteBuild){
+   if(!hash||hash===CLIENT_SIGNATURE||hash===dismissedHash||busy)return;
+   availableHash=hash;
+   description.textContent=remoteBuild&&remoteBuild!==CURRENT_BUILD
+     ?'Version '+remoteBuild+' ist verfügbar. Jetzt neu laden, um sie zu übernehmen?'
+     :INITIAL_DESCRIPTION;
+   popup.hidden=false;
+ }
+ later?.addEventListener('click',()=>{dismissedHash=availableHash;popup.hidden=true});
+ apply?.addEventListener('click',()=>{
+   if(busy||!availableHash)return;
+   busy=true;popup.hidden=true;
+   // Do not permanently mark a version as applied before the new HTML actually loads.
+   try{sessionStorage.setItem(pendingKey,availableHash)}catch(_){}
+   const url=new URL(location.href);
+   url.searchParams.set('ivy_refresh',String(Date.now()));
+   location.replace(url.href);
+ });
+ async function hashHTML(html){
+   // Replace only the embedded signature; the hash is otherwise over the full server HTML.
+   const normalized=html.replace(/const CLIENT_SIGNATURE='[a-f0-9]{64}';/,
+      "const CLIENT_SIGNATURE='"+'0'.repeat(64)+"';");
+   const data=new TextEncoder().encode(normalized);
+   const digest=await crypto.subtle.digest('SHA-256',data);
+   return Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
+ }
+ async function check(force=false){
+   if(checking||busy||document.hidden||!navigator.onLine)return;
+   if(!force&&Date.now()-lastCheck<60000)return;
+   checking=true;
+   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),12000);
+   try{
+     // Unique query bypasses the V33/V34 service-worker shell cache AND browser/CDN cache.
+     const url=new URL('./index.html',location.href);
+     url.searchParams.set('ivy_update_probe',String(Date.now()));
+     const response=await fetch(url.href,{cache:'no-store',signal:abort.signal});
+     if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return;
+     const html=await response.text();
+     const remoteHash=await hashHTML(html);
+     const remoteBuild=html.match(/<meta name="ivy-build" content="([^"]+)"\s*\/?\s*>/)?.[1]||'';
+     if(remoteHash===CLIENT_SIGNATURE){popup.hidden=true;availableHash='';return;}
+     show(remoteHash,remoteBuild);
+   }catch(err){if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
+   finally{clearTimeout(timer);lastCheck=Date.now();checking=false;}
+ }
+ window.addEventListener('load',()=>{setTimeout(()=>check(true),2500);setInterval(()=>check(false),5*60*1000);});
+ window.addEventListener('online',()=>check(true));
+ window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
+ window.ivyUpdateMonitor={check:()=>check(true),version:35};
 })();
 </script>
 
@@ -5549,13 +5580,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-<script id="ivy-natural-weather-v34">
+<script id="ivy-natural-weather-v35">
 (()=>{'use strict';
 function init(){
-const root=document.getElementById('ivy-weather-scene');if(!root||root.querySelector('.ivy-natural-canvas'))return;
+const root=document.getElementById('ivy-weather-scene');if(!root||root.querySelector('.ivy-natural-canvas'))return;root.dataset.ivyNatural='starting';
 const canvas=document.createElement('canvas');canvas.className='ivy-natural-canvas';canvas.setAttribute('aria-hidden','true');root.prepend(canvas);
 const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:'default'});
-if(!gl){canvas.remove();root.dataset.ivyNatural='fallback';return;}
+if(!gl){canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');return;}
 const vertexSource='attribute vec2 position;void main(){gl_Position=vec4(position,0.,1.);}';
 const geometrySource=`precision highp float;
 uniform vec2 resolution;
@@ -5737,7 +5768,7 @@ try{
  geometry=program(geometrySource,['resolution']);
  scene=program(sceneSource,['geometryTex','resolution','sunPosition','skyWeights','clock','cloud','wind','rain','fog','snow','freeze','storm','flash','wetGround','drift']);
  glass=program(glassSource,['sceneTex','precipTex','resolution','drops[0]','freezeGlass','exposure','glassWet']);
-}catch(e){canvas.remove();root.dataset.ivyNatural='fallback';console.warn('IVY weather renderer unavailable',e);return;}
+}catch(e){canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');console.warn('IVY weather renderer unavailable',e);return;}
 const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
 function texture(filter){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
 function renderTarget(filter){const tex=texture(filter),fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);return {tex,fbo};}
@@ -5852,7 +5883,7 @@ function drawWeather(){
 
 let width=0,height=0,last=performance.now(),lastScene=-100,sceneBudget=0,stopped=false,lastDraw=0;
 const maxFPS=paused?6:(matchMedia('(pointer:coarse)').matches?24:30);
-root.classList.add('ivy-natural-active');root.dataset.ivyNatural='webgl';
+root.dataset.ivyNatural='starting';let firstFrameDone=false;
 
 function resize(){const scale=Math.min(matchMedia('(pointer:coarse)').matches?1.1:1.2,devicePixelRatio||1);const w=Math.max(2,Math.min(matchMedia('(pointer:coarse)').matches?520:640,Math.round(canvas.clientWidth*scale))),h=Math.max(2,Math.round(w*canvas.clientHeight/Math.max(1,canvas.clientWidth)));if(w===width&&h===height)return false;width=w;height=h;canvas.width=w;canvas.height=h;weatherCanvas.width=w;weatherCanvas.height=h;weatherTextureReady=false;overlayWasActive=true;
  for(const t of [geometryTarget,sceneTarget]){gl.bindTexture(gl.TEXTURE_2D,t.tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);}
@@ -5875,18 +5906,19 @@ function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!in
  frost=approach(frost,(current.freeze*.65+current.snow*.28)*(+q('glass').value/100),realDt,8);
  sceneBudget+=dt;const resized=resize();updateParticles(dt,liquid);updateDrops(dt,liquid);updateLightning(dt);
  const overlayChanged=drawWeather();if(resized||sceneBudget+1e-6>=1/30||progress<1||flash>.01||paused){scenePass();lastScene=clock;sceneBudget%=1/30;}finalPass(overlayChanged);
+ if(!firstFrameDone){firstFrameDone=true;root.classList.add('ivy-natural-active');root.dataset.ivyNatural='webgl';document.documentElement.classList.remove('ivy-natural-boot');}
  requestAnimationFrame(frame);}
-canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();stopped=true;root.classList.remove('ivy-natural-active');canvas.remove();root.dataset.ivyNatural='fallback';});
+canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();stopped=true;root.classList.remove('ivy-natural-active');canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');});
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(!document.hidden&&latest)applySnapshot(latest);});
 if(typeof IntersectionObserver==='function')new IntersectionObserver(entries=>{intersecting=entries[0]?.isIntersecting!==false;},{threshold:0}).observe(root);
 window.addEventListener('ivy-weather-snapshot',event=>applySnapshot(event.detail));
 setInterval(()=>{if(latest&&!document.hidden)applySnapshot(latest);},60000);
 try{applySnapshot(JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null'));}catch(_){}
-window.ivyNaturalWeather={version:34,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,current:{...current},target:{...target},transition:progress})};
+window.ivyNaturalWeather={version:35,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,current:{...current},target:{...target},transition:progress})};
 requestAnimationFrame(frame);
 
 }
-function startDeferred(){if('requestIdleCallback' in window)requestIdleCallback(init,{timeout:1200});else setTimeout(init,350);}
+function startDeferred(){requestAnimationFrame(()=>setTimeout(init,0));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startDeferred,{once:true});else startDeferred();
 })();
 </script>
