@@ -7,7 +7,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="36">
+<meta name="ivy-build" content="37">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 <style>
 
@@ -2893,6 +2893,7 @@ function readIvySearchControls(s){
             root.style.setProperty('--bg-color-hex', settings.bgColor);
             root.style.setProperty('--bg-color-rgb', hexToRgb(settings.bgColor));
             root.style.setProperty('--bg-opacity', settings.bgOpacity);
+            root.classList.toggle('ivy-no-dynamic-borders', !!settings.hideBorders);
             root.style.setProperty('--border-width', settings.hideBorders ? '0px' : '1px');
             root.style.setProperty('--compensation-padding', settings.hideBorders ? '1px' : '0px');
             const primaryColor = settings.primaryColor; 
@@ -5413,14 +5414,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <button id="ivy-update-later" type="button">Später</button>
   </div>
 </div>
-<script id="ivy-update-monitor-v36">
+<script id="ivy-update-monitor-v37">
 (()=>{
  'use strict';
  if(!/^https?:$/.test(location.protocol))return;
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='48ec6ec2be3a73e7e483503e98162f0db090d69f560a0bc03525d8680878c7f3';
+ const CLIENT_SIGNATURE='a0618b34e56d7b4d42f48a8ef07470f7fd95e5153ee20054aaed0d081c3027fa';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -5541,8 +5542,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    }
  }
  apply?.addEventListener('click',applyUpdate);
- async function check(force=false){
-   if(checking||busy||document.hidden||!navigator.onLine)return;
+ function status(message){const target=document.getElementById('ivy-v37-update-status');if(target)target.textContent=message;}
+ async function check(force=false,manual=false){
+   if(manual){dismissedHash='';status('Suche nach Updates …');}
+   if(checking||busy){if(manual)status('Eine Prüfung läuft bereits.');return;}
+   if(document.hidden){if(manual)status('Bitte das Dashboard im Vordergrund öffnen.');return;}
+   if(!navigator.onLine){if(manual)status('Offline – die gespeicherte Version bleibt nutzbar.');return;}
    if(!force&&Date.now()-lastCheck<60000)return;
    checking=true;
    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),12000);
@@ -5552,13 +5557,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
      const url=new URL('./index.html',location.href);
      url.searchParams.set('ivy_update_probe',String(Date.now()));
      const response=await fetch(url.href,{cache:'no-store',signal:abort.signal});
-     if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return;
+     if(!response.ok||!response.headers.get('content-type')?.includes('text/html')){if(manual)status('Updateprüfung fehlgeschlagen (Serverantwort).');return;}
      const html=await response.text();
      const remoteHash=await hashHTML(html);
      const remoteBuild=html.match(/<meta name="ivy-build" content="([^"]+)"\s*\/?>/)?.[1]||'';
-     if(remoteHash===CLIENT_SIGNATURE){popup.hidden=true;availableHash='';return;}
-     show(remoteHash,remoteBuild);
-   }catch(err){if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
+     if(remoteHash===CLIENT_SIGNATURE){popup.hidden=true;availableHash='';if(manual)status('Alles aktuell – Version V37 ist installiert.');return;}
+     show(remoteHash,remoteBuild);if(manual)status('Neue Version gefunden – im Popup installieren.');
+   }catch(err){if(manual)status('Keine Verbindung zum Updateserver – offline weiter nutzbar.');if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
    finally{clearTimeout(timer);lastCheck=Date.now();checking=false}
  }
  window.addEventListener('load',()=>{
@@ -5570,7 +5575,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),version:36};
+ window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:37};
 })();
 </script>
 
@@ -5685,12 +5690,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-<script id="ivy-natural-weather-v36">
+<script id="ivy-natural-weather-v37">
 (()=>{'use strict';
 function init(){
 const root=document.getElementById('ivy-weather-scene');if(!root||root.querySelector('.ivy-natural-canvas'))return;root.dataset.ivyNatural='starting';
 const canvas=document.createElement('canvas');canvas.className='ivy-natural-canvas';canvas.setAttribute('aria-hidden','true');root.prepend(canvas);
-const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:'default'});
+const mobileGpu=matchMedia('(pointer:coarse)').matches||Math.min(innerWidth,screen.width||innerWidth)<=600;
+const gl=canvas.getContext('webgl',{alpha:false,antialias:false,powerPreference:mobileGpu?'low-power':'default',preserveDrawingBuffer:false});
 if(!gl){canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');return;}
 const vertexSource='attribute vec2 position;void main(){gl_Position=vec4(position,0.,1.);}';
 const geometrySource=`precision highp float;
@@ -5737,12 +5743,12 @@ void main(){
 vec2 uv=gl_FragCoord.xy/resolution,xy=(gl_FragCoord.xy-.5*resolution)/resolution.y;
 vec3 ray=normalize(vec3(xy.x,xy.y+.10,1.15));
 float day=skyWeights.x,twilight=skyWeights.y,night=skyWeights.z;
-vec3 top=vec3(.16,.37,.64)*day+vec3(.14,.185,.32)*twilight+vec3(.077,.138,.245)*night;
-vec3 horizon=vec3(.74,.81,.84)*day+vec3(.95,.59,.39)*twilight+vec3(.19,.265,.36)*night;
-vec3 overcast=vec3(.49,.54,.58)*day+vec3(.36,.32,.34)*twilight+vec3(.125,.17,.24)*night;
+vec3 top=vec3(.16,.37,.64)*day+vec3(.14,.185,.32)*twilight+vec3(.17,.26,.42)*night;
+vec3 horizon=vec3(.74,.81,.84)*day+vec3(.95,.59,.39)*twilight+vec3(.37,.46,.60)*night;
+vec3 overcast=vec3(.49,.54,.58)*day+vec3(.36,.32,.34)*twilight+vec3(.23,.30,.40)*night;
 float heavy=cloud*cloud*(.45+storm*.18);
 top=mix(top,overcast*.63,heavy);horizon=mix(horizon,overcast,heavy*.7);
-vec3 atmosphere=mix(horizon,top,.1),sunColor=vec3(1.,.94,.78)*day+vec3(1.,.66,.39)*twilight+vec3(.50,.64,.83)*night;
+vec3 atmosphere=mix(horizon,top,.1),sunColor=vec3(1.,.94,.78)*day+vec3(1.,.66,.39)*twilight+vec3(.61,.72,.87)*night;
 vec3 sunDir=normalize(vec3(sunPosition,1.));
 vec4 geom=texture2D(geometryTex,uv);float distance=dot(geom.rg,vec2(1.,1./255.))*160.;
 vec3 col=sky(ray,top,horizon);
@@ -5765,7 +5771,7 @@ if(night>.002&&ray.y>.04){
  float visible=smoothstep(.08,.20,y)*(1.-smoothstep(.79,.97,y))*night*(1.-cloud*.80)*(1.-storm*.35);
  vec3 mint=vec3(.09,.76,.55),violet=vec3(.32,.33,.77);
  vec3 aurora=mix(mint,violet,smoothstep(-.9,.95,x+sin(clock*.025)*.6));
- col+=(aurora*(bandA*.35+bandB*.21)*fold+vec3(.045,.20,.23)*veil)*visible;
+ col+=(aurora*(bandA*.52+bandB*.29)*fold+vec3(.07,.27,.29)*veil)*visible;
 }
 if(distance>155.){
  if(ray.y>.02){
@@ -5774,7 +5780,7 @@ if(distance>155.){
    for(int i=0;i<64;i++){
     float t=start+(float(i)+jitter)*stepSize;vec3 p=vec3(0.,.7,0.)+ray*t;float d=density(p);
     if(d>.005){float shade=density(p+sunDir*.65);float forward=pow(max(0.,dot(ray,sunDir)),8.);
-     vec3 amb=vec3(.42,.49,.56)*day+vec3(.30,.29,.35)*twilight+vec3(.16,.205,.28)*night;
+     vec3 amb=vec3(.42,.49,.56)*day+vec3(.30,.29,.35)*twilight+vec3(.29,.37,.49)*night;
      vec3 lit=amb+sunColor*exp(-shade*3.8)*(.48+forward*.25)*(day+twilight*.8+night*.26);
      lit=mix(lit,atmosphere,1.-exp(-t*.016));lit+=vec3(.76,.84,1.)*flash*.5;
      float a=1.-exp(-d*stepSize*2.);
@@ -5802,9 +5808,10 @@ if(distance>155.){
  float diffuse=max(0.,dot(normal,litDirection));
  float occlusion=.75+.25*normal.y;
  float cloudShade=mix(1.,.52,smoothstep(.39,.68,fbm(vec3(pos.x*.055+drift*.20,1.,pos.z*.055)))*cloud);
- vec3 ambient=vec3(.47,.55,.61)*day+vec3(.35,.34,.42)*twilight+vec3(.21,.265,.34)*night;
+ vec3 ambient=vec3(.47,.55,.61)*day+vec3(.35,.34,.42)*twilight+vec3(.43,.49,.58)*night;
  vec3 direct=sunColor*(.78-cloud*.42)*(day+twilight*.8+night*.14)*diffuse*cloudShade;
  vec3 land=material*(ambient*occlusion+direct+vec3(.65,.74,.91)*flash*.8);
+ land=mix(land,land*1.24+vec3(.018,.026,.036),night*.76);
  float bank=abs(pos.x-riverCourse(pos.z));float riverWidth=.29+sin(pos.z*.37)*.055;float river=(1.-smoothstep(riverWidth-.05,riverWidth+.10,bank))*(1.-smoothstep(.3,.7,pos.y));
  float ripples=sin(pos.z*16.+pos.x*29.+clock*.8)*.005+sin(pos.z*41.-clock*1.3)*.0025;
  vec3 reflection=sky(reflect(ray,vec3(0,1,0)),top,horizon);
@@ -5869,10 +5876,19 @@ gl_FragColor=vec4(color,1.);
 function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
 function program(fragment,uniforms){const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,vertexSource));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fragment));gl.bindAttribLocation(p,0,'position');gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));const u={};for(const name of uniforms)u[name]=gl.getUniformLocation(p,name);return {p,u};}
 let geometry,scene,glass;
+// Mobile-specific shader budgets: fewer ray steps and fragment uniforms.
+// Small GPUs often fail to link the 48-drop shader; adapt to their actual limit.
+const uniformLimit=gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS)||32;
+const dropCount=Math.max(8,Math.min(mobileGpu?20:48,uniformLimit-12));
+const lowPrecision=!(gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER,gl.HIGH_FLOAT)?.precision>0);
+const precision=source=>lowPrecision?source.replace('precision highp float;','precision mediump float;'):source;
+const geometryShader=precision(mobileGpu?geometrySource.replace('i<125','i<62'):geometrySource);
+const sceneShader=precision(mobileGpu?sceneSource.replace('i<64','i<22').replace('/64.','/22.'):sceneSource);
+const glassShader=precision(glassSource.replace(/\b48\b/g,String(dropCount)));
 try{
- geometry=program(geometrySource,['resolution']);
- scene=program(sceneSource,['geometryTex','resolution','sunPosition','skyWeights','clock','cloud','wind','rain','fog','snow','freeze','storm','flash','wetGround','drift']);
- glass=program(glassSource,['sceneTex','precipTex','resolution','drops[0]','freezeGlass','exposure','glassWet']);
+ geometry=program(geometryShader,['resolution']);
+ scene=program(sceneShader,['geometryTex','resolution','sunPosition','skyWeights','clock','cloud','wind','rain','fog','snow','freeze','storm','flash','wetGround','drift']);
+ glass=program(glassShader,['sceneTex','precipTex','resolution','drops[0]','freezeGlass','exposure','glassWet']);
 }catch(e){canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');console.warn('IVY weather renderer unavailable',e);return;}
 const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
 function texture(filter){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
@@ -5927,8 +5943,8 @@ const rainParticles=Array.from({length:300},(_,i)=>({x:random(),y:random(),z:ran
 const snowParticles=Array.from({length:210},(_,i)=>({x:random(),y:random(),z:random(),rank:(i+.5)/210,life:random()*15,seed:random()*6.28,rotation:random()*6.28}));
 const hailParticles=Array.from({length:64},(_,i)=>({x:random(),y:random(),z:random(),rank:(i+.5)/64,phase:0,vy:0,vx:0,age:0,hitY:.22+random()*.7,seed:random()}));
 const splashes=[];
-const glassDrops=Array.from({length:48},()=>({active:false,x:random(),y:random(),r:0,age:0,wait:0,speed:0,tail:0,seed:random()*6.28}));
-const dropUniforms=new Float32Array(48*4);let mergeClock=0;
+const glassDrops=Array.from({length:dropCount},()=>({active:false,x:random(),y:random(),r:0,age:0,wait:0,speed:0,tail:0,seed:random()*6.28}));
+const dropUniforms=new Float32Array(dropCount*4);let mergeClock=0;
 function snowSprite(type){const c=document.createElement('canvas');c.width=c.height=40;const x=c.getContext('2d');const g=x.createRadialGradient(20,20,0,20,20,18);g.addColorStop(0,'rgba(247,250,252,.88)');g.addColorStop(.32,'rgba(237,244,248,.55)');g.addColorStop(.7,'rgba(230,240,247,.11)');g.addColorStop(1,'rgba(230,240,247,0)');x.fillStyle=g;x.fillRect(0,0,40,40);if(type!==2){for(let j=0;j<6;j++){const a=j*Math.PI/3+type*.5;x.fillStyle='rgba(240,248,252,.18)';x.beginPath();x.ellipse(20+Math.cos(a)*4,20+Math.sin(a)*4,5,2.3,a,0,Math.PI*2);x.fill();}}return c;}
 const snowSprites=[snowSprite(0),snowSprite(1),snowSprite(2)];
 const iceSprite=document.createElement('canvas');iceSprite.width=iceSprite.height=32;{const c=iceSprite.getContext('2d');const g=c.createRadialGradient(12,10,0,16,16,13);g.addColorStop(0,'rgba(251,254,255,.95)');g.addColorStop(.3,'rgba(220,236,245,.91)');g.addColorStop(.68,'rgba(167,193,210,.70)');g.addColorStop(1,'rgba(101,133,154,0)');c.fillStyle=g;c.beginPath();c.ellipse(16,16,12,11.3,-.35,0,Math.PI*2);c.fill();c.strokeStyle='rgba(247,252,255,.45)';c.lineWidth=1.3;c.beginPath();c.ellipse(15,15,8,7.5,0,3.3,5.2);c.stroke();}
@@ -5987,11 +6003,11 @@ function drawWeather(){
 }
 
 let width=0,height=0,last=performance.now(),lastScene=-100,sceneBudget=0,stopped=false,lastDraw=0;
-const maxFPS=paused?6:(matchMedia('(pointer:coarse)').matches?24:30);
+const maxFPS=paused?6:(mobileGpu?20:30);
 root.dataset.ivyNatural='starting';let firstFrameDone=false;
 
-function resize(){const scale=Math.min(matchMedia('(pointer:coarse)').matches?1.1:1.2,devicePixelRatio||1);const w=Math.max(2,Math.min(matchMedia('(pointer:coarse)').matches?520:640,Math.round(canvas.clientWidth*scale))),h=Math.max(2,Math.round(w*canvas.clientHeight/Math.max(1,canvas.clientWidth)));if(w===width&&h===height)return false;width=w;height=h;canvas.width=w;canvas.height=h;weatherCanvas.width=w;weatherCanvas.height=h;weatherTextureReady=false;overlayWasActive=true;
- for(const t of [geometryTarget,sceneTarget]){gl.bindTexture(gl.TEXTURE_2D,t.tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);}
+function resize(){const scale=Math.min(mobileGpu?.9:1.2,devicePixelRatio||1);const w=Math.max(2,Math.min(mobileGpu?420:640,Math.round(canvas.clientWidth*scale))),h=Math.max(2,Math.round(w*canvas.clientHeight/Math.max(1,canvas.clientWidth)));if(w===width&&h===height)return false;width=w;height=h;canvas.width=w;canvas.height=h;weatherCanvas.width=w;weatherCanvas.height=h;weatherTextureReady=false;overlayWasActive=true;
+ for(const t of [geometryTarget,sceneTarget]){gl.bindTexture(gl.TEXTURE_2D,t.tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.bindFramebuffer(gl.FRAMEBUFFER,t.fbo);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Wetter-Framebuffer nicht verfügbar');}
  gl.viewport(0,0,w,h);gl.bindFramebuffer(gl.FRAMEBUFFER,geometryTarget.fbo);gl.useProgram(geometry.p);gl.uniform2f(geometry.u.resolution,w,h);gl.drawArrays(gl.TRIANGLES,0,6);lastScene=-100;return true;}
 function scenePass(){gl.bindFramebuffer(gl.FRAMEBUFFER,sceneTarget.fbo);gl.useProgram(scene.p);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,geometryTarget.tex);gl.uniform1i(scene.u.geometryTex,0);gl.uniform2f(scene.u.resolution,width,height);gl.uniform2f(scene.u.sunPosition,current.sunX,current.sunY);gl.uniform3f(scene.u.skyWeights,current.day,current.twilight,current.night);
  const scalar={clock,cloud:current.cloud,wind:current.wind,rain:current.precip*(1-current.snow*.8),fog:current.fog,snow:Math.max(current.snow*.62,snowCover),freeze:current.freeze,storm:current.storm,flash,wetGround:groundWet,drift};for(const [name,value] of Object.entries(scalar))gl.uniform1f(scene.u[name],value);gl.drawArrays(gl.TRIANGLES,0,6);}
@@ -6001,7 +6017,7 @@ function finalPass(overlayChanged){gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.us
  else gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,gl.RGBA,gl.UNSIGNED_BYTE,weatherCanvas);
  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
 }gl.uniform1i(glass.u.precipTex,1);gl.uniform2f(glass.u.resolution,width,height);gl.uniform4fv(glass.u['drops[0]'],dropUniforms);const scalar={freezeGlass:frost,exposure:+q('exposure').value/100,glassWet:glassWet*(+q('glass').value/100)};for(const [name,value] of Object.entries(scalar))gl.uniform1f(glass.u[name],value);gl.drawArrays(gl.TRIANGLES,0,6);}
-function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!intersecting||canvas.clientWidth<2||canvas.clientHeight<2){last=now;setTimeout(()=>requestAnimationFrame(frame),700);return;}if(lastDraw&&now-lastDraw<1000/maxFPS){requestAnimationFrame(frame);return;}lastDraw=now;const realDt=Math.min(.08,Math.max(0,(now-last)/1000));last=now;const dt=paused?0:realDt;
+function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!intersecting||canvas.clientWidth<2||canvas.clientHeight<2){last=now;setTimeout(()=>requestAnimationFrame(safeFrame),700);return;}if(lastDraw&&now-lastDraw<1000/maxFPS){requestAnimationFrame(safeFrame);return;}lastDraw=now;const realDt=Math.min(.08,Math.max(0,(now-last)/1000));last=now;const dt=paused?0:realDt;
  if(progress<1){progress=clamp(progress+realDt/Math.max(1,+q('transition').value));const t=ease(progress);for(const key of keys)current[key]=from[key]+(target[key]-from[key])*t;}
  clock+=dt;drift+=dt*(.012+current.wind*.035);
  const liquid=current.precip*clamp(1-current.snow-current.hail);
@@ -6012,19 +6028,113 @@ function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!in
  sceneBudget+=dt;const resized=resize();updateParticles(dt,liquid);updateDrops(dt,liquid);updateLightning(dt);
  const overlayChanged=drawWeather();if(resized||sceneBudget+1e-6>=1/30||progress<1||flash>.01||paused){scenePass();lastScene=clock;sceneBudget%=1/30;}finalPass(overlayChanged);
  if(!firstFrameDone){firstFrameDone=true;root.classList.add('ivy-natural-active');root.dataset.ivyNatural='webgl';document.documentElement.classList.remove('ivy-natural-boot');}
- requestAnimationFrame(frame);}
-canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();stopped=true;root.classList.remove('ivy-natural-active');canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');});
+ requestAnimationFrame(safeFrame);}
+function fallback(reason){stopped=true;root.classList.remove('ivy-natural-active');canvas.remove();root.dataset.ivyNatural='fallback';document.documentElement.classList.remove('ivy-natural-boot');if(reason)console.warn('IVY Wetter: mobile WebGL fallback',reason);}
+function safeFrame(time){try{frame(time)}catch(error){fallback(error)}}
+canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();fallback('WebGL context lost');});
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(!document.hidden&&latest)applySnapshot(latest);});
 if(typeof IntersectionObserver==='function')new IntersectionObserver(entries=>{intersecting=entries[0]?.isIntersecting!==false;},{threshold:0}).observe(root);
 window.addEventListener('ivy-weather-snapshot',event=>applySnapshot(event.detail));
 setInterval(()=>{if(latest&&!document.hidden)applySnapshot(latest);},60000);
 try{applySnapshot(JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null'));}catch(_){}
-window.ivyNaturalWeather={version:36,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,current:{...current},target:{...target},transition:progress})};
-requestAnimationFrame(frame);
+window.ivyNaturalWeather={version:37,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,dropCount,mobileGpu,current:{...current},target:{...target},transition:progress})};
+requestAnimationFrame(safeFrame);
 
 }
 function startDeferred(){requestAnimationFrame(()=>setTimeout(init,0));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startDeferred,{once:true});else startDeferred();
+})();
+</script>
+<style id="ivy-v37-settings-style">
+/* IVY V37 Settings – grouped, accessible controls, mobile-safe */
+html body #settings-modal>div{width:min(100%,650px)!important;max-width:650px!important;scrollbar-gutter:stable;overscroll-behavior:contain}
+#settings-modal .ivy-v37-toolbar{position:sticky;top:-16px;z-index:15;padding:12px 3px 10px;background:linear-gradient(180deg,#1f2937 84%,#1f2937ee);display:grid;gap:9px}
+#settings-modal .ivy-v37-toolbar-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#settings-modal .ivy-v37-tools{display:flex;gap:6px;flex-wrap:wrap}
+#settings-modal .ivy-v37-tools button,#settings-modal .ivy-v37-update-button{border:1px solid #5d708d;border-radius:9px;padding:9px 11px;background:#283b59;color:#e5efff;font-weight:600;font-size:12px;touch-action:manipulation;min-height:38px}
+#settings-modal .ivy-v37-tools button:focus-visible,#settings-modal .ivy-v37-group summary:focus-visible{outline:2px solid #70dfff;outline-offset:2px}
+#settings-modal #ivy-v37-settings-search{width:100%;background:#111c31;color:#f1f7ff;border:1px solid #58708b;border-radius:10px;padding:11px 12px;font-size:16px;min-height:44px}
+#settings-modal .ivy-v37-group{border:1px solid #435676;border-radius:12px;background:rgba(11,22,42,.46);margin:0 0 10px;overflow:clip}
+#settings-modal .ivy-v37-group[open]{border-color:#597ca8;background:rgba(13,26,47,.72)}
+#settings-modal .ivy-v37-group summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;user-select:none;-webkit-user-select:none;touch-action:manipulation;padding:14px 14px;font-weight:700;font-size:14px;color:#bfe5ff;min-height:48px}
+#settings-modal .ivy-v37-group summary::-webkit-details-marker{display:none}
+#settings-modal .ivy-v37-group summary::after{content:'⌄';margin-left:auto;transition:transform .18s ease;font-size:22px;line-height:1;color:#83d8fa}
+#settings-modal .ivy-v37-group[open] summary::after{transform:rotate(180deg)}
+#settings-modal .ivy-v37-group .ivy-v37-content{display:grid;gap:10px;padding:0 11px 13px;min-width:0}
+#settings-modal .ivy-v37-group .ivy-v37-content>.flex,#settings-modal .ivy-v37-group .ivy-setting-line{gap:12px;min-width:0}
+#settings-modal .ivy-v37-group .ivy-v37-content label{line-height:1.35;min-width:0;overflow-wrap:anywhere}
+#settings-modal .ivy-v37-group input:not([type=checkbox]):not([type=color]),#settings-modal .ivy-v37-group select{max-width:100%;min-width:0}
+#settings-modal .ivy-v37-group input[type=checkbox]{min-width:21px;min-height:21px;flex:0 0 auto}
+#settings-modal .ivy-v37-footer{position:sticky;bottom:-16px;z-index:12;background:#1f2937f6;backdrop-filter:blur(8px);padding:12px 3px max(10px,env(safe-area-inset-bottom));margin-top:12px;display:flex;flex-wrap:wrap;gap:12px}
+#settings-modal .ivy-v37-footer>.flex{margin-left:auto}
+#settings-modal .ivy-v37-footer button{min-height:42px;touch-action:manipulation}
+#settings-modal .ivy-v37-update-status{font-size:12px;color:#b8cfeb;line-height:1.5;min-height:18px}
+#settings-modal .ivy-v37-help{font-size:12px;color:#a9c0dc;line-height:1.5;margin:3px 0 5px}
+#settings-modal .ivy-v37-hidden-row{display:none!important}
+#settings-modal .ivy-v37-group .ivy-v13-section,#settings-modal .ivy-v37-group .ivy-v14-size-section,#settings-modal .ivy-v37-group .ivy-v20-settings{min-width:0;max-width:100%;margin:0;box-sizing:border-box}
+/* Border option truly means no frame, including the profile image's hard-coded border-4. */
+html.ivy-no-dynamic-borders #profile-fixed-container>div,
+html.ivy-no-dynamic-borders #profile-image,
+html.ivy-no-dynamic-borders #weather-card,
+html.ivy-no-dynamic-borders #settings-fixed-container>div,
+html.ivy-no-dynamic-borders #import-fixed-container>div,
+html.ivy-no-dynamic-borders #export-fixed-container>div,
+html.ivy-no-dynamic-borders #light-mode-fixed-container>div,
+html.ivy-no-dynamic-borders .dynamic-border,
+html.ivy-no-dynamic-borders .compensated-p2,
+html.ivy-no-dynamic-borders .compensated-p4{border-width:0!important;border-style:none!important;border-color:transparent!important;outline:none!important}
+html.ivy-no-dynamic-borders #profile-fixed-container>div,html.ivy-no-dynamic-borders #profile-image{box-shadow:none!important}
+/* Keep old fallback weather usable and readable on mobile without WebGL. */
+#ivy-weather-scene[data-phase=night]:not(.ivy-natural-active),
+#ivy-weather-scene[data-mode=night]:not(.ivy-natural-active){background:linear-gradient(175deg,#26466e,#4f6682 64%,#626f86)!important}
+@media(max-width:767px){
+ html body #settings-modal>div{padding:12px!important;max-width:100%!important;width:100%!important}
+ #settings-modal .ivy-v37-toolbar{top:-12px}
+ #settings-modal .ivy-v37-group summary{padding:13px 11px;font-size:13px}
+ #settings-modal .ivy-v37-group .ivy-v37-content{padding:0 8px 12px}
+ #settings-modal .ivy-v37-footer{bottom:-12px}
+ #settings-modal .ivy-v37-footer>.flex{width:100%;justify-content:flex-end}
+}
+@media(prefers-reduced-motion:reduce){#settings-modal .ivy-v37-group summary::after{transition:none}}
+</style>
+<script id="ivy-v37-settings">
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const key='ivyDashboardSettingsOpenV37';
+const labels={'Design & Farben':'Farben & Darstellung','Suchfeld, Glow & Suchmaschinenmenü':'Suchfeld & Effekte','Hintergründe & Ränder':'Hintergründe & Rahmen','Wetter':'Wetter & Standort','Größen & Layout':'Größen & Geräteprofile','Suche & Verhalten':'Suche & Bedienung'};
+let groups=[],searching=false,saved={};
+function read(){try{return JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(_){return {}}}
+function persist(){if(searching)return;try{localStorage.setItem(key,JSON.stringify(saved))}catch(_){}}
+function addGroup(parent,id,label){const details=document.createElement('details');details.className='ivy-v37-group';details.id='ivy-v37-group-'+id;const summary=document.createElement('summary');summary.textContent=label;const content=document.createElement('div');content.className='ivy-v37-content';details.append(summary,content);parent.append(details);details.open=saved[id]??(id==='colors');details.addEventListener('toggle',()=>{if(searching)return;saved[id]=details.open;persist()});groups.push(details);return content;}
+function setOpen(value){for(const details of groups){details.open=value;saved[details.id.replace('ivy-v37-group-','')]=value}persist();}
+function init(){const modal=$('settings-modal');const outer=modal?.firstElementChild,section=outer?.querySelector(':scope > .space-y-4');if(!section||outer.querySelector('.ivy-v37-toolbar'))return;
+ saved=read();section.style.display='block';section.classList.remove('space-y-4');
+ const title=outer.querySelector(':scope > h3');if(title)title.classList.add('ivy-v37-title');
+ const toolbar=document.createElement('div');toolbar.className='ivy-v37-toolbar';toolbar.innerHTML='<div class="ivy-v37-toolbar-header"><strong>IVY · Einstellungen</strong><div class="ivy-v37-tools"><button type="button" id="ivy-v37-open-all">Alle öffnen</button><button type="button" id="ivy-v37-close-all">Alle schließen</button></div></div><input id="ivy-v37-settings-search" type="search" placeholder="Einstellungen suchen …" aria-label="Einstellungen durchsuchen" autocomplete="off"><span class="ivy-v37-update-status" id="ivy-v37-search-result" aria-live="polite"></span>';
+ section.before(toolbar);if(title)title.style.display='none';
+ let target=null,footer=null,index=0;
+ for(const node of [...section.children]){
+  if(node.matches('h4')){const original=node.textContent.trim();const label=labels[original]||original;const id=['colors','searchfx','borders','weather','sizes','behavior'][index++]||'section-'+index;target=addGroup(section,id,label);node.remove();continue}
+  if(node.classList.contains('mt-6')&&node.classList.contains('border-t')){footer=node;continue}
+  if(target)target.append(node);
+ }
+ // V20 deliberately hid obsolete size controls; keep them in DOM for old save callbacks.
+ for(const id of ['setting-weather-width','setting-profile-size','setting-quickdial-size']){
+  const el=$(id);if(el){const row=el.closest('div.flex')||el.parentElement;row?.classList.add('ivy-v37-hidden-row')}
+ }
+ const updates=addGroup(section,'updates','Updates & Offline');
+ updates.innerHTML='<p class="ivy-v37-help">Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.</p><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><button id="ivy-v37-check-update" type="button" class="ivy-v37-update-button">↻ Jetzt nach Updates suchen</button><small>Installiert: V37</small></div><output id="ivy-v37-update-status" role="status" aria-live="polite" class="ivy-v37-update-status">Automatische Prüfung im Hintergrund aktiviert.</output><button id="ivy-v37-weather-refresh" type="button" class="ivy-v37-update-button">☁ Wetter jetzt aktualisieren</button><p class="ivy-v37-help">Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.</p>';
+ $('ivy-v37-check-update')?.addEventListener('click',()=>{const m=window.ivyUpdateMonitor;if(m?.checkManual)m.checkManual();else $('ivy-v37-update-status').textContent='Updateprüfung ist noch nicht bereit.'});
+ $('ivy-v37-weather-refresh')?.addEventListener('click',()=>{const city=$('weather-city-input')?.value.trim()||localStorage.getItem('weatherCity');const status=$('ivy-v37-update-status');if(!city){status.textContent='Bitte zuerst einen Wetterstandort festlegen.';return}if(!navigator.onLine){status.textContent='Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.';return}if(typeof window.ivyRefreshWeather==='function'){window.ivyRefreshWeather(city);status.textContent='Wetteraktualisierung gestartet.'}});
+ if(footer){footer.classList.add('ivy-v37-footer');section.append(footer)}
+ $('ivy-v37-open-all').addEventListener('click',()=>setOpen(true));$('ivy-v37-close-all').addEventListener('click',()=>setOpen(false));
+ const filter=$('ivy-v37-settings-search'),result=$('ivy-v37-search-result');
+ filter.addEventListener('input',()=>{const query=filter.value.trim().toLocaleLowerCase('de');searching=!!query;let visible=0;for(const d of groups){if(!query){d.hidden=false;d.open=saved[d.id.replace('ivy-v37-group-','')]??(d.id==='ivy-v37-group-colors');visible++;continue}const found=d.textContent.toLocaleLowerCase('de').includes(query);d.hidden=!found;if(found){d.open=true;visible++}}result.textContent=query?visible+' passende Bereiche':'';});
+ modal.addEventListener('click',e=>{if(e.target===modal)window.cancelSettings?.()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modal.classList.contains('hidden')&&document.activeElement===filter){filter.value='';filter.dispatchEvent(new Event('input'));e.stopPropagation()}});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 </body>

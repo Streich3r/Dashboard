@@ -1,8 +1,8 @@
 /* IVY Dashboard V36 – offline-first shell; updates only after user confirms.
    Weather/API traffic and personal settings are never stored in this cache. */
 'use strict';
-const BUILD='36';
-const CACHE_NAME='ivy-dashboard-shell-natural-v36';
+const BUILD='37';
+const CACHE_NAME='ivy-dashboard-shell-natural-v37';
 const CACHE_PREFIX='ivy-dashboard-shell-';
 const SHELL_FILES=['./index.html','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
 const scopeURL=new URL(self.registration.scope);
