@@ -7,8 +7,8 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="35">
-<!-- IVY V35: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
+<meta name="ivy-build" content="36">
+<!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 <style>
 
 
@@ -3639,25 +3639,32 @@ window.hideAddModal = () => {
                 const t=setTimeout(()=>controller.abort(),10000);
                 let geo;
                 try {
-                    const geoRes=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=de&format=json',{signal:controller.signal,cache:'no-store'});
-                    if (!geoRes.ok) throw new Error('Standortabfrage '+geoRes.status);
-                    const geoData=await geoRes.json();
-                    geo=geoData.results?.[0];
-                    if (!geo) throw new Error('Ort nicht gefunden');
+                    // A saved coordinate avoids repeating the geocoder on every refresh.
+                    let previous=null;
+                    try{previous=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null')}catch(_){}
+                    if(previous?.searchQuery===city && Number.isFinite(+previous.latitude) && Number.isFinite(+previous.longitude))
+                        geo={name:previous.city||city,country_code:'',latitude:+previous.latitude,longitude:+previous.longitude};
+                    if(!geo){
+                        const geoRes=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=de&format=json',{signal:controller.signal,cache:'no-store'});
+                        if(!geoRes.ok)throw new Error('Standortabfrage '+geoRes.status);
+                        const geoData=await geoRes.json();
+                        geo=geoData.results?.[0];
+                        if(!geo)throw new Error('Ort nicht gefunden');
+                    }
                     const url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(geo.latitude)+'&longitude='+encodeURIComponent(geo.longitude)+'&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day&daily=sunrise,sunset&forecast_days=1&timezone=auto';
                     const res=await fetch(url,{signal:controller.signal,cache:'no-store'});
                     if (!res.ok) throw new Error('Wetterabfrage '+res.status);
                     const data=await res.json();
                     if (!data.current) throw new Error('Keine Wetterdaten');
                     if (request!==ivyWeatherRequest) return;
-                    const snapshot={city:geo.name+(geo.country_code?', '+geo.country_code:''),latitude:geo.latitude,longitude:geo.longitude,current:data.current,daily:data.daily,utc_offset_seconds:data.utc_offset_seconds,timezone:data.timezone,savedAt:Date.now()};
+                    const snapshot={searchQuery:city,city:geo.name+(geo.country_code?', '+geo.country_code:''),latitude:geo.latitude,longitude:geo.longitude,current:data.current,daily:data.daily,utc_offset_seconds:data.utc_offset_seconds,timezone:data.timezone,savedAt:Date.now()};
                     try{localStorage.setItem('ivyWeatherSnapshot',JSON.stringify(snapshot))}catch(_){}
                     showIvyWeather(snapshot,false);
                 }finally{clearTimeout(t)}
             }catch(err){
                 if(request!==ivyWeatherRequest)return;
                 if(status)status.textContent='Verbindung prüfen';
-                const cached=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null');
+                let cached=null;try{cached=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null')}catch(_){}
                 if(cached){showIvyWeather(cached,true)}
                 else document.getElementById('ivy-weather-condition').textContent=err.message||'Keine Wetterdaten';
             }
@@ -4120,7 +4127,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const storedCity = localStorage.getItem('weatherCity');
     if (storedCity) {
         weatherCityInput.value = storedCity;
-        updateWeatherIframe(storedCity);
+        // Render the last observation immediately (works offline). Network weather
+        // must never compete with the initial layout, scripts and first paint.
+        try {
+            const previous=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null');
+            if(previous)showIvyWeather(previous,true);
+        } catch (_) {}
+        const refreshAfterPaint=()=>setTimeout(()=>{
+            if(navigator.onLine && weatherCityInput.value.trim()===storedCity)
+                updateWeatherIframe(storedCity);
+        },900);
+        if(document.readyState==='complete')refreshAfterPaint();
+        else window.addEventListener('load',refreshAfterPaint,{once:true});
     }
 
     await new Promise(requestAnimationFrame);
@@ -5386,7 +5404,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<!-- IVY Update Monitor: works with the existing sw.js and checks for new index.html content. -->
+<!-- IVY Update Monitor: offline-first, checks remotely without changing the active app cache. -->
 <div id="ivy-update-popup" role="status" aria-live="polite" hidden>
   <p class="ivy-update-heading">✦ IVY Dashboard · Update verfügbar</p>
   <p class="ivy-update-description">Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?</p>
@@ -5395,77 +5413,164 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <button id="ivy-update-later" type="button">Später</button>
   </div>
 </div>
-<script id="ivy-update-monitor-v35">
+<script id="ivy-update-monitor-v36">
 (()=>{
  'use strict';
  if(!/^https?:$/.test(location.protocol))return;
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
- // Built during packaging from index.html with the 64-char signature replaced by zeroes.
- // Each later HTML change can be detected even if sw.js or the build label is not changed.
- const CLIENT_SIGNATURE='dacc443e52b8f500c34443bae852b377d107bae5dad4dcb1df17e5861c9f56db';
+ // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
+ // A different deployed HTML version shows a popup but never changes cached content.
+ const CLIENT_SIGNATURE='48ec6ec2be3a73e7e483503e98162f0db090d69f560a0bc03525d8680878c7f3';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
  const description=popup.querySelector('.ivy-update-description');
  const INITIAL_DESCRIPTION=description.textContent;
+ const pendingKey='ivy.dashboard.pendingUpdate';
  let busy=false,checking=false,availableHash='',dismissedHash='',lastCheck=0;
  const here=new URL(location.href);
  if(here.searchParams.has('ivy_refresh')){
    here.searchParams.delete('ivy_refresh');
    history.replaceState(history.state,'',here.href);
  }
- const pendingKey='ivy.dashboard.pendingUpdate.v35';
  try{if(sessionStorage.getItem(pendingKey)===CLIENT_SIGNATURE)sessionStorage.removeItem(pendingKey)}catch(_){}
  function show(hash,remoteBuild){
    if(!hash||hash===CLIENT_SIGNATURE||hash===dismissedHash||busy)return;
    availableHash=hash;
    description.textContent=remoteBuild&&remoteBuild!==CURRENT_BUILD
-     ?'Version '+remoteBuild+' ist verfügbar. Jetzt neu laden, um sie zu übernehmen?'
+     ?'Version '+remoteBuild+' ist verfügbar. Jetzt installieren?'
      :INITIAL_DESCRIPTION;
    popup.hidden=false;
  }
  later?.addEventListener('click',()=>{dismissedHash=availableHash;popup.hidden=true});
- apply?.addEventListener('click',()=>{
-   if(busy||!availableHash)return;
-   busy=true;popup.hidden=true;
-   // Do not permanently mark a version as applied before the new HTML actually loads.
-   try{sessionStorage.setItem(pendingKey,availableHash)}catch(_){}
-   const url=new URL(location.href);
-   url.searchParams.set('ivy_refresh',String(Date.now()));
-   location.replace(url.href);
- });
  async function hashHTML(html){
-   // Replace only the embedded signature; the hash is otherwise over the full server HTML.
    const normalized=html.replace(/const CLIENT_SIGNATURE='[a-f0-9]{64}';/,
-      "const CLIENT_SIGNATURE='"+'0'.repeat(64)+"';");
-   const data=new TextEncoder().encode(normalized);
-   const digest=await crypto.subtle.digest('SHA-256',data);
+     "const CLIENT_SIGNATURE='"+'0'.repeat(64)+"';");
+   const bytes=new TextEncoder().encode(normalized);
+   const digest=await crypto.subtle.digest('SHA-256',bytes);
    return Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
  }
+ function message(worker,data,timeout=6000){
+   return new Promise((resolve,reject)=>{
+     if(!worker){reject(new Error('Service Worker nicht erreichbar'));return;}
+     const channel=new MessageChannel();
+     const timer=setTimeout(()=>{channel.port1.close();reject(new Error('Service Worker antwortet nicht'))},timeout);
+     channel.port1.onmessage=event=>{clearTimeout(timer);channel.port1.close();resolve(event.data)};
+     try{worker.postMessage(data,[channel.port2])}
+     catch(err){clearTimeout(timer);channel.port1.close();reject(err)}
+   });
+ }
+ async function getRegistration(){
+   if(!('serviceWorker' in navigator))throw new Error('Offline-Cache wird hier nicht unterstützt');
+   return await navigator.serviceWorker.getRegistration('./')||
+     await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+ }
+ // V35 could have served V36 HTML from the network while its OLD worker is
+ // still active. Activate a waiting worker ONLY if its cached HTML has exactly
+ // the same fingerprint as the HTML that is already on screen.
+ async function adoptMatchingWorker(reg){
+   if(!reg?.waiting||busy)return false;
+   try{
+     const result=await message(reg.waiting,{type:'IVY_DASHBOARD_GET_BUILD'});
+     if(result?.hash!==CLIENT_SIGNATURE)return false;
+     await message(reg.waiting,{type:'IVY_DASHBOARD_ACTIVATE_UPDATE'});
+     return true;
+   }catch(_){return false}
+ }
+ async function watchRegistration(){
+   try{
+     const reg=await getRegistration();
+     await adoptMatchingWorker(reg);
+     const observe=installing=>{
+       if(!installing)return;
+       if(installing.state==='installed'){adoptMatchingWorker(reg);return;}
+       installing.addEventListener('statechange',()=>{
+         if(installing.state==='installed')adoptMatchingWorker(reg);
+       });
+     };
+     // A registration may already be installing when this listener attaches.
+     observe(reg.installing);
+     reg.addEventListener('updatefound',()=>observe(reg.installing));
+   }catch(_){}
+ }
+ function controllerChange(timeout=7000){
+   return new Promise(resolve=>{
+     if(!('serviceWorker' in navigator)){resolve(false);return}
+     let done=false;
+     const complete=value=>{if(done)return;done=true;clearTimeout(timer);navigator.serviceWorker.removeEventListener('controllerchange',listener);resolve(value)};
+     const listener=()=>complete(true);
+     navigator.serviceWorker.addEventListener('controllerchange',listener);
+     const timer=setTimeout(()=>complete(false),timeout);
+   });
+ }
+ async function applyUpdate(){
+   if(busy||!availableHash)return;
+   busy=true;apply.disabled=true;later.disabled=true;
+   description.textContent='Update wird im Offline-Cache installiert …';
+   const targetHash=availableHash;
+   try{
+     const reg=await getRegistration();
+     // A new service worker may already have downloaded the new full shell.
+     // If not, request a worker update now, without blocking normal visits.
+     if(!reg.waiting)try{await reg.update()}catch(_){}
+     if(reg.waiting){
+       const installed=await message(reg.waiting,{type:'IVY_DASHBOARD_GET_BUILD'});
+       if(installed?.hash!==targetHash)
+         throw new Error('Service Worker und Dashboard-Version stimmen nicht überein; bitte erneut prüfen');
+       if(installed?.hash===targetHash){
+         const changed=controllerChange();
+         const activated=await message(reg.waiting,{type:'IVY_DASHBOARD_ACTIVATE_UPDATE'});
+         if(!activated?.ok)throw new Error('Neue Version konnte nicht aktiviert werden');
+         if(!await changed && navigator.serviceWorker.controller!==reg.active)
+           throw new Error('Service Worker wurde nicht aktiviert');
+         try{sessionStorage.setItem(pendingKey,targetHash)}catch(_){}
+         location.reload();return;
+       }
+     }
+     // HTML-only updates: let the active worker verify SHA-256 and atomically
+     // replace its cached document, then reload FROM CACHE, not from network.
+     const active=navigator.serviceWorker.controller||reg.active;
+     const applied=await message(active,{type:'IVY_DASHBOARD_APPLY_SHELL',hash:targetHash},16000);
+     if(!applied?.ok)throw new Error(applied?.error||'Offline-Cache konnte nicht aktualisiert werden');
+     try{sessionStorage.setItem(pendingKey,targetHash)}catch(_){}
+     location.reload();
+   }catch(err){
+     busy=false;apply.disabled=false;later.disabled=false;
+     description.textContent='Update nicht übernommen: '+String(err.message||err)+'. Bitte erneut versuchen.';
+     popup.hidden=false;
+   }
+ }
+ apply?.addEventListener('click',applyUpdate);
  async function check(force=false){
    if(checking||busy||document.hidden||!navigator.onLine)return;
    if(!force&&Date.now()-lastCheck<60000)return;
    checking=true;
    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),12000);
    try{
-     // Unique query bypasses the V33/V34 service-worker shell cache AND browser/CDN cache.
+     // Cache busting is ONLY for this background update probe; page navigation
+     // is always cache-first. The old V34/V35 workers cannot intercept this URL.
      const url=new URL('./index.html',location.href);
      url.searchParams.set('ivy_update_probe',String(Date.now()));
      const response=await fetch(url.href,{cache:'no-store',signal:abort.signal});
      if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return;
      const html=await response.text();
      const remoteHash=await hashHTML(html);
-     const remoteBuild=html.match(/<meta name="ivy-build" content="([^"]+)"\s*\/?\s*>/)?.[1]||'';
+     const remoteBuild=html.match(/<meta name="ivy-build" content="([^"]+)"\s*\/?>/)?.[1]||'';
      if(remoteHash===CLIENT_SIGNATURE){popup.hidden=true;availableHash='';return;}
      show(remoteHash,remoteBuild);
    }catch(err){if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
-   finally{clearTimeout(timer);lastCheck=Date.now();checking=false;}
+   finally{clearTimeout(timer);lastCheck=Date.now();checking=false}
  }
- window.addEventListener('load',()=>{setTimeout(()=>check(true),2500);setInterval(()=>check(false),5*60*1000);});
+ window.addEventListener('load',()=>{
+   watchRegistration();
+   // Allow cached layout and cached weather to render before any update probe.
+   setTimeout(()=>check(true),4500);
+   setInterval(()=>check(false),5*60*1000);
+ });
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),version:35};
+ window.ivyUpdateMonitor={check:()=>check(true),version:36};
 })();
 </script>
 
@@ -5580,7 +5685,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-<script id="ivy-natural-weather-v35">
+<script id="ivy-natural-weather-v36">
 (()=>{'use strict';
 function init(){
 const root=document.getElementById('ivy-weather-scene');if(!root||root.querySelector('.ivy-natural-canvas'))return;root.dataset.ivyNatural='starting';
@@ -5914,7 +6019,7 @@ if(typeof IntersectionObserver==='function')new IntersectionObserver(entries=>{i
 window.addEventListener('ivy-weather-snapshot',event=>applySnapshot(event.detail));
 setInterval(()=>{if(latest&&!document.hidden)applySnapshot(latest);},60000);
 try{applySnapshot(JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null'));}catch(_){}
-window.ivyNaturalWeather={version:35,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,current:{...current},target:{...target},transition:progress})};
+window.ivyNaturalWeather={version:36,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,current:{...current},target:{...target},transition:progress})};
 requestAnimationFrame(frame);
 
 }
