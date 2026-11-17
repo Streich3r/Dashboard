@@ -3,7 +3,7 @@
    After this one-time migration, changing index.html does not require
    changing a cache version number. */
 
-const CACHE_NAME = 'ivy-dashboard-shell-auto-v2';
+const CACHE_NAME = 'ivy-dashboard-shell-natural-v33';
 const SHELL_FILES = [
   './',
   './index.html',
