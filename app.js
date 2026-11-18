@@ -1,5 +1,5 @@
 (()=>{if('serviceWorker'in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{});})();
-/* IVY V40 app – background particles extracted and booted separately. */
+/* IVY Dashboard runtime – background and weather are separate, non-blocking renderers. */
 
 ;
 /* from <script type="text/javascript"> */
@@ -212,7 +212,6 @@ function readIvySearchControls(s){
 const accentIcons = [
                 // Alle Buttons in den festen Containern
                 ...document.querySelectorAll('#settings-fixed-container svg'),
-		document.querySelector('#light-mode-close-btn svg'),
                 document.querySelector('#light-mode-fixed-container svg'),
                 //document.querySelector('#light-mode-overlay svg'),
                 // Das 'Link hinzufügen' Icon
@@ -1009,46 +1008,9 @@ window.hideAddModal = () => {
         // =================================================================
         
         // IVY V10: isolated fullscreen light overlay, independent of dashboard position/scroll.
-        function toggleLightMode(force) {
-            const overlay = document.getElementById('light-mode-overlay');
-            if (!overlay) return;
-            const active = !overlay.classList.contains('hidden');
-            const open = typeof force === 'boolean' ? force : !active;
-            overlay.classList.toggle('hidden', !open);
-            overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-            document.body.classList.toggle('ivy-light-active', open);
-            if (open) {
-                updateLightSource();
-                syncLightButtonPosition();
-                // Make the exit button available to keyboard users as well.
-                requestAnimationFrame(() => overlay.querySelector('#light-mode-close-btn button')?.focus({preventScroll:true}));
-            } else {
-                document.getElementById('light-mode-fixed-container')?.querySelector('button')?.focus({preventScroll:true});
-            }
-        }
-        function updateLightSource() {
-            const overlay = document.getElementById('light-mode-overlay');
-            if (!overlay) return;
-            const brightness = Math.max(0, Math.min(100, Number(document.getElementById('light-brightness')?.value ?? 100)));
-            const warmth = Math.max(0, Math.min(100, Number(document.getElementById('light-warmth')?.value ?? 0))) / 100;
-            const intensity = brightness / 100;
-            // Endpoints: 0 black; 100 white (or warm white). Intermediates monotonic.
-            const channels = [255, 255 - 95 * warmth, 255 - 195 * warmth];
-            const rgb = channels.map(v => Math.round(v * intensity));
-            overlay.style.setProperty('background', `rgb(${rgb.join(',')})`, 'important');
-            overlay.style.setProperty('background-color', `rgb(${rgb.join(',')})`, 'important');
-            overlay.dataset.brightness = String(brightness);
-            const controls = overlay.querySelector('.ivy-light-controls');
-            if (controls) controls.classList.toggle('ivy-light-dark', brightness < 38);
-        }
-        function syncLightButtonPosition() {
-            // The close button is always fixed in the safe area on mobile and desktop.
-            const close = document.getElementById('light-mode-close-btn');
-            if (!close) return;
-            close.style.left = 'auto'; close.style.bottom = 'auto';
-            close.style.top = 'max(14px, env(safe-area-inset-top))';
-            close.style.right = 'max(14px, env(safe-area-inset-right))';
-        }
+        
+        
+        
 
 /* V56: coordinate ownership is per device; visibility is separate from positioning. */
 function ivyV56HasFixedPosition(id, m) {
@@ -1231,11 +1193,7 @@ function updateResponsiveMode() {
     body.classList.toggle('ivy-mobile-auto', (compact || tablet) && !currentSettings.manualLayout);
     body.classList.toggle('ivy-responsive-desktop', !(compact || tablet));
 }
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !document.getElementById('light-mode-overlay')?.classList.contains('hidden')) {
-        e.preventDefault(); toggleLightMode(false);
-    }
-});
+
 
 // =================================================================
 
@@ -1266,14 +1224,7 @@ function ivyUpdateIconPreview(){
   let src='';try{src=custom ? new URL(/^https?:\/\//i.test(custom)?custom:'https://'+custom).href : getFaviconUrl(/^https?:\/\//i.test(urlField.value)?urlField.value:'https://'+urlField.value)}catch{}
   img.src=src||'';status.textContent=custom?'Eigenes Bild':'Website-Icon automatisch';
 }
-function ivyFallbackDialIcon(img){
-  const fallback=img.dataset.autoIcon;
-  if(fallback && img.src!==fallback && img.dataset.fallback!=='1'){
-    img.dataset.fallback='1';img.src=fallback;return;
-  }
-  img.onerror=null;
-  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#232f55"/><path d="M14 33h36M32 14c-18 12-18 24 0 36M32 14c18 12 18 24 0 36M14 33c0-25 36-25 36 0s-36 25-36 0" fill="none" stroke="#8feaff" stroke-width="3"/></svg>');
-}
+
 let ivyDialSortActive=false;
 function ivyBindDialDrag(card,handle){
   // One drag gesture per card: mouse immediately, touch on grip immediately when moved,
@@ -1542,7 +1493,7 @@ const V20SIZEKEY='ivyV20DeviceSizes';
 const currentDevice=()=>window.matchMedia('(max-width:900px)').matches?'mobile':'desktop';
 const selectedDevice=()=>window.ivyV20SelectedMode||currentDevice();
 function sizeRecord(mode){try{return JSON.parse(localStorage.getItem(V20SIZEKEY)||'{}')[mode]||{}}catch(e){return {}}}
-function sizes(){return {...defaultForDevice(currentDevice()),...(window.currentSettings||{}),...sizeRecord(currentDevice())};}
+
 function applySizes(){
   const s={...defaultForDevice(currentDevice()),...JSON.parse(localStorage.getItem('dashboardSettings')||'{}'),...sizeRecord(currentDevice())};
   const root=document.documentElement;
@@ -1599,19 +1550,7 @@ function reflowMobileWeather(){
     }
     return;
   }
-  const weatherBottom=weather.getBoundingClientRect().bottom;
-  const searchBox=search.getBoundingClientRect();
-  if(searchBox.top>=weatherBottom+20)return;
-  const forceTop=(el,top)=>{
-    if(!el)return;
-    el.dataset.ivyV25OldTop=el.style.getPropertyValue('top');
-    el.dataset.ivyV25OldPriority=el.style.getPropertyPriority('top');
-    el.style.setProperty('top',Math.ceil(top)+'px','important');
-  };
-  const top=weatherBottom+25;
-  forceTop(search,top);
-  if(launcher&&launcher.getBoundingClientRect().height>0)
-    forceTop(launcher,top+searchBox.height+20);
+  
 }
 function layout(){
  const header=byId('ivy-v13-header');if(!header)return;
@@ -1652,56 +1591,8 @@ function initSizes(){
   applySizes();
 }
 window.ivyV20RefreshSizes=initSizes;
-function initHeader(){
- const header=document.createElement('div');header.id='ivy-v13-header';
- const weather=byId('weather-fixed-container'),profile=byId('profile-fixed-container');
- if(!weather||!profile)return;
- // Move both cards into a shared layout. This prevents overlap across device widths.
- document.body.appendChild(header);header.append(weather,profile);
- let headerRAF=0;const resizeObserver=new ResizeObserver(()=>{if(!headerRAF)headerRAF=requestAnimationFrame(()=>{headerRAF=0;layout()})});
- resizeObserver.observe(header);resizeObserver.observe(weather);resizeObserver.observe(profile);
- window.addEventListener('resize',()=>{requestAnimationFrame(layout);applySizes();},{passive:true});
- window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(layout),{passive:true});
- requestAnimationFrame(layout);
-}
-function initLight(){
- const old=byId('light-mode-overlay');if(old)old.style.display='none';
- const el=document.createElement('div');el.id='ivy-v13-light';
- el.innerHTML='<button id="ivy-v13-light-close" type="button" aria-label="Lichtmodus schließen">✕ Schließen</button>'+
- '<div id="ivy-v13-light-panel"><h3>IVY LICHTMODUS</h3>'+
- '<label for="ivy-v13-brightness">Helligkeit <output id="ivy-v13-brightness-label">100 %</output></label>'+
- '<input id="ivy-v13-brightness" type="range" min="0" max="100" value="100" step="1">'+
- '<label for="ivy-v13-warmth">Farbtemperatur <output id="ivy-v13-warmth-label">0 %</output></label>'+
- '<input id="ivy-v13-warmth" type="range" min="0" max="100" value="0" step="1">'+
- '<p id="ivy-v13-light-readout">0 % = Schwarz · 100 % = maximale Helligkeit</p></div>';
- document.body.append(el);
- const paint=()=>{
-  const b=clamp(byId('ivy-v13-brightness').value,0,100)/100;
-  const w=clamp(byId('ivy-v13-warmth').value,0,100)/100;
-  const rgb=[255,255-95*w,255-195*w].map(c=>Math.round(b*c));
-  el.style.setProperty('background-color',`rgb(${rgb.join(',')})`,'important');
-  el.style.setProperty('background',`rgb(${rgb.join(',')})`,'important');
-  byId('ivy-v13-brightness-label').value=Math.round(b*100)+' %';
-  byId('ivy-v13-warmth-label').value=Math.round(w*100)+' %';
- };
- byId('ivy-v13-brightness').addEventListener('input',paint);
- byId('ivy-v13-warmth').addEventListener('input',paint);
- byId('ivy-v13-light-close').addEventListener('click',()=>window.toggleLightMode(false));
- // Replace legacy implementation, keep existing onclick buttons working.
- window.toggleLightMode=function(force){
-  const open=typeof force==='boolean'?force:!el.classList.contains('ivy-open');
-  el.classList.toggle('ivy-open',open);
-  el.setAttribute('aria-hidden',String(!open));
-  document.body.classList.toggle('ivy-light-active',open);
-  if(old){old.classList.add('hidden');old.style.display='none';}
-  if(open){paint();byId('ivy-v13-light-close').focus({preventScroll:true});}
- };
- window.updateLightSource=paint;
- document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&el.classList.contains('ivy-open')){e.preventDefault();window.toggleLightMode(false);}
- },true);
- paint();
-}
+
+
 function init(){
  initSizes();
  requestAnimationFrame(()=>requestAnimationFrame(layout));
@@ -2273,42 +2164,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 
  // --- 1. One genuine light mode. Both endpoints are explicitly RGB-bound. ---
- function installLight(){
-   if($('ivy-v23-light'))return;
-   const legacy=$('ivy-v13-light');
-   if(legacy)legacy.classList.remove('ivy-open');
-   const el=document.createElement('div');
-   el.id='ivy-v23-light';el.setAttribute('aria-hidden','true');
-   el.innerHTML='<button type="button" id="ivy-v23-light-close">✕ Schließen</button><div id="ivy-v23-light-panel"><h3>IVY · LICHTMODUS</h3><label for="ivy-v23-brightness">Helligkeit <output id="ivy-v23-brightness-value">100 %</output></label><input id="ivy-v23-brightness" type="range" min="0" max="100" step="1" value="100"><label for="ivy-v23-warmth">Farbtemperatur <output id="ivy-v23-warmth-value">0 %</output></label><input id="ivy-v23-warmth" type="range" min="0" max="100" step="1" value="0"><small>0 % Schwarz · 100 % Weiß (bei neutraler Farbtemperatur)</small></div>';
-   document.body.append(el);
-   const bright=$('ivy-v23-brightness'),warm=$('ivy-v23-warmth');
-   function paint(){
-     const b=clamp(bright.value,0,100),w=clamp(warm.value,0,100)/100;
-     const c=[255,255-95*w,255-195*w].map(x=>Math.round(x*b/100));
-     const color=`rgb(${c.join(', ')})`;
-     el.style.setProperty('background',color,'important');
-     el.style.setProperty('background-color',color,'important');
-     el.dataset.brightness=String(b);
-     $('ivy-v23-brightness-value').textContent=b+' %';
-     $('ivy-v23-warmth-value').textContent=Math.round(w*100)+' %';
-   }
-   bright.addEventListener('input',paint,{passive:true});warm.addEventListener('input',paint,{passive:true});
-   function toggle(force){
-     const open=typeof force==='boolean'?force:!el.classList.contains('ivy-open');
-     legacy?.classList.remove('ivy-open');
-     $('light-mode-overlay')?.classList.add('hidden');
-     el.classList.toggle('ivy-open',open);el.setAttribute('aria-hidden',String(!open));
-     document.body.classList.toggle('ivy-light-active',open);
-     if(open){paint();$('ivy-v23-light-close').focus({preventScroll:true});}
-     return open;
-   }
-   $('ivy-v23-light-close').addEventListener('click',()=>toggle(false));
-   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&el.classList.contains('ivy-open')){e.preventDefault();toggle(false)}},true);
-   // Keep every existing light button wired up to the single implementation.
-   window.toggleLightMode=toggle;window.updateLightSource=paint;
-   window.ivyV23Light={paint,toggle,getColor:()=>getComputedStyle(el).backgroundColor};
-   paint();
- }
+ 
 
  // Weather is owned by V27, while V23 retains the WetterOnline link and mobile link grid.
  const scene=$('ivy-weather-scene'), card=$('weather-card'), cityInput=$('weather-city-input');
@@ -2529,10 +2385,7 @@ function conditions(code,isDay,wind){
  if(code===0&&wind>=30)return ['wind','Windig'];
  return ['clear',isDay?'Klarer Himmel':'Klare Nacht'];
 }
-function moonPhase(nowMs){ // visual approximation of lunar phase, not exact moon ephemerides
- const ref=Date.UTC(2000,0,6,18,14),synodic=29.530588853;
- return (((nowMs-ref)/86400000)/synodic%1+1)%1;
-}
+
 function getCachedSnapshot(){try{return JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null')}catch(_){return null}}
 function makeLayers(){
  const scene=$('ivy-weather-scene');if(!scene)return;
@@ -2624,7 +2477,7 @@ function installLight(){
  for(const input of [brightness,warmth]){input.addEventListener('input',paint,{passive:true});input.addEventListener('change',paint,{passive:true});touchRange(input)}
  function toggle(force){
   const open=typeof force==='boolean'?force:!el.classList.contains('ivy-open');
-  $('ivy-v23-light')?.classList.remove('ivy-open');$('ivy-v13-light')?.classList.remove('ivy-open');$('light-mode-overlay')?.classList.add('hidden');
+  
   el.classList.toggle('ivy-open',open);el.setAttribute('aria-hidden',String(!open));
   document.body.classList.toggle('ivy-light-active',open);
   if(open){paint(); $('ivy-v27-light-close').focus({preventScroll:true})}
@@ -2636,7 +2489,7 @@ function installLight(){
  window.ivyV27Light={toggle,paint,layoutCheck:()=>null,getColor:()=>getComputedStyle(el).backgroundColor};
  paint();
 }
-function updateWeather(){const city=$('weather-city-input')?.value.trim()||localStorage.getItem('weatherCity')||'';if(city&&typeof window.ivyRefreshWeather==='function')window.ivyRefreshWeather(city)}
+
 function boot(){
  ensureHeader();makeLayers();installLight();layout();
  const old=getCachedSnapshot();if(old)render(old);
@@ -2682,7 +2535,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='df671c35e85f8b1a0937de9314eea9bf40afc0bdd9671af77151f130a157c19c';
+ const CLIENT_SIGNATURE='ec46a040026370902a1cb8acfb42aba62b03e7a5c31d7b33d58904be00a16809';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2705,13 +2558,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
    popup.hidden=false;
  }
  later?.addEventListener('click',()=>{dismissedHash=availableHash;dismissedBuild=availableBuild;popup.hidden=true});
- async function hashHTML(html){
-   const normalized=html.replace(/const CLIENT_SIGNATURE='[a-f0-9]{64}';/,
-     "const CLIENT_SIGNATURE='"+'0'.repeat(64)+"';");
-   const bytes=new TextEncoder().encode(normalized);
-   const digest=await crypto.subtle.digest('SHA-256',bytes);
-   return Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
- }
+ 
  function message(worker,data,timeout=6000){
    return new Promise((resolve,reject)=>{
      if(!worker){reject(new Error('Service Worker nicht erreichbar'));return;}

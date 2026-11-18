@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="57">
+<meta name="ivy-build" content="58">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -140,36 +140,7 @@
 </button>
 </div>
 </div>
-<div class="hidden fixed inset-0 z-[100] flex flex-col justify-end items-center pb-10" id="light-mode-overlay" style="background-color: #ffffff;">
-<div class="absolute z-[101]" id="light-mode-close-btn">
-<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2" style="border-color: var(--secondary-color) !important;">
-<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" onclick="toggleLightMode()" title="Licht aus">
-<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-</div>
-</div>
-<div class="ivy-light-controls bg-black/10 backdrop-blur-md p-6 rounded-2xl w-full max-w-sm mx-4 border border-black/5 shadow-2xl z-[101]">
-<h3 class="text-gray-800 font-bold mb-4 text-center uppercase tracking-wider text-xs">Lichtsteuerung</h3><button id="ivy-light-exit-secondary" type="button" onclick="toggleLightMode()" aria-label="Lichtmodus beenden">✕ Schließen</button>
-<div class="mb-4">
-<div class="flex justify-between text-xs text-gray-700 font-semibold mb-1">
-<span>Dunkel</span>
-<span>Helligkeit</span>
-<span>Hell</span>
-</div>
-<input class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-gray-800" id="light-brightness" max="100" min="0" oninput="updateLightSource()" type="range" value="100"/>
-</div>
-<div>
-<div class="flex justify-between text-xs text-gray-700 font-semibold mb-1">
-<span>Kalt</span>
-<span>Farbtemperatur</span>
-<span>Warm</span>
-</div>
-<input class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-orange-600" id="light-warmth" max="100" min="0" oninput="updateLightSource()" style="background: linear-gradient(to right, #ffffff, #ffb347);" type="range" value="0"/>
-</div>
-</div>
-</div>
+
 <div class="fixed bottom-8 right-8 z-50 draggable-container" id="settings-fixed-container">
 <div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
 <button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="settings-button" onclick="showSettingsModal()" title="Einstellungen öffnen">
