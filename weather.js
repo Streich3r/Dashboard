@@ -19,7 +19,7 @@
    return {
      aurora:s.weatherAurora!==false,
      droplets:s.weatherDroplets!==false,
-     intensity:clamp(Number.isFinite(+s.weatherIntensity)?(+s.weatherIntensity/100):.8,.05,1),
+     intensity:clamp(Number.isFinite(+s.weatherIntensity)?(+s.weatherIntensity/100):.8,0,1),
      speed:clamp(Number.isFinite(+s.weatherAnimationSpeed)?(+s.weatherAnimationSpeed/100):1,.3,2),
      clouds:clamp(Number.isFinite(+s.weatherClouds)?(+s.weatherClouds/100):.7,0,1)
    };
@@ -59,6 +59,6 @@
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){prefs=readPrefs();snapshot=readSnapshot();refreshTarget();wake()}},{passive:true});
  window.addEventListener('ivy-weather-snapshot',e=>{snapshot=e.detail||readSnapshot();refreshTarget();wake()},{passive:true});
  window.addEventListener('pageshow',()=>{prefs=readPrefs();snapshot=readSnapshot();refreshTarget();wake()},{passive:true});
- window.addEventListener('ivy-settings-changed',e=>{prefs={...prefs,...(e.detail||{})};prefs=readPrefs();wake()},{passive:true});
+ window.addEventListener('ivy-settings-changed',e=>{const s=e.detail||{};prefs={aurora:s.weatherAurora!==false,droplets:s.weatherDroplets!==false,intensity:clamp(Number(s.weatherIntensity??80)/100,0,1),speed:clamp(Number(s.weatherAnimationSpeed??100)/100,.3,2),clouds:clamp(Number(s.weatherClouds??70)/100,0,1)};wake()},{passive:true});
  window.IVY_WEATHER_BOOT={renderer:'canvas2d',startedAt:Math.round(boot),shaderMs:0,webgl:false}; wake();
 })();

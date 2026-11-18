@@ -2591,7 +2591,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='207f34b6a6db1ff65a6d494e3d44d48231176bce8991af36b9f2385aebc50640';
+ const CLIENT_SIGNATURE='479cab64a335074358b27c9b73bc158f9d827cc7dd1e4570ae2662f402ad8790';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2863,6 +2863,5 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.liveUpdateSettings=function(){ if(typeof oldLive==='function') oldLive(); const s=collect(read()); apply(s); };
  window.saveSettings=function(){ if(typeof oldSave==='function') oldSave(); const s=collect(read()); save(s); };
  window.cancelSettings=function(){ if(typeof oldCancel==='function') oldCancel(); apply(read()); };
- function initClockMobile(){ $('ivy-mobile-clock')?.addEventListener('click',()=>{ if(window.innerWidth>900) return; for(const n of ['weather','profile','clock']){ const el=document.getElementById(n+'-fixed-container'); const btn=document.getElementById('ivy-mobile-'+n); if(!el||!btn) continue; const on=(n==='clock')&&!el.classList.contains('ivy-card-open'); el.classList.toggle('ivy-card-open',on); btn.setAttribute('aria-expanded',String(on)); } }); }
- if(document.readyState!=='loading'){ apply(read()); initClockMobile(); } else document.addEventListener('DOMContentLoaded',()=>{ apply(read()); initClockMobile(); },{once:true});
+ if(document.readyState!=='loading'){ apply(read()); } else document.addEventListener('DOMContentLoaded',()=>{ apply(read()); },{once:true});
 })();
