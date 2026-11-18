@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="40">
+<meta name="ivy-build" content="41">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -29,8 +29,8 @@
 
 
 
-<link rel="stylesheet" href="./ivy-shell-v40.css"/>
-<script defer src="./ivy-particles-v40.js"></script>
+<link rel="stylesheet" href="./ivy-shell-v41.css"/>
+<script defer src="./ivy-particles-v41.js"></script>
 </head>
 <body class="ivy-ready" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -42,6 +42,7 @@
 <div class="fixed top-8 left-8 z-50 draggable-container" id="weather-fixed-container">
 <div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
 <div class="ivy-weather-scene" id="ivy-weather-scene" data-ivy-natural="fallback" role="region" aria-label="Aktuelles Wetter">
+<script src="./ivy-hq-buffer-v41.js"></script>
 <div class="ivy-weather-stars" aria-hidden="true"></div>
 <div class="ivy-weather-orb" id="ivy-weather-orb" aria-hidden="true"></div>
 <div class="ivy-weather-cloud cloud-a" aria-hidden="true"></div><div class="ivy-weather-cloud cloud-b" aria-hidden="true"></div>
@@ -341,6 +342,6 @@
 
 
 
-<script defer src="./ivy-app-v40.js"></script>
+<script defer src="./ivy-app-v41.js"></script>
 </body>
 </html>
