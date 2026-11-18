@@ -2591,7 +2591,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='479cab64a335074358b27c9b73bc158f9d827cc7dd1e4570ae2662f402ad8790';
+ const CLIENT_SIGNATURE='ae11d4abe10ebd5d188e101b8f1c3f4ed4de149834fa58d4d8dc5af79b79d8fc';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');

@@ -8,7 +8,7 @@
  root.dataset.ivyNatural='canvas2d-sky'; root.dataset.ivyHq='preparing';
  let w=0,h=0,scale=1,visible=true,raf=0,last=0,first=0;
  let snapshot=readSnapshot();
- let prefs=readPrefs();
+ let prefs;
  let target={night:.7,twilight:0,cloud:.65,rain:0,snow:0,fog:0,storm:0,wind:.25};
  const current={...target};
  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -29,6 +29,7 @@
  const mix=(a,b,f)=>a+(b-a)*f;
  const rgba=(r,g,b,a)=>`rgba(${r|0},${g|0},${b|0},${clamp(a)})`;
  const lerpColor=(a,b,t)=>a.map((v,i)=>mix(v,b[i],t));
+ prefs=readPrefs();
  const skyDay=[[37,97,160],[119,169,206],[194,217,222]];
  const skyDusk=[[52,66,120],[170,110,154],[243,178,151]];
  const skyNight=[[21,44,93],[74,104,151],[126,155,175]];

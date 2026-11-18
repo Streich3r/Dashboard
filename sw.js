@@ -1,7 +1,7 @@
 /* IVY Dashboard V50 – atomic offline-first shell; one active build cache. */
 'use strict';
-const BUILD='50';
-const CACHE_NAME='ivy-dashboard-shell-natural-v50';
+const BUILD='51';
+const CACHE_NAME='ivy-dashboard-shell-natural-v51';
 const CACHE_PREFIX='ivy-dashboard-shell-';
 const SHELL_FILES=["./index.html","./app.css","./particles.js","./app.js","./weather.js","./version.json","./manifest.json","./icons/favicon.ico","./icons/favicon-16x16.png","./icons/favicon-32x32.png","./icons/favicon-48x48.png","./icons/favicon-64x64.png","./icons/apple-touch-icon.png","./icons/apple-touch-icon-167x167.png","./icons/apple-touch-icon-152x152.png","./icons/icon-128.png","./icons/icon-192.png","./icons/icon-256.png","./icons/icon-512.png"];
 const base=new URL(self.registration.scope);
