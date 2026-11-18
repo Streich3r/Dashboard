@@ -2,12 +2,10 @@
 
 <html lang="de">
 <head>
-<!-- Keep the previous animated-weather layers hidden while the new WebGL scene loads. -->
-<script id="ivy-v35-first-paint">document.documentElement.classList.add('ivy-natural-boot');</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="38">
+<meta name="ivy-build" content="39">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -31,7 +29,7 @@
 
 
 
-<link rel="stylesheet" href="./ivy-shell-v38.css"/>
+<link rel="stylesheet" href="./ivy-shell-v39.css"/>
 </head>
 <body class="ivy-ready" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -42,7 +40,7 @@
 </div>
 <div class="fixed top-8 left-8 z-50 draggable-container" id="weather-fixed-container">
 <div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
-<div class="ivy-weather-scene" id="ivy-weather-scene" role="region" aria-label="Aktuelles Wetter">
+<div class="ivy-weather-scene" id="ivy-weather-scene" data-ivy-natural="fallback" role="region" aria-label="Aktuelles Wetter">
 <div class="ivy-weather-stars" aria-hidden="true"></div>
 <div class="ivy-weather-orb" id="ivy-weather-orb" aria-hidden="true"></div>
 <div class="ivy-weather-cloud cloud-a" aria-hidden="true"></div><div class="ivy-weather-cloud cloud-b" aria-hidden="true"></div>
@@ -74,7 +72,7 @@
 <div class="ivy-search-shell ivy-no-outer-frame">
 <div class="ivy-search-core">
 <button class="ivy-engine-button absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 p-2 rounded-full transition duration-200 dynamic-border border-2" id="search-engine-button" onclick="toggleSearchEngineMenu(event)" title="Suchmaschine wechseln" type="button">
-<img alt="Search Icon" class="w-full h-full object-contain rounded-full" id="current-search-icon" src="https://www.google.com/favicon.ico"/><span class="ivy-selected-fallback" id="ivy-selected-fallback">G</span>
+<img alt="Search Icon" class="w-full h-full object-contain rounded-full" id="current-search-icon" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="/><span class="ivy-selected-fallback" id="ivy-selected-fallback">G</span>
 </button>
 <input class="w-full text-white text-lg md:text-xl rounded-full focus:outline-none transition duration-300" id="search-input" placeholder="Schnellsuche..." required="" spellcheck="false" type="text"/>
 <button class="ivy-search-submit absolute right-2 top-1/2 -translate-y-1/2 h-12 px-4 rounded-full transition duration-200" id="search-submit-button" title="Suche starten" type="submit">
@@ -342,6 +340,6 @@
 
 
 
-<script defer src="./ivy-app-v38.js"></script>
+<script defer src="./ivy-app-v39.js"></script>
 </body>
 </html>
