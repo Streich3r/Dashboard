@@ -1,3 +1,3 @@
-IVY Dashboard V56 — gespeicherte Widgetpositionen werden beim Start zuverlässig wiederhergestellt. Unsichtbare Widgets verschieben keine anderen Widgets. Uhrtext skaliert mit Breite und Höhe.
+IVY Dashboard V57 – Drei Symbolbuttons im mobilen Linkmenü und vollständige Wettertransparenz.
 
-Feste Dateinamen beibehalten. Den kompletten Inhalt von Dashboard-main inklusive icons/ hochladen. Bestehende Links, Einstellungen, Orte und Positionen bleiben erhalten.
+Alle Dateien aus Dashboard-main gemeinsam veröffentlichen. Der Cache wird nach der bestätigten Aktivierung des Updates ersetzt; Nutzerdaten bleiben erhalten.

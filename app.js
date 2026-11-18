@@ -2682,7 +2682,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='944e314ef44c0750f68862baa5ba1096d421044efe50a74074fe22b490bdbe5a';
+ const CLIENT_SIGNATURE='df671c35e85f8b1a0937de9314eea9bf40afc0bdd9671af77151f130a157c19c';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2977,7 +2977,22 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  function toRGBA(color,opacity){const hex=(/^#[0-9a-f]{6}$/i.test(color)?color:'#1f2937');return 'rgba('+parseInt(hex.slice(1,3),16)+','+parseInt(hex.slice(3,5),16)+','+parseInt(hex.slice(5,7),16)+','+(opacity/100).toFixed(2)+')'}
  function apply(data){
    const weather=$('weather-card'),clock=$('clock-fixed-container')?.querySelector('.ivy-clock-card');
-   if(weather){weather.style.setProperty('--ivy-v55-weather-alpha',String(data.weatherOpacity/100));weather.style.setProperty('background',toRGBA(getComputedStyle(document.documentElement).getPropertyValue('--bg-color-hex').trim(),data.weatherOpacity),'important');}
+   if(weather){
+      const alpha=Math.max(0,Math.min(1,Number(data.weatherOpacity)/100));
+      const scene=$('ivy-weather-scene');
+      weather.style.setProperty('--ivy-v55-weather-alpha',String(alpha));
+      weather.style.setProperty('background',toRGBA(getComputedStyle(document.documentElement).getPropertyValue('--bg-color-hex').trim(),alpha*100),'important');
+      weather.style.setProperty('border-color',`rgba(128,156,255,${(alpha*.26).toFixed(3)})`,'important');
+      weather.style.setProperty('box-shadow',alpha<.01?'none':`0 12px 36px rgba(3,10,30,${(alpha*.26).toFixed(3)})`,'important');
+      if(scene){
+        // Old weather CSS carried an opaque blue background underneath the Canvas2D scene.
+        scene.style.setProperty('background','transparent','important');
+        scene.style.setProperty('background-image','none','important');
+        scene.style.setProperty('background-color','transparent','important');
+        scene.style.setProperty('border-color',`rgba(108,210,255,${(alpha*.30).toFixed(3)})`,'important');
+        scene.style.setProperty('box-shadow',alpha<.01?'none':`inset 0 1px rgba(255,255,255,${(alpha*.12).toFixed(3)})`,'important');
+      }
+   }
    if(clock){
       const width=Math.round(data.clockWidth),height=Math.round(data.clockHeight);
       clock.style.setProperty('--ivy-v55-clock-width',width+'px');
@@ -3061,7 +3076,15 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
    sync();
  }
  function sync(){const on=active(),btn=$('ivy-v54-edit-links'),check=$('ivy-v54-mobile-edit-check');
-   if(btn){btn.setAttribute('aria-pressed',String(on));btn.textContent=on?(language==='en'?'✓ Done':'✓ Fertig'):(language==='en'?'✎ Edit':'✎ Bearbeiten')}
+   if(btn){
+     const name=on?(language==='en'?'Done':'Fertig'):(language==='en'?'Edit links':'Links bearbeiten');
+     btn.setAttribute('aria-pressed',String(on));btn.setAttribute('aria-label',name);btn.title=name;
+     const label=btn.querySelector('.ivy-v57-action-label');
+     if(label)label.textContent=on?(language==='en'?'✓ Done':'✓ Fertig'):(language==='en'?'✎ Edit':'✎ Bearbeiten');
+   }
+   const back=$('ivy-v15-links-head')?.querySelector('.ivy-v15-back'),add=$('ivy-v20-add-link');
+   if(back){back.setAttribute('aria-label',language==='en'?'Back to dashboard':'Zurück zum Dashboard');back.title=back.getAttribute('aria-label')}
+   if(add){add.setAttribute('aria-label',language==='en'?'Add link':'Link hinzufügen');add.title=add.getAttribute('aria-label')}
    if(check)check.checked=on;
  }
  function exit(){document.body.classList.remove('ivy-mobile-link-edit');sync()}
