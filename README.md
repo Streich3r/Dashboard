@@ -1,7 +1,8 @@
-IVY Dashboard V41 – Originale HQ-WebGL-Landschaft mit lokalem Animationspuffer.
+IVY Dashboard V42 – hochwertige Original-HQ-Wetterkarte als Standard mit Glas-/Fenstertropfen-Effekt, Offline-First und vollständigen App-Icons.
 
-Alle Dateien aus Dashboard-main gemeinsam auf GitHub Pages hochladen. Ein Update muss vom bisherigen Dashboard bestätigt werden.
-
-Nach dem ersten vollständigen Rendern speichert die App drei komprimierte echte GPU-Bilder der Landschaft im lokalen Browser-Speicher. Beim nächsten Aufruf erscheinen diese als sich bewegender Bildpuffer sofort, danach übernimmt automatisch die live berechnete WebGL-Landschaft. Erstbesuch ohne Puffer: 2D als Fallback bis WebGL bereit ist. Wetterdaten werden im Hintergrund regelmäßig aktualisiert; Offline-First bleibt bestehen.
-
-In Einstellungen > Wetter & Standort bleibt die Option Nur schnell (2D) als Notfallmodus verfügbar.
+Wichtig:
+- Alle Dateien aus Dashboard-main gemeinsam auf GitHub Pages hochladen.
+- Die sichtbare 2D-/Qualitätsumschaltung wurde aus den Einstellungen entfernt.
+- Intern bleibt nur ein stiller Notfall-Fallback aktiv, falls WebGL auf einem Gerät überhaupt nicht startet.
+- Die Original-HQ-Landschaft bleibt Standard. Beim erneuten Start zeigt die App einen lokalen Animationspuffer aus echten HQ-Bildern, bis der Live-Renderer übernimmt.
+- Enthalten sind jetzt sortierte Browser-/PWA-/Apple-Icons: favicon.ico, 16/32/48/64 PNG, Apple Touch 152/167/180 und PWA-Icons 128/192/256/512.

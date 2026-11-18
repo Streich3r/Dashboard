@@ -1,9 +1,9 @@
 /* IVY Dashboard V40 – verified, atomic offline-first shell. */
 'use strict';
-const BUILD='41';
-const CACHE_NAME='ivy-dashboard-shell-natural-v41';
+const BUILD='42';
+const CACHE_NAME='ivy-dashboard-shell-natural-v42';
 const CACHE_PREFIX='ivy-dashboard-shell-';
-const SHELL_FILES=['./index.html','./ivy-shell-v41.css','./ivy-particles-v41.js','./ivy-app-v41.js','./ivy-weather-hq-v41.js','./ivy-hq-buffer-v41.js','./version.json','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
+const SHELL_FILES=['./index.html','./ivy-shell-v42.css','./ivy-particles-v42.js','./ivy-app-v42.js','./ivy-weather-hq-v42.js','./ivy-hq-buffer-v42.js','./version.json','./manifest.json','./favicon.ico','./favicon-16x16.png','./favicon-32x32.png','./favicon-48x48.png','./favicon-64x64.png','./apple-touch-icon.png','./apple-touch-icon-167x167.png','./apple-touch-icon-152x152.png','./icon-128.png','./icon-192.png','./icon-256.png','./icon-512.png'];
 const base=new URL(self.registration.scope);
 const indexURL=new URL('./index.html',base).href;
 const homeURL=new URL('./',base).href;
@@ -17,11 +17,11 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   const index=await byURL.get(indexURL).clone().text();
   const metadata=await byURL.get(new URL('./version.json',base).href).clone().json();
   if(metadata.build!==BUILD||metadata.hash!==await sha(index))throw new Error('Version oder HTML-Hash inkonsistent');
-  const style=await byURL.get(new URL('./ivy-shell-v41.css',base).href).clone().text();
-  const particles=await byURL.get(new URL('./ivy-particles-v41.js',base).href).clone().text();
-  const script=await byURL.get(new URL('./ivy-app-v41.js',base).href).clone().text();
-  const buffer=await byURL.get(new URL('./ivy-hq-buffer-v41.js',base).href).clone().text();
-  if(!index.includes('ivy-shell-v41.css')||!index.includes('ivy-particles-v41.js')||!index.includes('ivy-app-v41.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length||!particles.includes('IVY_PARTICLES')||!index.includes('ivy-hq-buffer-v41.js')||!buffer.includes('ivyHqFrameBuffer'))throw new Error('Unvollständiger App-Build');
+  const style=await byURL.get(new URL('./ivy-shell-v42.css',base).href).clone().text();
+  const particles=await byURL.get(new URL('./ivy-particles-v42.js',base).href).clone().text();
+  const script=await byURL.get(new URL('./ivy-app-v42.js',base).href).clone().text();
+  const buffer=await byURL.get(new URL('./ivy-hq-buffer-v42.js',base).href).clone().text();
+  if(!index.includes('ivy-shell-v42.css')||!index.includes('ivy-particles-v42.js')||!index.includes('ivy-app-v42.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length||!particles.includes('IVY_PARTICLES')||!index.includes('ivy-hq-buffer-v42.js')||!buffer.includes('ivyHqFrameBuffer'))throw new Error('Unvollständiger App-Build');
   const cache=await caches.open(CACHE_NAME);
   try{await Promise.all(resources.map(([url,res])=>cache.put(url,res)))}catch(error){await caches.delete(CACHE_NAME);throw error}
   // Do not skipWaiting: user confirmation is required on an existing installation.

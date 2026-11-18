@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="41">
+<meta name="ivy-build" content="42">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -14,8 +14,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="IVY"/>
 <link rel="manifest" href="./manifest.json"/>
+<link rel="icon" href="./favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png"/>
-<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png"/>
+<link rel="icon" type="image/png" sizes="48x48" href="./favicon-48x48.png"/>
+<link rel="icon" type="image/png" sizes="64x64" href="./favicon-64x64.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon-167x167.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon-152x152.png"/>
 
 
 
@@ -29,8 +35,8 @@
 
 
 
-<link rel="stylesheet" href="./ivy-shell-v41.css"/>
-<script defer src="./ivy-particles-v41.js"></script>
+<link rel="stylesheet" href="./ivy-shell-v42.css"/>
+<script defer src="./ivy-particles-v42.js"></script>
 </head>
 <body class="ivy-ready" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -42,7 +48,7 @@
 <div class="fixed top-8 left-8 z-50 draggable-container" id="weather-fixed-container">
 <div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
 <div class="ivy-weather-scene" id="ivy-weather-scene" data-ivy-natural="fallback" role="region" aria-label="Aktuelles Wetter">
-<script src="./ivy-hq-buffer-v41.js"></script>
+<script src="./ivy-hq-buffer-v42.js"></script>
 <div class="ivy-weather-stars" aria-hidden="true"></div>
 <div class="ivy-weather-orb" id="ivy-weather-orb" aria-hidden="true"></div>
 <div class="ivy-weather-cloud cloud-a" aria-hidden="true"></div><div class="ivy-weather-cloud cloud-b" aria-hidden="true"></div>
@@ -342,6 +348,6 @@
 
 
 
-<script defer src="./ivy-app-v41.js"></script>
+<script defer src="./ivy-app-v42.js"></script>
 </body>
 </html>
