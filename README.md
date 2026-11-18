@@ -1,9 +1,8 @@
-IVY Dashboard V53 – Sichtbarkeitseinstellungen bereinigt, Drag-and-drop Desktop/Mobil überarbeitet.
+# IVY Dashboard V54
 
-- Alte Hinweise, Sichtbarkeits-Reset-Knopf und Vorschau-Nachricht entfernt.
-- Link-Kacheln: sanftes Ziehen mit Maus, Griff oder Touch-Halten; Reihenfolge horizontal und vertikal, Tastatur-Pfeile/Home/End; Autoscroll in langer Linkliste; gespeicherte Reihenfolge.
-- Desktop-Widgets: Verschieben nur am Griff im manuellen Layoutmodus, nicht beim Klicken in die Karten.
-- Mobile Widgets: nur ein aktiver Drag-Controller (V19); alte doppelte Griffe entfallen; kein dauerhaftes 220ms-Layout-Polling mehr. Desktop/Mobil-Positionen bleiben getrennt.
-- Offline-First mit bestätigungspflichtigen Updates; stabile Dateinamen. Keine persönlichen Daten werden gelöscht.
+Offline-first Dashboard. Änderungen gegenüber V53:
 
-Installation: Alle Dateien in Dashboard-main auf GitHub Pages ersetzen. Erst nach vollständigem V53-Update alte Dateien entfernen.
+- Die Uhrkarte ist auf Mobilgeräten direkt sichtbar und wird unterhalb des Kopfbereichs positioniert; die mobile Sichtbarkeitseinstellung bleibt maßgeblich.
+- Nur mobil: Links bearbeiten über den mittleren Button zwischen Zurück und Link hinzufügen oder über Einstellungen → Suche & Bedienung. Im Normalmodus sind Bearbeiten, Löschen und Verschieben ausgeblendet.
+- Deutsch/Englisch unter Einstellungen → Sprache / Language, offline und persistent; persönliche Linktitel und Ortsnamen werden nicht übersetzt.
+- Bestehende Namen und Nutzerdaten bleiben erhalten. Service Worker prüft vor Aktivierung alle Dateiprüfsummen und bereinigt alte App-Caches.

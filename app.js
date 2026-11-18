@@ -761,6 +761,7 @@ window.showAddModal = () => {
         // =================================================================
 window.deleteLink = (event, id) => {
     event.stopPropagation();
+    if(window.matchMedia('(max-width:900px)').matches && !document.body.classList.contains('ivy-mobile-link-edit'))return;
     if (confirm("Soll dieser Schnellwahleintrag wirklich gelöscht werden?")) {
         let dials = getDialsFromLocalStorage();
         dials = dials.filter(dial => dial.id !== id);
@@ -773,6 +774,7 @@ window.deleteLink = (event, id) => {
         // =================================================================
 window.editLink = (event, id) => {
     event.stopPropagation();
+    if(window.matchMedia('(max-width:900px)').matches && !document.body.classList.contains('ivy-mobile-link-edit'))return;
     isEditingId = id;
     
     const dials = getDialsFromLocalStorage();
@@ -1299,6 +1301,7 @@ function ivyBindDialDrag(card,handle){
     scrollRaf=requestAnimationFrame(scrollStep);
   }
   function start(e,fromGrip){
+    if(window.matchMedia('(max-width:900px)').matches && !document.body.classList.contains('ivy-mobile-link-edit'))return;
     if(e.isPrimary===false||(e.button!==undefined&&e.button!==0)||drag)return;
     if(!fromGrip&&e.target.closest?.('button,input,select,textarea,[contenteditable="true"]'))return;
     drag={id:e.pointerId,source:fromGrip?handle:card,grip:fromGrip,
@@ -1380,6 +1383,7 @@ function ivyBindDialDrag(card,handle){
     if(drag||performance.now()<suppressUntil){e.preventDefault();e.stopPropagation()}
   });
   handle.addEventListener('keydown',e=>{
+    if(window.matchMedia('(max-width:900px)').matches && !document.body.classList.contains('ivy-mobile-link-edit'))return;
     const arrow={ArrowLeft:-1,ArrowUp:-1,ArrowRight:1,ArrowDown:1};
     if(!(e.key in arrow)&&e.key!=='Home'&&e.key!=='End')return;
     const order=cards(),i=order.indexOf(card);
@@ -1863,7 +1867,7 @@ function defaults(id,v,box){
  const mobileLandscape=v.h<520;
  if(id==='weather-fixed-container')return{x:safe,y:safe};
  if(id==='profile-fixed-container')return{x:sw,y:safe};
- if(id==='clock-fixed-container')return{x:clamp((v.w-box.width)/2,safe,sw),y:safe};
+ if(id==='clock-fixed-container'){const headerBottom=$('ivy-v13-header')?.getBoundingClientRect().bottom||Math.max(120,($('weather-fixed-container')?.getBoundingClientRect().bottom||0));return{x:clamp((v.w-box.width)/2,safe,sw),y:clamp(headerBottom+8,safe,sh)};}
  if(id==='settings-fixed-container')return{x:sw,y:sh};
  if(id==='light-mode-fixed-container')return{x:safe,y:sh};
  if(id==='ivy18-search')return{x:clamp((v.w-box.width)/2,safe,sw),y:clamp(defaultCardsBottom+8,safe,sh)};
@@ -1881,7 +1885,7 @@ function sizeSearch(v){const s=searchSection();if(!s)return;
 function place(id,v){const e=elById(id);if(!e)return;
  if(window.ivyV27Layout && !document.body.classList.contains('manual-layout-mode') && (id==='weather-fixed-container'||id==='profile-fixed-container'))return;
  const b=e.getBoundingClientRect(),w=Math.max(12,b.width),h=Math.max(12,b.height);
- const p=saved[id],d=defaults(id,v,{width:w,height:h});
+ const p=(id==='clock-fixed-container'&&!document.body.classList.contains('manual-layout-mode'))?null:saved[id],d=defaults(id,v,{width:w,height:h});
  const x=clamp(p&&Number.isFinite(p.x)?p.x*v.w:d.x,5,Math.max(5,v.w-w-5));
  const y=clamp(p&&Number.isFinite(p.y)?p.y*v.h:d.y,5,Math.max(5,v.h-h-5));
  if(id==='ivy18-search'){
@@ -1920,7 +1924,7 @@ function openLinks(){if(!MOBILE()||document.body.classList.contains('manual-layo
  opened=true;document.body.classList.add('ivy-v15-links-open');$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','true');
  const grid=$('quick-dials-grid');if(grid){requestAnimationFrame(()=>{grid.scrollTop=grid.scrollHeight;});}
 }
-function closeLinks(refocus=true){opened=false;document.body.classList.remove('ivy-v15-links-open');$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','false');if(refocus&&MOBILE())$('ivy-v15-links-launcher')?.focus({preventScroll:true})}
+function closeLinks(refocus=true){opened=false;document.body.classList.remove('ivy-v15-links-open');window.ivyV54LinkEdit?.exit?.();$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','false');if(refocus&&MOBILE())$('ivy-v15-links-launcher')?.focus({preventScroll:true})}
 function setup(){
  if(initialized)return;
  const links=linksSection(),search=searchSection(),launch=$('ivy-v15-links-launcher');if(!links||!search||!launch)return;initialized=true;
@@ -2402,6 +2406,7 @@ function layout(){
  requestAnimationFrame(()=>{
    const bottom=header.getBoundingClientRect().height;
    document.documentElement.style.setProperty('--ivy-v13-header-h',Math.ceil(bottom+4)+'px');
+   window.ivyV18?.refresh?.();
    requestAnimationFrame(repairMobileCollisions);
    window.ivyV27Light?.layoutCheck?.();
  });
@@ -2420,8 +2425,11 @@ function repairMobileCollisions(){
  const launcher=$('ivy-v15-links-launcher');
  if(!search||!launcher||!weather||!header)return;
  let sr=search.getBoundingClientRect(); const headerBottom=header.getBoundingClientRect().bottom;
- if(sr.top<headerBottom+12){
-   const top=Math.ceil(headerBottom+12);
+ const clock=$('clock-fixed-container');
+ const clockBottom=clock&&getComputedStyle(clock).display!=='none'&&!document.body.classList.contains('ivy-v20-hide-clock')?clock.getBoundingClientRect().bottom:0;
+ const clearBelow=Math.max(headerBottom,clockBottom);
+ if(sr.top<clearBelow+12){
+   const top=Math.ceil(clearBelow+12);
    search.style.setProperty('top',top+'px','important');
    sr=search.getBoundingClientRect();
  }
@@ -2625,7 +2633,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='7d616ecc0e3624028c67e2b94dafdf34ae94f00bc5bbb613abfd8df33641bbf1';
+ const CLIENT_SIGNATURE='14906fcfcbec80dec2df687c39eacd228537fc2d6327969371902627f7ae779c';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2890,7 +2898,8 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  function save(s){const merged={...read(),...s}; try{localStorage.setItem('dashboardSettings',JSON.stringify(merged))}catch(_){} apply(merged);}
  function populate(s){const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'}; for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; if(el.type==='checkbox') el.checked=!!s[key]; else el.value=s[key];} syncOutputs(s); }
  let clockTimer=0;
- function updateClock(s){const time=$('ivy-clock-time'),date=$('ivy-clock-date'),zone=$('ivy-clock-zone'); if(!time||!date||!zone) return; const now=new Date(); try{time.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h}).format(now);}catch(_){time.textContent=now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h});} const dateParts=[]; if(s.clockShowWeekday) dateParts.push(new Intl.DateTimeFormat('de-DE',{weekday:'long'}).format(now)); if(s.clockShowDate) dateParts.push(new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(now)); date.textContent=dateParts.join(' · '); date.style.display=dateParts.length?'block':'none'; const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Local'; zone.textContent=tz.replace(/_/g,' '); zone.style.display=s.clockShowTimezone?'block':'none'; clearTimeout(clockTimer); const delay=s.clockShowSeconds?250:(60000 - (now.getSeconds()*1000+now.getMilliseconds()) + 30); clockTimer=setTimeout(()=>updateClock(read()), delay); }
+ function updateClock(s){const time=$('ivy-clock-time'),date=$('ivy-clock-date'),zone=$('ivy-clock-zone'); if(!time||!date||!zone) return; const now=new Date(); try{time.textContent=new Intl.DateTimeFormat(window.ivyI18n?.locale||'de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h}).format(now);}catch(_){time.textContent=now.toLocaleTimeString(window.ivyI18n?.locale||'de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h});} const dateParts=[]; if(s.clockShowWeekday) dateParts.push(new Intl.DateTimeFormat(window.ivyI18n?.locale||'de-DE',{weekday:'long'}).format(now)); if(s.clockShowDate) dateParts.push(new Intl.DateTimeFormat(window.ivyI18n?.locale||'de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(now)); date.textContent=dateParts.join(' · '); date.style.display=dateParts.length?'block':'none'; const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Local'; zone.textContent=tz.replace(/_/g,' '); zone.style.display=s.clockShowTimezone?'block':'none'; clearTimeout(clockTimer); const delay=s.clockShowSeconds?250:(60000 - (now.getSeconds()*1000+now.getMilliseconds()) + 30); clockTimer=setTimeout(()=>updateClock(read()), delay); }
+ window.ivyClockRefresh=()=>updateClock(read());
  // patch existing setting lifecycle
  const oldShow=window.showSettingsModal, oldLive=window.liveUpdateSettings, oldSave=window.saveSettings, oldCancel=window.cancelSettings;
  window.showSettingsModal=function(){ if(typeof oldShow==='function') oldShow(); const s=read(); populate(s); apply(s); };
@@ -2898,4 +2907,104 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.saveSettings=function(){ if(typeof oldSave==='function') oldSave(); const s=collect(read()); save(s); };
  window.cancelSettings=function(){ if(typeof oldCancel==='function') oldCancel(); apply(read()); };
  if(document.readyState!=='loading'){ apply(read()); } else document.addEventListener('DOMContentLoaded',()=>{ apply(read()); },{once:true});
+})();
+
+
+/* IVY V54: mobile-only link editing and local German/English UI language. */
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const mobile=()=>window.matchMedia('(max-width:900px)').matches;
+ const langKey='ivyDashboardLanguage';
+ const dictionary={"LINKS":"LINKS","Wetter":"Weather","Profil":"Profile","Uhr":"Clock","Suche":"Search","← Zurück":"← Back","＋ Link hinzufügen":"+ Add link","✎ Bearbeiten":"✎ Edit","✓ Fertig":"✓ Done","Link hinzufügen":"Add link","Wähle Suchmaschine":"Choose search engine","Icons in Graustufen":"Grayscale icons","Schnellwahleintrag hinzufügen":"Add quick link","Schnellwahleintrag bearbeiten":"Edit quick link","Eigenes Icon (optional)":"Custom icon (optional)","Website-Icon automatisch erkennen":"Detect website icon automatically","Website-Icon automatisch":"Automatic website icon","Eigenes Bild":"Custom image","Abbrechen":"Cancel","Speichern":"Save","Lichtsteuerung":"Light controls","✕ Schließen":"✕ Close","Dunkel":"Dark","Hell":"Light","Helligkeit":"Brightness","Kalt":"Cool","Warm":"Warm","Farbtemperatur":"Color temperature","Dashboard-Einstellungen":"Dashboard settings","IVY · Einstellungen":"IVY · Settings","Alle öffnen":"Expand all","Alle schließen":"Collapse all","Design & Farben":"Design & colors","Farben & Darstellung":"Colors & appearance","Suchfeld & Effekte":"Search & effects","Hintergründe & Rahmen":"Backgrounds & borders","Wetter & Standort":"Weather & location","Uhr & Zeit":"Clock & time","Größen & Geräteprofile":"Sizes & device profiles","Suche & Bedienung":"Search & controls","Datensicherung · Import & Export":"Backup · Import & Export","Updates & Offline":"Updates & offline","Sprache / Language":"Language / Sprache","Akzent-/Start-Glow-Farbe:":"Accent / initial glow color:","Ziel-Glow-Farbe (Animation):":"Target glow color (animation):","Kachel-Hintergrundfarbe (Standard):":"Tile background color (default):","Kachel-Transparenz:":"Tile transparency:","Suchfarben mit den Dashboard-Akzentfarben synchronisieren":"Sync search colors with dashboard accents","Suchfeld-Farbe 1":"Search color 1","Suchfeld-Farbe 2":"Search color 2","Glow-Effekt":"Glow effect","Aurora + Scan":"Aurora + scan","Weicher Puls":"Soft pulse","Statischer Glow":"Static glow","Aus":"Off","Glow-Intensität":"Glow intensity","Animationsgeschwindigkeit":"Animation speed","Suchfeld-Deckkraft":"Search opacity","Suchmaschinenmenü-Deckkraft":"Search engine menu opacity","Suchfeld-Randdeckkraft":"Search border opacity","Hintergrund von Modulen/Buttons ausblenden (Wetter, Profil, Steuerung):":"Hide widget/button backgrounds (weather, profile, controls):","Hintergrund von Schnellwahleinträgen ausblenden (Kacheln):":"Hide quick-link tile backgrounds:","Ränder ausblenden (Dynamic Border):":"Hide borders (dynamic border):","\"Link hinzufügen\"-Button ausblenden:":"Hide \"Add link\" button:","Standort-Suchfeld unter der Wetterkarte anzeigen":"Show location search below weather card","Aurora anzeigen":"Show aurora","Fenstertropfen anzeigen":"Show window droplets","Effektstärke":"Effect intensity","Wolkendichte":"Cloud density","24-Stunden-Format":"24-hour format","Sekunden anzeigen":"Show seconds","Datum anzeigen":"Show date","Wochentag anzeigen":"Show weekday","Zeitzone anzeigen":"Show time zone","Darstellung":"Appearance","Glas":"Glass","Minimal":"Minimal","Kartengröße":"Card size","Wetter-Karten-Breite (Tailwind-Klasse):":"Weather card width (Tailwind class):","Profilbild-Größe:":"Profile image size:","Quick-Dial-Icon-Größe:":"Quick-link icon size:","Klein (w-16 h-16)":"Small (w-16 h-16)","Mittel (w-20 h-20)":"Medium (w-20 h-20)","Groß (w-24 h-24)":"Large (w-24 h-24)","Klein (w-8 h-8)":"Small (w-8 h-8)","Mittel (w-10 h-10)":"Medium (w-10 h-10)","Groß (w-12 h-12)":"Large (w-12 h-12)","Zusätzliche Größen & Bedienung":"Additional sizes & controls","Suchfeld-Breite":"Search field width","Link-Container-Breite":"Links container width","Link-Container-Höhe":"Links container height","Link-Kachel-Größe":"Link tile size","Link-Icon-Größe":"Link icon size","Buttons / Touchflächen":"Buttons / touch targets","Profilbild-Größe":"Profile image size","Wetterkarte-Breite":"Weather card width","Wetterkarte-Höhe":"Weather card height","Die Größen passen sich automatisch an den verfügbaren Platz an. Die bestehenden Designfarben bleiben erhalten.":"Sizes adapt to available space. Your design colors are preserved.","Manuellen Layout-Modus aktivieren (Drag & Drop):":"Enable manual layout (drag & drop):","Gewählte Suchmaschine speichern:":"Remember selected search engine:","Suchvorschläge (Autofill) deaktivieren:":"Disable search suggestions (autofill):","Cache löschen (Alle Daten)":"Clear cache (all data)","Speichern & Schließen":"Save & close","Geräteprofile & Sichtbarkeit":"Device profiles & visibility","Farben und Glow bleiben gemeinsam. Positionen, Größen und sichtbare Widgets sind pro Ansichtsmodus getrennt.":"Colors and glow are shared. Positions, sizes and visible widgets are separate for each view.","Einstellungen bearbeiten für":"Edit settings for","Desktop-Ansicht":"Desktop view","Mobil-Ansicht":"Mobile view","Wetter anzeigen":"Show weather","Profil anzeigen":"Show profile","Schnellsuche anzeigen":"Show quick search","Uhr anzeigen":"Show clock","Exportiert gespeicherte Links, Einstellungen, Profil, Wetterort und Layoutpositionen. Ein Import ersetzt nur die enthaltenen gespeicherten Werte; zuvor ein Backup erstellen.":"Exports saved links, settings, profile, weather location and layout positions. Import replaces only included saved values; create a backup first.","↓ Backup exportieren":"↓ Export backup","↑ Backup importieren":"↑ Import backup","Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.":"The app starts instantly from its offline cache. Version checks run in the background; the cache is updated only after your confirmation.","↻ Jetzt nach Updates suchen":"↻ Check for updates","☁ Wetter jetzt aktualisieren":"☁ Refresh weather now","Automatische Prüfung im Hintergrund aktiviert.":"Automatic background checks enabled.","Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.":"Personal data stays in your browser. Only “Clear all data” removes settings and links.","⧉ Lade-Diagnose kopieren":"⧉ Copy load diagnostics","✓ Diagnose kopiert":"✓ Diagnostics copied","✦ IVY Dashboard · Update verfügbar":"✦ IVY Dashboard · Update available","Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?":"A new dashboard version is available. Reload now to apply it?","Jetzt aktualisieren":"Update now","Später":"Later","Bitte zuerst einen Wetterstandort festlegen.":"Please choose a weather location first.","Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.":"Offline – last saved weather data remain visible.","Wetteraktualisierung gestartet.":"Weather refresh started.","Neue Version gefunden – im Popup installieren.":"New version found – install it in the popup.","Suche nach Updates …":"Checking for updates …","Eine Prüfung läuft bereits.":"A check is already running.","Bitte das Dashboard im Vordergrund öffnen.":"Please bring the dashboard to the foreground.","Offline – die gespeicherte Version bleibt nutzbar.":"Offline – your saved version remains available.","Versionsdatei nicht erreichbar.":"Version file unavailable.","Ungültige Versionsdatei.":"Invalid version file.","Keine Verbindung zum Updateserver – offline weiter nutzbar.":"Cannot reach the update server – offline version remains available.","Update wird im Offline-Cache installiert …":"Installing update in the offline cache …","Update nicht übernommen:":"Update not applied:","Bitte erneut versuchen.":"Please try again.","Bereit":"Ready","Live-Wetterdaten":"Live weather data","Ort unten eingeben":"Enter a city below","Schneefall":"Snowfall","Gewitter":"Thunderstorm","Gefrierender Regen":"Freezing rain","Leichter Regen":"Light rain","Regen":"Rain","Nebel":"Fog","Bewölkt":"Cloudy","Klar":"Clear","Stadt eingeben, z. B. Berlin":"Enter a city, e.g. Berlin","Schnellsuche...":"Quick search...","Einstellungen suchen …":"Search settings …","Titel (z.B. Google)":"Title (e.g. Google)","URL (z.B. https://google.com)":"URL (e.g. https://google.com)","Eintrag bearbeiten":"Edit link","Eintrag löschen":"Delete link","Link verschieben":"Move link","Links bearbeiten":"Edit links","Mobile Linkbearbeitung":"Mobile link editing","Bearbeitungsmodus für Links":"Link editing mode","Nur in der mobilen Linkansicht. Aktiviert Bearbeiten, Löschen und Verschieben.":"Only in the mobile links view. Enables edit, delete and reorder.","Sprache auswählen":"Choose language","Sprache für das Dashboard":"Dashboard language","Deutsch":"German","Englisch":"English","Sprachwechsel wird sofort gespeichert.":"Language changes are saved immediately.","Bearbeiten":"Edit","Fertig":"Done","Bitte geben Sie einen Titel und eine URL ein.":"Please enter a title and a URL.","Soll dieser Schnellwahleintrag wirklich gelöscht werden?":"Do you really want to delete this quick link?","Bitte eine gültige HTTP- oder HTTPS-Adresse eingeben.":"Please enter a valid HTTP or HTTPS address.","Icon-URL muss eine gültige HTTP-/HTTPS-Adresse sein.":"Icon URL must be a valid HTTP/HTTPS address."};
+ const textState=new WeakMap(),attrState=new WeakMap();
+ let language=localStorage.getItem(langKey)==='en'?'en':'de';
+ const skip=el=>el?.closest?.('#quick-dials-grid,#weather-city,#ivy-clock-time,#ivy-clock-date,#ivy-clock-zone,#user-id-display');
+ function translated(raw){
+   const trimmed=raw.trim();if(!trimmed)return raw;
+   const mapped=dictionary[trimmed]||trimmed.replace(/^(.*?)(\s+)([0-9]+(?:\s*%|\s*px))$/,(_,prefix,space,num)=>(dictionary[prefix]||prefix)+space+num)
+     .replace(/^(Installiert: V)(\d+)$/,(_,p,n)=>'Installed: V'+n)
+     .replace(/^(Alles aktuell – Version V)(\d+)( ist installiert\.)$/,(_,p,n)=>'Up to date – version V'+n+' is installed.')
+     .replace(/^(\d+) passende Bereiche$/,(_,n)=>n+' matching sections');
+   return raw.replace(trimmed,mapped);
+ }
+ function translateNode(n){
+   if(skip(n.parentElement))return;
+   const current=n.nodeValue||'';let st=textState.get(n);
+   if(!st||current!==st.de&&current!==st.en){st={de:current,en:translated(current)};textState.set(n,st)}
+   const next=language==='en'?st.en:st.de;
+   if(current!==next)n.nodeValue=next;
+ }
+ function translateAttrs(el){
+   if(skip(el))return;
+   const names=['placeholder','title','aria-label'];let all=attrState.get(el)||{};
+   for(const key of names){if(!el.hasAttribute(key))continue;
+     const current=el.getAttribute(key)||'';let st=all[key];
+     if(!st||current!==st.de&&current!==st.en){st={de:current,en:translated(current)};all[key]=st}
+     const next=language==='en'?st.en:st.de;if(current!==next)el.setAttribute(key,next);
+   }attrState.set(el,all);
+ }
+ function translate(root=document.body){
+   if(!root)return;
+   if(root.nodeType===3){translateNode(root);return}
+   if(root.nodeType!==1)return;
+   if(skip(root))return;
+   translateAttrs(root);
+   const walker=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT);
+   let n;while((n=walker.nextNode())){
+     if(n.nodeType===3){if(n.parentElement?.closest('script,style,svg,option[data-user-value]'))continue;translateNode(n)}
+     else if(!n.closest('script,style,svg'))translateAttrs(n);
+   }
+ }
+ function refresh(){document.documentElement.lang=language;translate();window.ivyClockRefresh?.();}
+ function setLanguage(value){language=value==='en'?'en':'de';try{localStorage.setItem(langKey,language)}catch(_){ }const select=$('ivy-v54-language');if(select)select.value=language;refresh();}
+ window.ivyI18n={get language(){return language},get locale(){return language==='en'?'en-GB':'de-DE'},setLanguage,translate};
+ function active(){return document.body.classList.contains('ivy-mobile-link-edit')}
+ function setEdit(on){
+   const enable=!!on&&mobile()&&document.body.classList.contains('ivy-v15-links-open');
+   document.body.classList.toggle('ivy-mobile-link-edit',enable);
+   sync();
+ }
+ function sync(){const on=active(),btn=$('ivy-v54-edit-links'),check=$('ivy-v54-mobile-edit-check');
+   if(btn){btn.setAttribute('aria-pressed',String(on));btn.textContent=on?(language==='en'?'✓ Done':'✓ Fertig'):(language==='en'?'✎ Edit':'✎ Bearbeiten')}
+   if(check)check.checked=on;
+ }
+ function exit(){document.body.classList.remove('ivy-mobile-link-edit');sync()}
+ window.ivyV54LinkEdit={set:setEdit,exit,sync,get active(){return active()}};
+ function mount(){
+   const edit=$('ivy-v54-edit-links');
+   edit?.addEventListener('click',()=>setEdit(!active()));
+   const grid=$('quick-dials-grid');
+   grid?.addEventListener('click',e=>{
+     if(!mobile()||!active())return;
+     if(e.target.closest('a[href]')){e.preventDefault();e.stopPropagation()}
+   },true);
+   // Dedicated mobile-only preference inside the existing collapsible settings group.
+   const behavior=$('ivy-v37-group-behavior')?.querySelector('.ivy-v37-content');
+   if(behavior&&!$('ivy-v54-mobile-edit-setting')){
+     const wrap=document.createElement('div');wrap.id='ivy-v54-mobile-edit-setting';wrap.className='ivy-v54-mobile-setting';
+     wrap.innerHTML='<label class="ivy-v20-line" for="ivy-v54-mobile-edit-check">Bearbeitungsmodus für Links <input type="checkbox" id="ivy-v54-mobile-edit-check"></label><p>Nur in der mobilen Linkansicht. Aktiviert Bearbeiten, Löschen und Verschieben.</p>';
+     behavior.appendChild(wrap);
+     $('ivy-v54-mobile-edit-check').addEventListener('change',e=>{
+       if(e.target.checked&&!document.body.classList.contains('ivy-v15-links-open'))window.ivyV15Links?.open?.();
+       setEdit(e.target.checked);
+     });
+   }
+   // Local language selection in settings; no network translation requests.
+   const settings=$('ivy-v37-group-backup')?.parentElement;
+   if(settings&&!$('ivy-v37-group-language')){
+     const group=document.createElement('details');group.id='ivy-v37-group-language';group.className='ivy-v37-group';
+     group.innerHTML='<summary>Sprache / Language</summary><div class="ivy-v37-content"><div class="ivy-setting-line"><label for="ivy-v54-language">Sprache für das Dashboard</label><select id="ivy-v54-language" aria-label="Sprache auswählen"><option value="de">Deutsch</option><option value="en">Englisch</option></select></div><p class="ivy-v37-help">Sprachwechsel wird sofort gespeichert.</p></div>';
+     settings.insertBefore(group,$('ivy-v37-group-backup'));
+     const select=$('ivy-v54-language');select.value=language;select.addEventListener('change',e=>{setLanguage(e.target.value);sync()});
+   }
+   window.matchMedia('(max-width:900px)').addEventListener?.('change',()=>{if(!mobile())exit()});
+   // Translate only the small, dynamic UI surfaces; no global MutationObserver.
+   for(const id of ['settings-modal','add-modal','ivy-update-popup','ivy-weather-condition','ivy-v37-update-status']){
+     const root=$(id);if(!root)continue;let queued=false;
+     new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;if(language==='en')translate(root)})})
+       .observe(root,{subtree:true,childList:true,characterData:true});
+   }
+   refresh();sync();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
