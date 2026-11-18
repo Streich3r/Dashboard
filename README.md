@@ -1,8 +1,5 @@
-# IVY Dashboard V54
+IVY Dashboard V55 – Wetter-/Uhr-Transparenz, Uhrbreite/-höhe und stabilere Drag-Positionen.
 
-Offline-first Dashboard. Änderungen gegenüber V53:
+Dateinamen unverändert. Alle Dateien inklusive icons/ hochladen und Update bestätigen. Keine persönlichen Daten löschen.
 
-- Die Uhrkarte ist auf Mobilgeräten direkt sichtbar und wird unterhalb des Kopfbereichs positioniert; die mobile Sichtbarkeitseinstellung bleibt maßgeblich.
-- Nur mobil: Links bearbeiten über den mittleren Button zwischen Zurück und Link hinzufügen oder über Einstellungen → Suche & Bedienung. Im Normalmodus sind Bearbeiten, Löschen und Verschieben ausgeblendet.
-- Deutsch/Englisch unter Einstellungen → Sprache / Language, offline und persistent; persönliche Linktitel und Ortsnamen werden nicht übersetzt.
-- Bestehende Namen und Nutzerdaten bleiben erhalten. Service Worker prüft vor Aktivierung alle Dateiprüfsummen und bereinigt alte App-Caches.
+Neue Kartenoptionen werden getrennt für Desktop und Mobil in ivyV55CardOptions gespeichert; bisherige Konfigurationen bleiben bestehen.

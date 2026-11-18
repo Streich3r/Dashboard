@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="54">
+<meta name="ivy-build" content="55">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -237,6 +237,7 @@
 <div class="ivy-setting-line"><label for="setting-weather-intensity">Effektstärke <output id="setting-weather-intensity-value">80%</output></label><input id="setting-weather-intensity" type="range" min="0" max="100" step="5" value="80" oninput="liveUpdateSettings()"></div>
 <div class="ivy-setting-line"><label for="setting-weather-speed">Animationsgeschwindigkeit <output id="setting-weather-speed-value">100%</output></label><input id="setting-weather-speed" type="range" min="30" max="200" step="5" value="100" oninput="liveUpdateSettings()"></div>
 <div class="ivy-setting-line"><label for="setting-weather-clouds">Wolkendichte <output id="setting-weather-clouds-value">70%</output></label><input id="setting-weather-clouds" type="range" min="0" max="100" step="5" value="70" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="ivy-v55-weather-opacity">Wetterkarte – Transparenz <output id="ivy-v55-weather-opacity-value">100%</output></label><input id="ivy-v55-weather-opacity" type="range" min="0" max="100" step="5" value="100" oninput="window.ivyV55Controls?.preview()"></div>
 <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Uhr</h4>
 <div class="ivy-setting-line"><label for="setting-clock-24h">24-Stunden-Format</label><input id="setting-clock-24h" type="checkbox" onchange="liveUpdateSettings()" checked></div>
 <div class="ivy-setting-line"><label for="setting-clock-seconds">Sekunden anzeigen</label><input id="setting-clock-seconds" type="checkbox" onchange="liveUpdateSettings()"></div>
@@ -245,6 +246,9 @@
 <div class="ivy-setting-line"><label for="setting-clock-timezone">Zeitzone anzeigen</label><input id="setting-clock-timezone" type="checkbox" onchange="liveUpdateSettings()"></div>
 <div class="ivy-setting-line"><label for="setting-clock-style">Darstellung</label><select id="setting-clock-style" onchange="liveUpdateSettings()"><option value="glass">Glas</option><option value="minimal">Minimal</option><option value="glow">Glow</option></select></div>
 <div class="ivy-setting-line"><label for="setting-clock-scale">Kartengröße <output id="setting-clock-scale-value">100%</output></label><input id="setting-clock-scale" type="range" min="80" max="140" step="5" value="100" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="ivy-v55-clock-opacity">Uhrkarte – Transparenz <output id="ivy-v55-clock-opacity-value">100%</output></label><input id="ivy-v55-clock-opacity" type="range" min="0" max="100" step="5" value="100" oninput="window.ivyV55Controls?.preview()"></div>
+<div class="ivy-setting-line"><label for="ivy-v55-clock-width">Uhrkarte – Breite <output id="ivy-v55-clock-width-value">235 px</output></label><input id="ivy-v55-clock-width" type="range" min="160" max="460" step="5" value="235" oninput="window.ivyV55Controls?.preview()"></div>
+<div class="ivy-setting-line"><label for="ivy-v55-clock-height">Uhrkarte – Höhe <output id="ivy-v55-clock-height-value">120 px</output></label><input id="ivy-v55-clock-height" type="range" min="75" max="320" step="5" value="120" oninput="window.ivyV55Controls?.preview()"></div>
 <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Größen &amp; Layout</h4>
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
 <label class="text-white" for="setting-weather-width">Wetter-Karten-Breite (Tailwind-Klasse):</label>
