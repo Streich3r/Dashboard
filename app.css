@@ -2586,7 +2586,7 @@ html body:not(.ivy-v15-links-open) #ivy-v13-header[data-ivy-show-weather="false"
 
 #clock-fixed-container{position:fixed!important;top:2rem;left:50%;transform:translateX(-50%);z-index:50;max-width:calc(100vw - 24px)}
 #clock-fixed-container>div{pointer-events:auto!important}
-body.ivy-v49-hide-clock #clock-fixed-container{display:none!important}
+html body.ivy-v20-hide-clock #clock-fixed-container{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .ivy-clock-card{min-width:210px;padding:12px 16px!important;border-radius:16px;border:1px solid rgba(128,156,255,.26);backdrop-filter:blur(10px)}
 .ivy-clock-face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;transform:scale(var(--ivy-clock-scale,1));transform-origin:center center;transition:transform .22s ease,opacity .22s ease}
 .ivy-clock-time{font-size:clamp(32px,4vw,48px);line-height:1;font-weight:700;letter-spacing:.04em;color:#f4fbff;text-shadow:0 0 18px rgba(98,222,255,.18)}
@@ -2603,3 +2603,6 @@ body.ivy-hide-weather-location #weather-city-input{display:none!important}
   #clock-fixed-container.ivy-card-open{display:block!important;z-index:850!important}
   #clock-fixed-container .ivy-clock-card{width:100%!important;min-width:unset}
 }
+
+/* V52: Clock visibility follows the selected desktop/mobile device profile. */
+html body.ivy-v20-hide-clock #ivy-mobile-clock{display:none!important}

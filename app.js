@@ -2028,27 +2028,43 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
  const $=id=>document.getElementById(id);
  const K='ivyV20DisplayPrefs', SIZEK='ivyV20DeviceSizes';
  const modeNow=()=>matchMedia('(max-width:900px)').matches?'mobile':'desktop';
- const defaults={weather:true,profile:true,search:true};
- const prefs=()=>{try{return JSON.parse(localStorage.getItem(K)||'{}')||{}}catch{return {}}};
+ const defaults={weather:true,profile:true,search:true,clock:true};
+ const prefs=()=>{
+  try{
+   const p=JSON.parse(localStorage.getItem(K)||'{}')||{};
+   if(p.__clockMigrated!==true){
+    let legacy=true;
+    try{legacy=JSON.parse(localStorage.getItem('dashboardSettings')||'{}')?.clockVisible!==false}catch(_){}
+    for(const m of ['desktop','mobile']){
+     p[m]={...(p[m]||{})};
+     if(!Object.prototype.hasOwnProperty.call(p[m],'clock'))p[m].clock=legacy;
+    }
+    p.__clockMigrated=true;
+    localStorage.setItem(K,JSON.stringify(p));
+   }
+   return p;
+  }catch{return {}}
+ };
  const get=m=>({...defaults,...(prefs()[m]||{})});
  const getEditMode=()=>window.ivyV20SelectedMode||modeNow();
  const applyVisibility=()=>{
   const d=get(modeNow());
-  for(const name of ['weather','profile','search'])document.body.classList.toggle('ivy-v20-hide-'+name,!d[name]);
+  for(const name of ['weather','profile','search','clock'])document.body.classList.toggle('ivy-v20-hide-'+name,!d[name]);
   // The weather preference must never change the profile preference or parent header.
   document.documentElement.dataset.ivyWeatherVisible=String(d.weather);
   document.documentElement.dataset.ivyProfileVisible=String(d.profile);
+  document.documentElement.dataset.ivyClockVisible=String(d.clock);
   requestAnimationFrame(()=>window.ivyV27Layout?.());
  };
  function updateUI(){
   const m=getEditMode(),d=get(m);
   if($('ivy-v20-editmode'))$('ivy-v20-editmode').value=m;
-  for(const name of ['weather','profile','search'])if($('ivy-v20-visible-'+name))$('ivy-v20-visible-'+name).checked=d[name];
+  for(const name of ['weather','profile','search','clock'])if($('ivy-v20-visible-'+name))$('ivy-v20-visible-'+name).checked=d[name];
   window.ivyV20RefreshSizes?.();
  }
  function saveCheckbox(){
   const m=getEditMode(),all=prefs(),d=get(m);
-  for(const name of ['weather','profile','search'])d[name]=!!$('ivy-v20-visible-'+name)?.checked;
+  for(const name of ['weather','profile','search','clock'])d[name]=!!$('ivy-v20-visible-'+name)?.checked;
   all[m]=d;localStorage.setItem(K,JSON.stringify(all));applyVisibility();
  }
  function mountSettings(){
@@ -2066,12 +2082,13 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    <label class="ivy-v20-line" for="ivy-v20-visible-weather">Wetter anzeigen <input type="checkbox" id="ivy-v20-visible-weather" checked></label>
    <label class="ivy-v20-line" for="ivy-v20-visible-profile">Profil anzeigen <input type="checkbox" id="ivy-v20-visible-profile" checked></label>
    <label class="ivy-v20-line" for="ivy-v20-visible-search">Schnellsuche anzeigen <input type="checkbox" id="ivy-v20-visible-search" checked></label>
+   <label class="ivy-v20-line" for="ivy-v20-visible-clock">Uhr anzeigen <input type="checkbox" id="ivy-v20-visible-clock" checked></label>
    <p>Die fünf Größenregler weiter unten speichern automatisch für den hier gewählten Modus. Die Größe des Suchfelds und des Link-Bereichs bleibt separat einstellbar.</p>
    <button class="ivy-v20-reset" type="button" id="ivy-v20-reset-device">Sichtbarkeit dieses Profils zurücksetzen</button>`;
   const size=$('ivy-v13-link-size')?.closest('.ivy-v13-section');
   if(size)size.before(box);else settings.appendChild(box);
   $('ivy-v20-editmode').addEventListener('change',e=>{window.ivyV20SelectedMode=e.target.value;updateUI();});
-  for(const name of ['weather','profile','search'])$('ivy-v20-visible-'+name).addEventListener('change',saveCheckbox);
+  for(const name of ['weather','profile','search','clock'])$('ivy-v20-visible-'+name).addEventListener('change',saveCheckbox);
   $('ivy-v20-reset-device').addEventListener('click',()=>{
    const m=getEditMode(),all=prefs();delete all[m];localStorage.setItem(K,JSON.stringify(all));
    updateUI();applyVisibility();
@@ -2137,8 +2154,8 @@ const KEY='ivyV20DisplayPrefs';
 const mode=()=>matchMedia('(max-width:900px)').matches?'mobile':'desktop';
 const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch{return {}}};
 function visible(){
- const flags={weather:true,profile:true,search:true,...(read()[mode()]||{})};
- for(const [name,id] of [['weather','weather-fixed-container'],['profile','profile-fixed-container']]){
+ const flags={weather:true,profile:true,search:true,clock:true,...(read()[mode()]||{})};
+ for(const [name,id] of [['weather','weather-fixed-container'],['profile','profile-fixed-container'],['clock','clock-fixed-container']]){
   const el=$(id);if(!el)continue;
   if(flags[name]){
    // Do not force display:block: fullscreen mode controls visibility too.
@@ -2159,6 +2176,7 @@ function visible(){
  document.body.classList.toggle('ivy-v20-hide-weather',!flags.weather);
  document.body.classList.toggle('ivy-v20-hide-profile',!flags.profile);
  document.body.classList.toggle('ivy-v20-hide-search',!flags.search);
+ document.body.classList.toggle('ivy-v20-hide-clock',!flags.clock);
  window.ivyV18?.refresh?.();
 }
 function init(){
@@ -2168,7 +2186,7 @@ function init(){
   msg.textContent='Die Größen werden getrennt für Desktop und Mobil gespeichert.';
   section.appendChild(msg);
  }
- const controls=['weather','profile','search'].map(x=>$('ivy-v20-visible-'+x)).filter(Boolean);
+ const controls=['weather','profile','search','clock'].map(x=>$('ivy-v20-visible-'+x)).filter(Boolean);
  for(const ctrl of controls)ctrl.addEventListener('change',()=>requestAnimationFrame(visible));
  $('ivy-v20-reset-device')?.addEventListener('click',()=>requestAnimationFrame(visible));
  $('ivy-v20-editmode')?.addEventListener('change',()=>requestAnimationFrame(()=>window.ivyV20RefreshSizes?.()));
@@ -2591,7 +2609,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='ae11d4abe10ebd5d188e101b8f1c3f4ed4de149834fa58d4d8dc5af79b79d8fc';
+ const CLIENT_SIGNATURE='1c5ab8347e4d8bc5a511c547536e6b51471c5f01b338669e6c80951b25abbbd0';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2843,18 +2861,18 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 /* IVY V49 extras — weather controls + clock card */
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
- const DEFAULTS={weatherAurora:true,weatherDroplets:true,weatherIntensity:80,weatherAnimationSpeed:100,weatherClouds:70,clockVisible:true,clockUse24h:true,clockShowSeconds:false,clockShowDate:true,clockShowWeekday:true,clockShowTimezone:false,clockStyle:'glass',clockScale:100};
+ const DEFAULTS={weatherAurora:true,weatherDroplets:true,weatherIntensity:80,weatherAnimationSpeed:100,weatherClouds:70,clockUse24h:true,clockShowSeconds:false,clockShowDate:true,clockShowWeekday:true,clockShowTimezone:false,clockStyle:'glass',clockScale:100};
  let preview={...DEFAULTS};
  function read(){let s={};try{s=JSON.parse(localStorage.getItem('dashboardSettings')||'{}')||{}}catch(_){s={}};return {...DEFAULTS,...s};}
  function collect(base){const s={...(base||read())};
-  const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockVisible:'setting-clock-visible',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'};
+  const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'};
   for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; s[key]=el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;}
   return s;
  }
  function syncOutputs(s){const pairs=[['setting-weather-intensity-value',s.weatherIntensity],['setting-weather-speed-value',s.weatherAnimationSpeed],['setting-weather-clouds-value',s.weatherClouds],['setting-clock-scale-value',s.clockScale]]; for(const [id,val] of pairs){const el=$(id); if(el)el.textContent=String(val)+'%';}}
- function apply(s){preview={...DEFAULTS,...s}; syncOutputs(preview); document.body.classList.toggle('ivy-v49-hide-clock', preview.clockVisible===false); document.documentElement.style.setProperty('--ivy-clock-scale',(Number(preview.clockScale||100)/100).toFixed(2)); const face=$('ivy-clock-face'); if(face) face.dataset.style=preview.clockStyle||'glass'; window.dispatchEvent(new CustomEvent('ivy-settings-changed',{detail:preview})); updateClock(preview);}
+ function apply(s){preview={...DEFAULTS,...s}; syncOutputs(preview); document.documentElement.style.setProperty('--ivy-clock-scale',(Number(preview.clockScale||100)/100).toFixed(2)); const face=$('ivy-clock-face'); if(face) face.dataset.style=preview.clockStyle||'glass'; window.dispatchEvent(new CustomEvent('ivy-settings-changed',{detail:preview})); updateClock(preview);}
  function save(s){const merged={...read(),...s}; try{localStorage.setItem('dashboardSettings',JSON.stringify(merged))}catch(_){} apply(merged);}
- function populate(s){const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockVisible:'setting-clock-visible',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'}; for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; if(el.type==='checkbox') el.checked=!!s[key]; else el.value=s[key];} syncOutputs(s); }
+ function populate(s){const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'}; for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; if(el.type==='checkbox') el.checked=!!s[key]; else el.value=s[key];} syncOutputs(s); }
  let clockTimer=0;
  function updateClock(s){const time=$('ivy-clock-time'),date=$('ivy-clock-date'),zone=$('ivy-clock-zone'); if(!time||!date||!zone) return; const now=new Date(); try{time.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h}).format(now);}catch(_){time.textContent=now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h});} const dateParts=[]; if(s.clockShowWeekday) dateParts.push(new Intl.DateTimeFormat('de-DE',{weekday:'long'}).format(now)); if(s.clockShowDate) dateParts.push(new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(now)); date.textContent=dateParts.join(' · '); date.style.display=dateParts.length?'block':'none'; const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Local'; zone.textContent=tz.replace(/_/g,' '); zone.style.display=s.clockShowTimezone?'block':'none'; clearTimeout(clockTimer); const delay=s.clockShowSeconds?250:(60000 - (now.getSeconds()*1000+now.getMilliseconds()) + 30); clockTimer=setTimeout(()=>updateClock(read()), delay); }
  // patch existing setting lifecycle
