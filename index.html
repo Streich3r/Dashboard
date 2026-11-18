@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IVY Dashboard</title>
+<meta name="ivy-build" content="44">
+<!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
+
+<meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
+<meta name="theme-color" content="#070b18"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="IVY"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="icon" href="./icons/favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16x16.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png"/>
+<link rel="icon" type="image/png" sizes="48x48" href="./icons/favicon-48x48.png"/>
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64x64.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="./icons/apple-touch-icon-167x167.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="./icons/apple-touch-icon-152x152.png"/>
+
+<link rel="stylesheet" href="./app.css"/>
+<script defer src="./particles.js"></script>
+<script defer src="./weather-cache.js"></script>
+</head>
+<body class="ivy-ready" id="body-root">
+<button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
+<div id="ivy-particles-background"><canvas aria-hidden="true" id="ivy-particles-canvas"></canvas></div>
+<div id="ivy-mobile-toolbar" aria-label="Mobile Dashboard-Leiste">
+<button id="ivy-mobile-weather" type="button" aria-expanded="false" aria-controls="weather-fixed-container" title="Wetterkarte öffnen">☁ <span>Wetter</span></button>
+<button id="ivy-mobile-profile" type="button" aria-expanded="false" aria-controls="profile-fixed-container" title="Profilkarte öffnen">◉ <span>Profil</span></button>
+</div>
+<div class="fixed top-8 left-8 z-50 draggable-container" id="weather-fixed-container">
+<div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
+<div class="ivy-weather-scene" id="ivy-weather-scene" data-ivy-natural="fallback" role="region" aria-label="Aktuelles Wetter">
+
+<div class="ivy-weather-stars" aria-hidden="true"></div>
+<div class="ivy-weather-orb" id="ivy-weather-orb" aria-hidden="true"></div>
+<div class="ivy-weather-cloud cloud-a" aria-hidden="true"></div><div class="ivy-weather-cloud cloud-b" aria-hidden="true"></div>
+<div class="ivy-weather-rain" id="ivy-weather-rain" aria-hidden="true"></div>
+<div class="ivy-weather-data">
+<div class="ivy-weather-city" id="ivy-weather-city">Wetter</div>
+<div class="ivy-weather-temp" id="ivy-weather-temp">--°</div>
+<div class="ivy-weather-condition" id="ivy-weather-condition">Ort unten eingeben</div>
+<div class="ivy-weather-stats" id="ivy-weather-stats">Live-Wetterdaten</div>
+</div>
+<div class="ivy-weather-status" id="ivy-weather-status" aria-live="polite">Bereit</div>
+</div>
+<input class="mt-2 w-full bg-gray-700/50 text-white text-xs p-1 rounded focus:outline-none focus:ring-1 focus:ring-indigo-400" id="weather-city-input" placeholder="Stadt eingeben, z. B. Berlin" type="text"/>
+</div>
+</div>
+<div class="fixed top-8 right-8 z-50 draggable-container" id="profile-fixed-container">
+<div class="relative group text-right dynamic-bg rounded-xl shadow-2xl transition duration-300 compensated-p2">
+<input accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml" id="profile-image-input" type="file"/>
+<label class="cursor-pointer" for="profile-image-input">
+<img alt="Profilbild" class="w-20 h-20 rounded-full border-4 border-indigo-500/80 shadow-xl transition transform duration-300 hover:scale-105 object-cover" id="profile-image" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 rx=%2240%22 fill=%22%230d111f%22/%3E%3Ctext x=%2240%22 y=%2254%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2242%22%3EU%3C/text%3E%3C/svg%3E';" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%230d111f'/%3E%3Ctext x='40' y='54' text-anchor='middle' fill='white' font-size='42' font-family='sans-serif'%3EU%3C/text%3E%3C/svg%3E"/>
+</label>
+<p class="text-xs text-white/50 mt-1" id="user-id-display"></p>
+</div>
+</div>
+<div class="flex justify-center items-start lg:items-center py-8" id="dashboard-container">
+<div class="w-full max-w-5xl space-y-8 p-4 pt-32">
+<section class="flex justify-center">
+<form autocomplete="off" class="w-full max-w-2xl" id="search-form">
+<div class="ivy-search-shell ivy-no-outer-frame">
+<div class="ivy-search-core">
+<button class="ivy-engine-button absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 p-2 rounded-full transition duration-200 dynamic-border border-2" id="search-engine-button" onclick="toggleSearchEngineMenu(event)" title="Suchmaschine wechseln" type="button">
+<img alt="Search Icon" class="w-full h-full object-contain rounded-full" id="current-search-icon" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="/><span class="ivy-selected-fallback" id="ivy-selected-fallback">G</span>
+</button>
+<input class="w-full text-white text-lg md:text-xl rounded-full focus:outline-none transition duration-300" id="search-input" placeholder="Schnellsuche..." required="" spellcheck="false" type="text"/>
+<button class="ivy-search-submit absolute right-2 top-1/2 -translate-y-1/2 h-12 px-4 rounded-full transition duration-200" id="search-submit-button" title="Suche starten" type="submit">
+<svg aria-hidden="true" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M13 5l7 7-7 7M5 12h14" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="hidden sm:inline">Suche</span>
+</button>
+<div class="hidden absolute left-0 top-[calc(100%+14px)] w-56 rounded-2xl shadow-2xl z-50 p-2 space-y-1 dynamic-border" id="search-engine-menu">
+<h4 class="text-xs text-white/60 px-2 pt-1 pb-2 border-b border-gray-700">Wähle Suchmaschine</h4>
+<div class="ivy-engine-gray-setting">
+  <label class="ivy-engine-gray-label" for="ivy-search-gray-toggle">
+    <span>Icons in Graustufen</span>
+    <input type="checkbox" id="ivy-search-gray-toggle" aria-label="Suchmaschinen-Icons grau darstellen">
+    <span class="ivy-engine-gray-track" aria-hidden="true"></span>
+  </label>
+</div>
+</div>
+</div>
+
+</div>
+</form>
+</section>
+<section class="pt-4">
+<div id="ivy-v15-links-head"><button type="button" class="ivy-v15-back" aria-label="Zurück zum Dashboard" onclick="window.ivyV15Links?.close()">← Zurück</button><button type="button" id="ivy-v20-add-link" class="ivy-v20-add-link" onclick="window.showAddModal()" aria-label="Link hinzufügen">＋ Link hinzufügen</button></div>
+<h2 class="text-2xl font-bold text-white mb-4 text-center"></h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6" id="quick-dials-grid">
+<div class="flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 cursor-pointer add-dial-button compensated-p4" id="add-dial-container" onclick="showAddModal()">
+<svg class="h-10 w-10 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="mt-2 text-white text-sm font-medium">Link hinzufügen</span>
+</div>
+</div>
+</section>
+<div class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" id="add-modal">
+<div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
+<h3 class="text-xl font-bold text-white mb-4">Schnellwahleintrag hinzufügen</h3>
+<input class="w-full p-3 mb-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" id="modal-title" placeholder="Titel (z.B. Google)" type="text"/>
+<input class="w-full p-3 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" id="modal-url" placeholder="URL (z.B. https://google.com)" type="url"/>
+<div class="ivy-icon-config">
+ <label for="modal-icon-url">Eigenes Icon (optional)</label>
+ <input id="modal-icon-url" type="url" inputmode="url" placeholder="https://beispiel.de/icon.png · leer = automatisch"/>
+ <div class="ivy-icon-preview"><img id="modal-icon-preview" alt="Icon-Vorschau"/><span id="modal-icon-status">Website-Icon automatisch erkennen</span></div>
+</div>
+<div class="flex justify-end space-x-3">
+<button class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-200" onclick="hideAddModal()">Abbrechen</button>
+<button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200" onclick="saveQuickDial()">Speichern</button>
+</div>
+</div>
+</div>
+<div class="fixed bottom-8 left-8 z-50 draggable-container" id="light-mode-fixed-container">
+<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2" style="border-color: var(--secondary-color) !important;">
+<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" onclick="toggleLightMode()" title="Licht an">
+<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<div class="hidden fixed inset-0 z-[100] flex flex-col justify-end items-center pb-10" id="light-mode-overlay" style="background-color: #ffffff;">
+<div class="absolute z-[101]" id="light-mode-close-btn">
+<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2" style="border-color: var(--secondary-color) !important;">
+<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" onclick="toggleLightMode()" title="Licht aus">
+<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<div class="ivy-light-controls bg-black/10 backdrop-blur-md p-6 rounded-2xl w-full max-w-sm mx-4 border border-black/5 shadow-2xl z-[101]">
+<h3 class="text-gray-800 font-bold mb-4 text-center uppercase tracking-wider text-xs">Lichtsteuerung</h3><button id="ivy-light-exit-secondary" type="button" onclick="toggleLightMode()" aria-label="Lichtmodus beenden">✕ Schließen</button>
+<div class="mb-4">
+<div class="flex justify-between text-xs text-gray-700 font-semibold mb-1">
+<span>Dunkel</span>
+<span>Helligkeit</span>
+<span>Hell</span>
+</div>
+<input class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-gray-800" id="light-brightness" max="100" min="0" oninput="updateLightSource()" type="range" value="100"/>
+</div>
+<div>
+<div class="flex justify-between text-xs text-gray-700 font-semibold mb-1">
+<span>Kalt</span>
+<span>Farbtemperatur</span>
+<span>Warm</span>
+</div>
+<input class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-orange-600" id="light-warmth" max="100" min="0" oninput="updateLightSource()" style="background: linear-gradient(to right, #ffffff, #ffb347);" type="range" value="0"/>
+</div>
+</div>
+</div>
+<div class="fixed bottom-8 right-8 z-50 draggable-container" id="settings-fixed-container">
+<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
+<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="settings-button" onclick="showSettingsModal()" title="Einstellungen öffnen">
+<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</div>
+<div class="fixed bottom-8 right-24 z-50 draggable-container" id="import-fixed-container">
+<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
+<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="import-button" onclick="document.getElementById('import-file-input').click()" title="Einstellungen und Links importieren">
+<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="export-button" onclick="exportSettings()" title="Einstellungen und Links exportieren">
+<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0L8 12m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<input accept=".json" id="import-file-input" onchange="importSettings(event)" style="display: none;" type="file"/>
+</div>
+</div>
+<div class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-start pt-8 pb-8 z-50 overflow-y-auto" id="settings-modal">
+<div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
+<h3 class="text-xl font-bold text-white mb-4">Dashboard-Einstellungen</h3>
+<div class="space-y-4">
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Design &amp; Farben</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-primary-color">Akzent-/Start-Glow-Farbe:</label>
+<input class="w-12 h-8 rounded border-none cursor-pointer" id="setting-primary-color" oninput="liveUpdateSettings()" type="color" value="#4f46e5"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-secondary-color">Ziel-Glow-Farbe (Animation):</label>
+<input class="w-12 h-8 rounded border-none cursor-pointer" id="setting-secondary-color" oninput="liveUpdateSettings()" type="color" value="#a78bfa"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-bg-color">Kachel-Hintergrundfarbe (Standard):</label>
+<input class="w-12 h-8 rounded border-none cursor-pointer" id="setting-bg-color" oninput="liveUpdateSettings()" type="color" value="#1f2937"/>
+</div>
+<div class="p-2 bg-gray-700 rounded-lg">
+<label class="text-white block mb-1" for="setting-bg-opacity">Kachel-Transparenz:</label>
+<input class="w-full h-2 rounded-lg appearance-none cursor-pointer range-lg" id="setting-bg-opacity" max="1.0" min="0.0" oninput="liveUpdateSettings()" step="0.05" type="range" value="0.9"/>
+<span class="text-xs text-white/50 block text-right" id="opacity-value-display">90%</span>
+</div>
+
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Suchfeld, Glow &amp; Suchmaschinenmenü</h4>
+<div class="ivy-setting-line"><label for="setting-search-follow-theme">Suchfarben mit den Dashboard-Akzentfarben synchronisieren</label><input id="setting-search-follow-theme" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-search-color-a">Suchfeld-Farbe 1</label><input id="setting-search-color-a" type="color" value="#25dfff" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-color-b">Suchfeld-Farbe 2</label><input id="setting-search-color-b" type="color" value="#b44bff" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-effect">Glow-Effekt</label><select id="setting-search-effect" onchange="liveUpdateSettings()"><option value="aurora">Aurora + Scan</option><option value="pulse">Weicher Puls</option><option value="static">Statischer Glow</option><option value="off">Aus</option></select></div>
+<div class="ivy-setting-line"><label for="setting-search-glow">Glow-Intensität <output id="setting-search-glow-value">75%</output></label><input id="setting-search-glow" type="range" min="0" max="150" step="5" value="75" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-speed">Animationsgeschwindigkeit <output id="setting-search-speed-value">100%</output></label><input id="setting-search-speed" type="range" min="25" max="250" step="5" value="100" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-opacity">Suchfeld-Deckkraft <output id="setting-search-opacity-value">85%</output></label><input id="setting-search-opacity" type="range" min="0" max="100" step="5" value="85" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-menu-opacity">Suchmaschinenmenü-Deckkraft <output id="setting-search-menu-opacity-value">95%</output></label><input id="setting-search-menu-opacity" type="range" min="0" max="100" step="5" value="95" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-search-border-opacity">Suchfeld-Randdeckkraft <output id="setting-search-border-opacity-value">65%</output></label><input id="setting-search-border-opacity" type="range" min="0" max="100" step="5" value="65" oninput="liveUpdateSettings()"></div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Hintergründe &amp; Ränder</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-hide-button-bg">Hintergrund von Modulen/Buttons ausblenden (Wetter, Profil, Steuerung):</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-hide-button-bg" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-hide-quickdial-bg">Hintergrund von Schnellwahleinträgen ausblenden (Kacheln):</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-hide-quickdial-bg" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-hide-borders">Ränder ausblenden (Dynamic Border):</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-hide-borders" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-hide-add-dial">"Link hinzufügen"-Button ausblenden:</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-hide-add-dial" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Wetter</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-weather-location-visible">Standort-Suchfeld unter der Wetterkarte anzeigen</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-weather-location-visible" onchange="liveUpdateSettings()" type="checkbox" checked/>
+</div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Größen &amp; Layout</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-weather-width">Wetter-Karten-Breite (Tailwind-Klasse):</label>
+<input class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" id="setting-weather-width" oninput="liveUpdateSettings()" placeholder="z.B. w-56 oder w-80" type="text" value="w-56"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-profile-size">Profilbild-Größe:</label>
+<select class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" id="setting-profile-size" onchange="liveUpdateSettings()">
+<option value="w-16 h-16">Klein (w-16 h-16)</option>
+<option value="w-20 h-20">Mittel (w-20 h-20)</option>
+<option value="w-24 h-24">Groß (w-24 h-24)</option>
+</select>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-quickdial-size">Quick-Dial-Icon-Größe:</label>
+<select class="w-24 p-1 bg-gray-600 text-white rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400" id="setting-quickdial-size" onchange="liveUpdateSettings()">
+<option value="w-8 h-8">Klein (w-8 h-8)</option>
+<option value="w-10 h-10">Mittel (w-10 h-10)</option>
+<option value="w-12 h-12">Groß (w-12 h-12)</option>
+</select>
+</div>
+<div class="ivy-v13-section">
+<h4>Zusätzliche Größen &amp; Bedienung</h4>
+<label for="ivy-v13-link-size">Link-Kachel-Größe <output id="ivy-v13-link-size-label">160 px</output></label>
+<input type="range" id="ivy-v13-link-size" min="100" max="260" step="5" value="160" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v13-icon-size">Link-Icon-Größe <output id="ivy-v13-icon-size-label">44 px</output></label>
+<input type="range" id="ivy-v13-icon-size" min="20" max="112" step="2" value="44" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v13-button-size">Buttons / Touchflächen <output id="ivy-v13-button-size-label">44 px</output></label>
+<input type="range" id="ivy-v13-button-size" min="36" max="80" step="2" value="44" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v13-profile-size">Profilbild-Größe <output id="ivy-v13-profile-size-label">80 px</output></label>
+<input type="range" id="ivy-v13-profile-size" min="44" max="144" step="4" value="80" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v13-weather-size">Wetterkarte-Breite <output id="ivy-v13-weather-size-label">224 px</output></label>
+<input type="range" id="ivy-v13-weather-size" min="160" max="460" step="5" value="224" oninput="ivyV13UpdateSizeControls()" />
+<label for="ivy-v25-weather-height">Wetterkarte-Höhe <output id="ivy-v25-weather-height-label">284 px</output></label>
+<input type="range" id="ivy-v25-weather-height" min="175" max="540" step="1" value="284" oninput="ivyV13UpdateSizeControls()" />
+<p class="ivy-v13-note">Die Größen passen sich automatisch an den verfügbaren Platz an. Die bestehenden Designfarben bleiben erhalten.</p>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-manual-layout">Manuellen Layout-Modus aktivieren (Drag &amp; Drop):</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-manual-layout" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Suche &amp; Verhalten</h4>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-save-search-engine-id">Gewählte Suchmaschine speichern:</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-save-search-engine-id" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
+<label class="text-white" for="setting-autofill-disable">Suchvorschläge (Autofill) deaktivieren:</label>
+<input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-autofill-disable" onchange="liveUpdateSettings()" type="checkbox"/>
+</div>
+<div class="mt-6 border-t border-gray-700 pt-4 flex justify-between items-center">
+<button class="text-red-400 text-sm hover:text-red-300 transition duration-200" onclick="clearCacheAndReload()">
+                        Cache löschen (Alle Daten)
+                    </button>
+<div class="flex space-x-3">
+<button class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-200" onclick="cancelSettings()">Abbrechen</button>
+<button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200" onclick="saveSettings()">Speichern &amp; Schließen</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+</div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- IVY Update Monitor: offline-first, checks remotely without changing the active app cache. -->
+<div id="ivy-update-popup" role="status" aria-live="polite" hidden>
+  <p class="ivy-update-heading">✦ IVY Dashboard · Update verfügbar</p>
+  <p class="ivy-update-description">Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?</p>
+  <div class="ivy-update-actions">
+    <button id="ivy-update-apply" type="button">Jetzt aktualisieren</button>
+    <button id="ivy-update-later" type="button">Später</button>
+  </div>
+</div>
+
+
+
+
+
+
+
+<script defer src="./app.js"></script>
+</body>
+</html>
