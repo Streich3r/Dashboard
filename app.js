@@ -2632,7 +2632,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='4cfc79e41461de7fd7766b8c42ee163e458753eafa8ee4a74326457482d37c75';
+ const CLIENT_SIGNATURE='4c1f77e9c4da76110140fafaf802fcda971ea19956cdbc049aa7231f297dc493';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2772,7 +2772,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
      const remoteHash=String(metadata.hash||'');
      const remoteBuild=String(metadata.build||'');
      if(!/^[a-f0-9]{64}$/.test(remoteHash)){if(manual)status('Ungültige Versionsdatei.');return;}
-     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V44 ist installiert.');return;}
+     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V45 ist installiert.');return;}
      show(remoteHash,remoteBuild);if(manual)status('Neue Version gefunden – im Popup installieren.');
    }catch(err){if(manual)status('Keine Verbindung zum Updateserver – offline weiter nutzbar.');if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
    finally{clearTimeout(timer);lastCheck=Date.now();checking=false}
@@ -2786,7 +2786,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:44};
+ window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:45};
 })();
 
 ;
