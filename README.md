@@ -1,5 +1,3 @@
-IVY Dashboard V55 – Wetter-/Uhr-Transparenz, Uhrbreite/-höhe und stabilere Drag-Positionen.
+IVY Dashboard V56 — gespeicherte Widgetpositionen werden beim Start zuverlässig wiederhergestellt. Unsichtbare Widgets verschieben keine anderen Widgets. Uhrtext skaliert mit Breite und Höhe.
 
-Dateinamen unverändert. Alle Dateien inklusive icons/ hochladen und Update bestätigen. Keine persönlichen Daten löschen.
-
-Neue Kartenoptionen werden getrennt für Desktop und Mobil in ivyV55CardOptions gespeichert; bisherige Konfigurationen bleiben bestehen.
+Feste Dateinamen beibehalten. Den kompletten Inhalt von Dashboard-main inklusive icons/ hochladen. Bestehende Links, Einstellungen, Orte und Positionen bleiben erhalten.
