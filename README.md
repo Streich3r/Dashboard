@@ -1,7 +1,9 @@
-IVY Dashboard V52 — Sichtbarkeit zusammengefasst
+IVY Dashboard V53 – Sichtbarkeitseinstellungen bereinigt, Drag-and-drop Desktop/Mobil überarbeitet.
 
-Unter Einstellungen → Größen & Geräteprofile → Geräteprofile & Sichtbarkeit:
-Wetter, Profil, Schnellsuche und Uhr gemeinsam pro Desktop-/Mobilansicht ein- oder ausblenden.
-Uhr & Zeit enthält nur noch Anzeigeformat, Sekunden, Datum, Wochentag, Zeitzone, Stil und Größe.
-Alte Uhr-Sichtbarkeit aus dashboardSettings.clockVisible wird beim ersten Aufruf als Standard übernommen, bis ein Geräteprofil explizit geändert wird.
-Alle Dateinamen bleiben stabil; Wetter, Uhr, Links, Cache und Import/Export unverändert.
+- Alte Hinweise, Sichtbarkeits-Reset-Knopf und Vorschau-Nachricht entfernt.
+- Link-Kacheln: sanftes Ziehen mit Maus, Griff oder Touch-Halten; Reihenfolge horizontal und vertikal, Tastatur-Pfeile/Home/End; Autoscroll in langer Linkliste; gespeicherte Reihenfolge.
+- Desktop-Widgets: Verschieben nur am Griff im manuellen Layoutmodus, nicht beim Klicken in die Karten.
+- Mobile Widgets: nur ein aktiver Drag-Controller (V19); alte doppelte Griffe entfallen; kein dauerhaftes 220ms-Layout-Polling mehr. Desktop/Mobil-Positionen bleiben getrennt.
+- Offline-First mit bestätigungspflichtigen Updates; stabile Dateinamen. Keine persönlichen Daten werden gelöscht.
+
+Installation: Alle Dateien in Dashboard-main auf GitHub Pages ersetzen. Erst nach vollständigem V53-Update alte Dateien entfernen.

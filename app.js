@@ -1056,6 +1056,7 @@ window.hideAddModal = () => {
 const DEFAULT_FIXED_POSITIONS = {
     'weather-fixed-container': { top: '2rem', left: '2rem', right: 'auto', bottom: 'auto' },
     'profile-fixed-container': { top: '2rem', right: '2rem', left: 'auto', bottom: 'auto' },
+    'clock-fixed-container': { top: '2rem', left: '50%', right: 'auto', bottom: 'auto' },
     'settings-fixed-container': { bottom: '2rem', right: '2rem', left: 'auto', top: 'auto' },
     'light-mode-fixed-container': { bottom: '2rem', left: '2rem', right: 'auto', top: 'auto' }
 };
@@ -1086,10 +1087,12 @@ function loadItemPositionsForElement(element) {
     if (!Number.isFinite(rx) || !Number.isFinite(ry)) return applyDefaultItemPosition(element);
     const vw = document.documentElement.clientWidth || window.innerWidth;
     const vh = window.innerHeight;
-    element.style.position = 'fixed';
-    element.style.right = 'auto'; element.style.bottom = 'auto';
-    element.style.left = Math.round(Math.max(0, Math.min(vw - element.offsetWidth, rx * vw))) + 'px';
-    element.style.top = Math.round(Math.max(0, Math.min(vh - element.offsetHeight, ry * vh))) + 'px';
+    element.style.setProperty('position','fixed','important');
+    element.style.setProperty('right','auto','important'); element.style.setProperty('bottom','auto','important');
+    element.style.setProperty('left', Math.round(Math.max(0, Math.min(vw - element.offsetWidth, rx * vw))) + 'px','important');
+    element.style.setProperty('top', Math.round(Math.max(0, Math.min(vh - element.offsetHeight, ry * vh))) + 'px','important');
+    element.style.setProperty('transform','none','important');
+    element.style.setProperty('translate','none','important');
     element.classList.add('draggable-positioning');
     return true;
 }
@@ -1130,51 +1133,61 @@ function toggleManualLayout(enable, shouldSave = true) {
 }
 function makeDraggable(el) {
     removeDraggable(el);
-    if(window.innerWidth>900)return;
-    let state = null;
-    const excluded = 'input,button,select,textarea,iframe,a,label,[contenteditable="true"]';
-    function down(e) {
-        if (e.button !== undefined && e.button !== 0) return;
-        if (e.target.closest(excluded) && !e.target.closest('.ivy-drag-handle')) return;
-        if (!currentSettings.manualLayout) return;
-        if (!document.getElementById('light-mode-overlay')?.classList.contains('hidden')) return;
-        const rect = el.getBoundingClientRect();
-        el.style.position = 'fixed'; el.style.right = 'auto'; el.style.bottom = 'auto';
-        el.style.top = rect.top + 'px'; el.style.left = rect.left + 'px';
-        el.classList.add('draggable-positioning');
-        state = { id:e.pointerId, x:e.clientX, y:e.clientY, left:rect.left, top:rect.top, moved:false };
-        try { el.setPointerCapture(e.pointerId); } catch(_) {}
-        el.classList.add('is-dragging'); window.isDragging = true;
-        e.preventDefault();
+    // Mobile layout is exclusively owned by the V19 drag portal.
+    if (window.matchMedia('(max-width:900px)').matches) return;
+    const handle=el.querySelector(':scope > .ivy-drag-handle');
+    if(!handle)return;
+    let drag=null;
+    const clamp=(n,min,max)=>Math.max(min,Math.min(Math.max(min,max),n));
+    function down(e){
+        if(e.isPrimary===false||(e.button!==undefined&&e.button!==0)||!currentSettings.manualLayout||drag)return;
+        if(!document.getElementById('settings-modal')?.classList.contains('hidden')||
+           !document.getElementById('add-modal')?.classList.contains('hidden'))return;
+        const r=el.getBoundingClientRect();
+        drag={id:e.pointerId,ox:e.clientX,oy:e.clientY,left:r.left,top:r.top,w:r.width,h:r.height,moved:false};
+        for(const [name,value] of Object.entries({position:'fixed',left:r.left+'px',top:r.top+'px',right:'auto',bottom:'auto',transform:'none',translate:'none'}))el.style.setProperty(name,value,'important');
+        el.classList.add('is-dragging','draggable-positioning');window.isDragging=true;
+        try{handle.setPointerCapture(e.pointerId)}catch(_){}
+        e.preventDefault();e.stopPropagation();
     }
-    function move(e) {
-        if (!state || e.pointerId !== state.id) return;
-        const dx=e.clientX-state.x, dy=e.clientY-state.y;
-        if (Math.abs(dx)>3 || Math.abs(dy)>3) state.moved=true;
-        if (!state.moved) return;
-        const vw=document.documentElement.clientWidth || window.innerWidth, vh=window.innerHeight;
-        el.style.left=Math.round(Math.max(0,Math.min(vw-el.offsetWidth,state.left+dx)))+'px';
-        el.style.top=Math.round(Math.max(0,Math.min(vh-el.offsetHeight,state.top+dy)))+'px';
-        e.preventDefault();
+    function move(e){
+        if(!drag||e.pointerId!==drag.id)return;
+        const dx=e.clientX-drag.ox,dy=e.clientY-drag.oy;
+        drag.moved=drag.moved||Math.hypot(dx,dy)>3;
+        if(!drag.moved)return;
+        const w=document.documentElement.clientWidth||window.innerWidth,h=window.innerHeight;
+        el.style.setProperty('left',Math.round(clamp(drag.left+dx,0,w-drag.w))+'px','important');
+        el.style.setProperty('top',Math.round(clamp(drag.top+dy,0,h-drag.h))+'px','important');
+        e.preventDefault();e.stopPropagation();
     }
-    function up(e) {
-        if (!state || e.pointerId !== state.id) return;
-        if (state.moved) saveItemPosition(el.id,el.style.top,el.style.left);
-        state=null; el.classList.remove('is-dragging'); window.isDragging=false;
-        try { if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId); } catch(_) {}
+    function finish(e,cancel=false){
+        if(!drag||e.pointerId!==drag.id)return;
+        if(cancel){el.style.setProperty('left',drag.left+'px','important');el.style.setProperty('top',drag.top+'px','important')}
+        else if(drag.moved)saveItemPosition(el.id,el.style.top,el.style.left);
+        drag=null;el.classList.remove('is-dragging');window.isDragging=false;
+        try{if(handle.hasPointerCapture(e.pointerId))handle.releasePointerCapture(e.pointerId)}catch(_){}
+        e.preventDefault();e.stopPropagation();
     }
-    el.addEventListener('pointerdown',down);
-    el.addEventListener('pointermove',move);
-    el.addEventListener('pointerup',up);
-    el.addEventListener('pointercancel',up);
-    el.__ivyDragCleanup = () => {
-        el.removeEventListener('pointerdown',down);
-        el.removeEventListener('pointermove',move);
-        el.removeEventListener('pointerup',up);
-        el.removeEventListener('pointercancel',up);
-        state=null;
+    function cancelOnEsc(e){if(e.key==='Escape'&&drag)finish({pointerId:drag.id,preventDefault(){},stopPropagation(){}},true)}
+    const up=e=>finish(e,false),cancel=e=>finish(e,true);
+    handle.addEventListener('pointerdown',down);
+    handle.addEventListener('pointermove',move);
+    handle.addEventListener('pointerup',up);
+    handle.addEventListener('pointercancel',cancel);
+    handle.addEventListener('lostpointercapture',cancel);
+    document.addEventListener('keydown',cancelOnEsc);
+    el.__ivyDragCleanup=()=>{
+        handle.removeEventListener('pointerdown',down);
+        handle.removeEventListener('pointermove',move);
+        handle.removeEventListener('pointerup',up);
+        handle.removeEventListener('pointercancel',cancel);
+        handle.removeEventListener('lostpointercapture',cancel);
+        document.removeEventListener('keydown',cancelOnEsc);
+        if(drag){drag=null;window.isDragging=false;el.classList.remove('is-dragging')}
     };
 }
+
+window.matchMedia('(max-width:900px)').addEventListener?.('change',()=>{if(currentSettings.manualLayout)toggleManualLayout(true,false)});
 
 // Responsive detection based on viewport + touch capability, not user-agent strings.
 function updateResponsiveMode() {
@@ -1214,6 +1227,7 @@ function ivyToggleMobileCard(name){ if(window.innerWidth>900)return;
     const on=(n===name)&&!el.classList.contains('ivy-card-open');
     el.classList.toggle('ivy-card-open',on);btn.setAttribute('aria-expanded',String(on));
   }
+  requestAnimationFrame(()=>{window.ivyV18?.refresh?.();window.ivyV19?.refresh?.()});
 }
 function ivyUpdateIconPreview(){
   const field=document.getElementById('modal-icon-url'), urlField=document.getElementById('modal-url');
@@ -1233,116 +1247,148 @@ function ivyFallbackDialIcon(img){
 }
 let ivyDialSortActive=false;
 function ivyBindDialDrag(card,handle){
-  // V24: neither tapping nor beginning a scroll may reorder a tile.
-  // A deliberate hold arms sorting. The dedicated grip supports vertical drag;
-  // swiping the tile itself stays native scrolling on mobile.
-  const HOLD_MS = 170, CARD_HOLD_MS = 220, SLOP_PX = 9;
-  let drag=null, pressTimer=null, suppressUntil=0;
-  card.style.webkitTouchCallout='none';
+  // One drag gesture per card: mouse immediately, touch on grip immediately when moved,
+  // touch on the link itself only after a deliberate hold. Native scrolling otherwise wins.
+  const HOLD_TOUCH=230,SLOP=9;
+  let drag=null,timer=0,scrollRaf=0,suppressUntil=0;
+  card.draggable=false;
+  card.querySelectorAll('img').forEach(img=>img.draggable=false);
+  handle.title='Link per Maus oder Finger verschieben; Pfeiltasten zum Umordnen';
+  handle.setAttribute('aria-keyshortcuts','ArrowLeft ArrowRight ArrowUp ArrowDown Home End');
   const grid=()=>document.getElementById('quick-dials-grid');
-  const cards=()=>[...(grid()?.querySelectorAll(':scope > [data-id]') || [])];
-  function hitTarget(x,y){
-    for(const el of cards()){
-      if(el===card)continue;
-      const r=el.getBoundingClientRect();
-      if(x>=r.left-5&&x<=r.right+5&&y>=r.top-5&&y<=r.bottom+5)return el;
+  const cards=()=>[...(grid()?.querySelectorAll(':scope > [data-id]')||[])];
+  const clearTarget=()=>grid()?.querySelectorAll('.ivy-dial-target').forEach(e=>e.classList.remove('ivy-dial-target'));
+  function targetAt(x,y){
+    const g=grid(),area=g?.getBoundingClientRect();
+    if(!area||x<area.left-30||x>area.right+30||y<area.top-30||y>area.bottom+30)return null;
+    let best=null,distance=Infinity;
+    for(const item of cards()){
+      if(item===card)continue;
+      const r=item.getBoundingClientRect();
+      if(r.width<2||r.height<2)continue;
+      const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom);
+      const d=Math.hypot(dx,dy);
+      if(d<distance&&d<Math.max(16,Math.min(r.width,r.height)*.27)){distance=d;best=item;}
     }
-    return null;
+    return best;
   }
-  function clearTarget(){grid()?.querySelectorAll('.ivy-dial-target').forEach(el=>el.classList.remove('ivy-dial-target'));}
-  function clearTimer(){if(pressTimer!==null){clearTimeout(pressTimer);pressTimer=null;}}
-  function releaseCapture(d){
-    if(!d)return;
-    const el=d.fromHandle?handle:card;
-    try{if(el.hasPointerCapture(d.id))el.releasePointerCapture(d.id);}catch(_){}
+  function endScroll(){if(scrollRaf){cancelAnimationFrame(scrollRaf);scrollRaf=0}}
+  function scrollStep(){
+    scrollRaf=0;if(!drag||!drag.active)return;
+    const g=grid();if(g&&g.scrollHeight>g.clientHeight+5){
+      const r=g.getBoundingClientRect(),margin=Math.min(52,r.height*.16),y=drag.latestY;
+      const amount=y<r.top+margin?-Math.min(13,(r.top+margin-y)*.30):y>r.bottom-margin?Math.min(13,(y-(r.bottom-margin))*.30):0;
+      if(amount)g.scrollTop+=amount;
+    }
+    updateTarget(drag.latestX,drag.latestY);
+    scrollRaf=requestAnimationFrame(scrollStep);
+  }
+  function updateTarget(x,y){
+    if(!drag?.active)return;
+    const next=targetAt(x,y);
+    if(next===drag.target)return;
+    clearTarget();drag.target=next;
+    next?.classList.add('ivy-dial-target');
   }
   function activate(){
     if(!drag||drag.active)return;
     drag.active=true;
+    clearTimeout(timer);timer=0;
     card.classList.add('ivy-dial-moving');
-    const el=drag.fromHandle?handle:card;
-    try{el.setPointerCapture(drag.id);}catch(_){}
+    try{drag.source.setPointerCapture(drag.id)}catch(_){}
+    scrollRaf=requestAnimationFrame(scrollStep);
   }
-  function down(e,fromHandle){
-    if((e.button!==undefined&&e.button!==0)||drag||performance.now()<suppressUntil)return;
-    if(!fromHandle&&e.target.closest?.('button,input,select,textarea'))return;
-    drag={id:e.pointerId,x:e.clientX,y:e.clientY,active:false,fromHandle,
-          target:null,hasMoved:false,latestX:e.clientX,latestY:e.clientY};
-    // Do not preventDefault() before the hold: taps and scrolling keep working.
-    clearTimer();
-    pressTimer=setTimeout(activate,fromHandle?HOLD_MS:CARD_HOLD_MS);
-    // Attach window listeners only for this gesture (no leaks on dial re-render).
-    window.addEventListener('pointerup',lostUp);
-    window.addEventListener('pointercancel',lostCancel);
-    if(fromHandle)e.stopPropagation();
+  function start(e,fromGrip){
+    if(e.isPrimary===false||(e.button!==undefined&&e.button!==0)||drag)return;
+    if(!fromGrip&&e.target.closest?.('button,input,select,textarea,[contenteditable="true"]'))return;
+    drag={id:e.pointerId,source:fromGrip?handle:card,grip:fromGrip,
+      isTouch:e.pointerType==='touch',x:e.clientX,y:e.clientY,latestX:e.clientX,latestY:e.clientY,
+      active:false,moved:false,target:null};
+    window.addEventListener('pointerup',lostUp,true);
+    window.addEventListener('pointercancel',lostCancel,true);
+    if(!fromGrip&&drag.isTouch)timer=setTimeout(activate,HOLD_TOUCH);
+    if(fromGrip){
+      if(!drag.isTouch)activate();
+      e.stopPropagation();
+    }
   }
-  function discard(){
-    clearTimer();releaseCapture(drag);drag=null;
-    window.removeEventListener('pointerup',lostUp);
-    window.removeEventListener('pointercancel',lostCancel);
-    clearTarget();card.classList.remove('ivy-dial-moving');
+  function clear(){
+    clearTimeout(timer);timer=0;endScroll();
+    if(drag){
+      try{if(drag.source.hasPointerCapture(drag.id))drag.source.releasePointerCapture(drag.id)}catch(_){}
+    }
+    card.classList.remove('ivy-dial-moving');
+    card.style.removeProperty('transform');
+    clearTarget();drag=null;
+    window.removeEventListener('pointerup',lostUp,true);
+    window.removeEventListener('pointercancel',lostCancel,true);
   }
   function move(e){
     if(!drag||e.pointerId!==drag.id)return;
     const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
     drag.latestX=e.clientX;drag.latestY=e.clientY;
+    const dist=Math.hypot(dx,dy);
     if(!drag.active){
-      // Finger movement before 170/220 ms means scroll/gesture, never a sort.
-      if(Math.hypot(dx,dy)>SLOP_PX)discard();
-      return;
+      if(drag.grip&&dist>4)activate();
+      else if(!drag.isTouch&&dist>5)activate();
+      else if(drag.isTouch&&!drag.grip&&dist>SLOP){clear();return;}
+      else return;
     }
-    // On the normal tile (not its grip), downward/upward scroll wins.
-    if(!drag.fromHandle&&!drag.hasMoved&&e.pointerType==='touch'&&
-       Math.abs(dy)>SLOP_PX&&Math.abs(dy)>Math.abs(dx)*1.2){discard();return;}
-    drag.hasMoved=drag.hasMoved||Math.hypot(dx,dy)>SLOP_PX;
-    const destination=hitTarget(e.clientX,e.clientY);
-    if(destination!==drag.target){
-      clearTarget();drag.target=destination;
-      destination?.classList.add('ivy-dial-target');
+    drag.moved=drag.moved||dist>4;
+    if(drag.moved){
+      card.style.setProperty('transform',`translate3d(${Math.round(dx)}px,${Math.round(dy)}px,0) scale(1.025)`,'important');
+      updateTarget(e.clientX,e.clientY);
     }
-    e.preventDefault();e.stopPropagation();
+    if(e.cancelable)e.preventDefault();e.stopPropagation();
   }
-  function up(e,cancel=false){
+  function commitMove(destination){
+    const order=cards(),from=order.indexOf(card),to=order.indexOf(destination);
+    if(from<0||to<0||from===to)return;
+    // Insert in DOM order both left-to-right and right-to-left; handle target after/before.
+    if(from<to)destination.after(card);else destination.before(card);
+    ivyPersistDialOrder();
+    window.ivyV23Links?.layout?.();
+  }
+  function end(e,cancel=false){
     if(!drag||e.pointerId!==drag.id)return;
     const d=drag;
-    const destination=(!cancel&&d.active&&d.hasMoved)?(hitTarget(e.clientX,e.clientY)||d.target):null;
-    discard();
-    if(d.active){
-      // Prevent opening the link after a deliberate long press or reorder.
-      suppressUntil=performance.now()+650;
-      if(destination&&destination!==card){
-        const ordered=cards();
-        const from=ordered.indexOf(card),to=ordered.indexOf(destination);
-        if(from>=0&&to>=0){
-          if(from<to)destination.after(card);else destination.before(card);
-          ivyPersistDialOrder();
-          window.ivyV23Links?.layout?.();
-        }
-      }
-      if(e.cancelable)e.preventDefault();
-      e.stopPropagation();
+    const target=!cancel&&d.active&&d.moved?(targetAt(e.clientX,e.clientY)||d.target):null;
+    const handled=d.active;
+    clear();
+    if(handled){
+      suppressUntil=performance.now()+450;
+      if(target&&target!==card)commitMove(target);
+      if(e.cancelable)e.preventDefault();e.stopPropagation();
     }
   }
-  handle.addEventListener('pointerdown',e=>down(e,true));
-  card.addEventListener('pointerdown',e=>{
-    if(e.target.closest?.('.ivy-dial-drag-handle'))return;
-    down(e,false);
-  });
+  function lostUp(e){end(e)}
+  function lostCancel(e){end(e,true)}
+  // Handle and card listeners must never start two simultaneous gestures.
+  handle.addEventListener('pointerdown',e=>start(e,true));
+  card.addEventListener('pointerdown',e=>{if(e.target.closest?.('.ivy-dial-drag-handle'))return;start(e,false)});
   handle.addEventListener('pointermove',move);
   card.addEventListener('pointermove',move);
-  handle.addEventListener('pointerup',e=>up(e));
-  card.addEventListener('pointerup',e=>up(e));
-  handle.addEventListener('pointercancel',e=>up(e,true));
-  card.addEventListener('pointercancel',e=>up(e,true));
-  function lostUp(e){up(e)}
-  function lostCancel(e){up(e,true)}
-  card.addEventListener('contextmenu',e=>{
-    if(drag?.active||performance.now()<suppressUntil){e.preventDefault();e.stopPropagation();}
-  });
-  card.addEventListener('click',e=>{
-    if(performance.now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation();}
-  },true);
+  handle.addEventListener('pointerup',end);
+  card.addEventListener('pointerup',end);
+  handle.addEventListener('pointercancel',e=>end(e,true));
+  card.addEventListener('pointercancel',e=>end(e,true));
   handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
+  card.addEventListener('click',e=>{
+    if(performance.now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation()}
+  },true);
+  card.addEventListener('contextmenu',e=>{
+    if(drag||performance.now()<suppressUntil){e.preventDefault();e.stopPropagation()}
+  });
+  handle.addEventListener('keydown',e=>{
+    const arrow={ArrowLeft:-1,ArrowUp:-1,ArrowRight:1,ArrowDown:1};
+    if(!(e.key in arrow)&&e.key!=='Home'&&e.key!=='End')return;
+    const order=cards(),i=order.indexOf(card);
+    const j=e.key==='Home'?0:e.key==='End'?order.length-1:i+arrow[e.key];
+    if(i<0||j<0||j>=order.length||i===j)return;
+    e.preventDefault();e.stopPropagation();
+    if(i<j)order[j].after(card);else order[j].before(card);
+    ivyPersistDialOrder();window.ivyV23Links?.layout?.();handle.focus({preventScroll:true});
+  });
 }
 
 function ivyPersistDialOrder(){
@@ -1570,8 +1616,6 @@ function initSizes(){
   const hideAddRow=byId('setting-hide-add-dial')?.closest('div.flex');
   if(hideAddRow)hideAddRow.style.display=selectedDevice()==='mobile'?'none':'';
   applySizes();
-  const help=byId('ivy-v22-sizing-notice');
- if(help)help.textContent=selectedDevice()===currentDevice()?'Vorschau: Diese Ansicht wird sofort aktualisiert.':'Du bearbeitest das andere Geräteprofil. Die Änderungen siehst du beim Wechsel in dessen Ansicht.';
 }
 window.ivyV20RefreshSizes=initSizes;
 function initHeader(){
@@ -1793,7 +1837,7 @@ const $=id=>document.getElementById(id);
 const root=document.documentElement;
 const MOBILE=()=>window.matchMedia('(max-width:900px)').matches;
 const KEY='ivyV18MobileLayout';
-const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy18-search'];
+const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','clock-fixed-container','ivy18-search'];
 const clamp=(v,a,b)=>Math.max(a,Math.min(Math.max(a,b),v));
 const vp=()=>({w:Math.max(1,window.innerWidth),h:Math.max(1,window.innerHeight)});
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
@@ -1819,6 +1863,7 @@ function defaults(id,v,box){
  const mobileLandscape=v.h<520;
  if(id==='weather-fixed-container')return{x:safe,y:safe};
  if(id==='profile-fixed-container')return{x:sw,y:safe};
+ if(id==='clock-fixed-container')return{x:clamp((v.w-box.width)/2,safe,sw),y:safe};
  if(id==='settings-fixed-container')return{x:sw,y:sh};
  if(id==='light-mode-fixed-container')return{x:safe,y:sh};
  if(id==='ivy18-search')return{x:clamp((v.w-box.width)/2,safe,sw),y:clamp(defaultCardsBottom+8,safe,sh)};
@@ -1876,36 +1921,6 @@ function openLinks(){if(!MOBILE()||document.body.classList.contains('manual-layo
  const grid=$('quick-dials-grid');if(grid){requestAnimationFrame(()=>{grid.scrollTop=grid.scrollHeight;});}
 }
 function closeLinks(refocus=true){opened=false;document.body.classList.remove('ivy-v15-links-open');$('ivy-v15-links-launcher')?.setAttribute('aria-expanded','false');if(refocus&&MOBILE())$('ivy-v15-links-launcher')?.focus({preventScroll:true})}
-function installGrip(id){const el=elById(id);if(!el)return;
- for(const old of el.querySelectorAll(':scope > .ivy-v15-widget-grip,:scope > .ivy-v17-grip'))old.remove();
- if(el.querySelector(':scope > .ivy18-grip'))return;
- const grip=document.createElement('button');grip.type='button';grip.className='ivy18-grip';grip.textContent='⠿';grip.title='Verschieben';grip.setAttribute('aria-label',id+' verschieben');el.appendChild(grip);
- let state=null;
- grip.addEventListener('pointerdown',ev=>{
-  if(!MOBILE()||!document.body.classList.contains('manual-layout-mode')||opened)return;
-  if(ev.button!==undefined&&ev.button!==0)return;
-  const b=el.getBoundingClientRect();state={id:ev.pointerId,sx:ev.clientX,sy:ev.clientY,x:b.left,y:b.top,w:b.width,h:b.height};
-  busy=true;active=id;el.classList.add('ivy18-dragging');
-  try{grip.setPointerCapture(ev.pointerId)}catch(e){}ev.preventDefault();ev.stopPropagation();
- });
- grip.addEventListener('pointermove',ev=>{
-  if(!state||state.id!==ev.pointerId)return;
-  const v=vp(),x=clamp(state.x+ev.clientX-state.sx,5,v.w-state.w-5),y=clamp(state.y+ev.clientY-state.sy,5,v.h-state.h-5);
-  if(id==='ivy18-search'){
-   root.style.setProperty('--ivy18-search-left',Math.round(x)+'px');root.style.setProperty('--ivy18-search-top',Math.round(y)+'px');
-  } else if(id==='ivy-v15-links-launcher'){
-   root.style.setProperty('--ivy18-launch-left',Math.round(x)+'px');root.style.setProperty('--ivy18-launch-top',Math.round(y)+'px');
-   el.style.setProperty('left',Math.round(x)+'px','important');el.style.setProperty('top',Math.round(y)+'px','important');
-  }else {el.style.setProperty('left',Math.round(x)+'px','important');el.style.setProperty('top',Math.round(y)+'px','important')}
-  ev.preventDefault();ev.stopPropagation();
- });
- const finish=(ev)=>{if(!state||state.id!==ev.pointerId)return;
-  const b=el.getBoundingClientRect(),v=vp();saved[id]={x:clamp(b.left/v.w,0,1),y:clamp(b.top/v.h,0,1)};persist();
-  state=null;active=null;busy=false;el.classList.remove('ivy18-dragging');ev.preventDefault();ev.stopPropagation();schedule();
- };
- grip.addEventListener('pointerup',finish);grip.addEventListener('pointercancel',finish);
- grip.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation()});
-}
 function setup(){
  if(initialized)return;
  const links=linksSection(),search=searchSection(),launch=$('ivy-v15-links-launcher');if(!links||!search||!launch)return;initialized=true;
@@ -1917,7 +1932,7 @@ function setup(){
  const reset=$('ivy-v15-reset-mobile');if(reset)reset.addEventListener('click',()=>{saved={};persist();schedule()});
  // No old linked 'open' method or grip can steal touch interactions.
  launch.addEventListener('click',ev=>{if(document.body.classList.contains('manual-layout-mode')){ev.preventDefault();ev.stopImmediatePropagation()}},true);
- for(const id of IDS)installGrip(id);
+ // V19 alone owns mobile widget grips, avoiding double pointer handlers.
  for(const target of [window,window.visualViewport])target?.addEventListener('resize',()=>setTimeout(schedule,30),{passive:true});
  window.addEventListener('orientationchange',()=>setTimeout(schedule,180));
  document.addEventListener('fullscreenchange',schedule);
@@ -1940,7 +1955,7 @@ setTimeout(setup,0);
 (()=>{
 'use strict';
 const KEY='ivyV18MobileLayout';
-const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy19-search'];
+const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','clock-fixed-container','ivy19-search'];
 const $=id=>document.getElementById(id);
 const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -1982,19 +1997,20 @@ function attach(){if(layer)return;
   const y=clamp(dragging.y+ev.clientY-dragging.startY,4,Math.max(4,v.h-dragging.height-4));
   setXY(id,x,y);placeHandles();ev.preventDefault();ev.stopPropagation();
  });
- const done=ev=>{
+ const done=(ev,cancel=false)=>{
   if(!dragging||dragging.id!==id||dragging.pointer!==ev.pointerId)return;
-  save(id,t.getBoundingClientRect());dragging=null;
+  if(cancel)setXY(id,dragging.x,dragging.y);else save(id,t.getBoundingClientRect());
+  dragging=null;
   try{if(grip.hasPointerCapture(ev.pointerId))grip.releasePointerCapture(ev.pointerId)}catch(_){}
-  window.ivyV18?.refresh?.();placeHandles();ev.preventDefault();ev.stopPropagation();
+  window.ivyV18?.refresh?.();schedule();ev.preventDefault();ev.stopPropagation();
  };
- grip.addEventListener('pointerup',done);grip.addEventListener('pointercancel',done);
+ grip.addEventListener('pointerup',ev=>done(ev));grip.addEventListener('pointercancel',ev=>done(ev,true));
  grip.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
  }
 }
 function placeHandles(){if(!layer)return;const show=enabled();layer.style.display=show?'block':'none';if(!show)return;
  const v=viewport();for(const grip of layer.querySelectorAll('button[data-ivy-target]')){
-  const t=target(grip.dataset.ivyTarget),r=t?.getBoundingClientRect();if(!r||r.width<1||r.height<1){grip.style.display='none';continue}
+  const t=target(grip.dataset.ivyTarget),r=t?.getBoundingClientRect();if(!t||!r||!t.getClientRects().length||r.width<1||r.height<1){grip.style.display='none';continue}
   grip.style.display='flex';
   // Above each toolbar control: avoids stealing its normal click/tap area.
   const control=['settings-fixed-container','light-mode-fixed-container'].includes(grip.dataset.ivyTarget);
@@ -2003,10 +2019,22 @@ function placeHandles(){if(!layer)return;const show=enabled();layer.style.displa
   grip.style.left=Math.round(x)+'px';grip.style.top=Math.round(y)+'px';
  }
 }
-function loop(){if(document.hidden||!isMobile())return;placeHandles()}
-function setup(){attach();if(!paintId){loop();paintId=setInterval(loop,220)}}
+function schedule(){if(paintId)return;paintId=requestAnimationFrame(()=>{paintId=0;placeHandles()})}
+function setup(){
+ attach();schedule();
+ window.addEventListener('resize',schedule,{passive:true});
+ window.visualViewport?.addEventListener('resize',schedule,{passive:true});
+ window.addEventListener('orientationchange',schedule,{passive:true});
+ document.addEventListener('visibilitychange',schedule,{passive:true});
+ const resizer=typeof ResizeObserver==='function'?new ResizeObserver(schedule):null;
+ if(resizer){for(const id of IDS){const e=target(id);if(e)resizer.observe(e)}}
+ const observer=typeof MutationObserver==='function'?new MutationObserver(schedule):null;
+ observer?.observe(document.body,{attributes:true,attributeFilter:['class']});
+ for(const id of ['settings-modal','add-modal']){const el=$(id);if(el)observer?.observe(el,{attributes:true,attributeFilter:['class']})}
+ for(const id of ['ivy-mobile-weather','ivy-mobile-profile','ivy-mobile-clock'])$(id)?.addEventListener('click',schedule);
+}
 if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
-window.ivyV19={refresh:placeHandles, positions:stored};
+window.ivyV19={refresh:schedule, positions:stored};
 })();
 
 ;
@@ -2083,16 +2111,11 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    <label class="ivy-v20-line" for="ivy-v20-visible-profile">Profil anzeigen <input type="checkbox" id="ivy-v20-visible-profile" checked></label>
    <label class="ivy-v20-line" for="ivy-v20-visible-search">Schnellsuche anzeigen <input type="checkbox" id="ivy-v20-visible-search" checked></label>
    <label class="ivy-v20-line" for="ivy-v20-visible-clock">Uhr anzeigen <input type="checkbox" id="ivy-v20-visible-clock" checked></label>
-   <p>Die fünf Größenregler weiter unten speichern automatisch für den hier gewählten Modus. Die Größe des Suchfelds und des Link-Bereichs bleibt separat einstellbar.</p>
-   <button class="ivy-v20-reset" type="button" id="ivy-v20-reset-device">Sichtbarkeit dieses Profils zurücksetzen</button>`;
+   `;
   const size=$('ivy-v13-link-size')?.closest('.ivy-v13-section');
   if(size)size.before(box);else settings.appendChild(box);
   $('ivy-v20-editmode').addEventListener('change',e=>{window.ivyV20SelectedMode=e.target.value;updateUI();});
   for(const name of ['weather','profile','search','clock'])$('ivy-v20-visible-'+name).addEventListener('change',saveCheckbox);
-  $('ivy-v20-reset-device').addEventListener('click',()=>{
-   const m=getEditMode(),all=prefs();delete all[m];localStorage.setItem(K,JSON.stringify(all));
-   updateUI();applyVisibility();
-  });
   window.ivyV20SelectedMode=modeNow();updateUI();
  }
  // Smooth bidirectional move controls as alternative to pointer sorting.
@@ -2180,15 +2203,8 @@ function visible(){
  window.ivyV18?.refresh?.();
 }
 function init(){
- const section=$('ivy-v20-device-settings');
- if(section && !$('ivy-v22-sizing-notice')){
-  const msg=document.createElement('div');msg.id='ivy-v22-sizing-notice';
-  msg.textContent='Die Größen werden getrennt für Desktop und Mobil gespeichert.';
-  section.appendChild(msg);
- }
  const controls=['weather','profile','search','clock'].map(x=>$('ivy-v20-visible-'+x)).filter(Boolean);
  for(const ctrl of controls)ctrl.addEventListener('change',()=>requestAnimationFrame(visible));
- $('ivy-v20-reset-device')?.addEventListener('click',()=>requestAnimationFrame(visible));
  $('ivy-v20-editmode')?.addEventListener('change',()=>requestAnimationFrame(()=>window.ivyV20RefreshSizes?.()));
  // Keep active device profile after switching modes or resizing the viewport.
  const mq=matchMedia('(max-width:900px)');mq.addEventListener?.('change',()=>{visible();window.ivyV20RefreshSizes?.()});
@@ -2609,7 +2625,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='1c5ab8347e4d8bc5a511c547536e6b51471c5f01b338669e6c80951b25abbbd0';
+ const CLIENT_SIGNATURE='7d616ecc0e3624028c67e2b94dafdf34ae94f00bc5bbb613abfd8df33641bbf1';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');

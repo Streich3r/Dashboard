@@ -1729,8 +1729,6 @@ body.ivy-v20-hide-search #dashboard-container > div {gap:0 !important;}
 .ivy-v20-settings .ivy-v20-line{display:flex;align-items:center;gap:10px;justify-content:space-between;
  padding:10px 0;border-bottom:1px solid rgba(140,175,210,.13);}
 .ivy-v20-settings input[type=checkbox]{width:19px;height:19px;accent-color:#53c6ff;flex:none;}
-.ivy-v20-settings .ivy-v20-reset{margin-top:9px;border:1px solid #739dc0;
- padding:9px 12px;border-radius:9px;background:#263752;}
 @media(min-width:901px){.ivy-v20-add-link{display:none !important;}}
 
 /* IVY V21 — modal layering, bottom-up mobile tiles, drag handle only */
@@ -1812,7 +1810,6 @@ html body.ivy-v15-links-open #settings-modal:not(.hidden) {
 }
 
 /* IVY V22 — definitive visibility and responsive sizing safeguards */
-#ivy-v22-sizing-notice{font-size:12px;line-height:1.45;color:#8bdfff;padding:9px 11px;border:1px solid rgba(65,199,250,.25);border-radius:10px;background:rgba(19,42,68,.35);}
 html body.ivy-v20-hide-weather #weather-fixed-container,
 html.ivy-v16-mobile-ui body.ivy-v20-hide-weather #weather-fixed-container,
 html body.ivy-mobile-auto.ivy-v20-hide-weather #weather-fixed-container,
@@ -2606,3 +2603,12 @@ body.ivy-hide-weather-location #weather-city-input{display:none!important}
 
 /* V52: Clock visibility follows the selected desktop/mobile device profile. */
 html body.ivy-v20-hide-clock #ivy-mobile-clock{display:none!important}
+
+/* V53: one DnD controller per device; prevent touch-callout and text selection. */
+#quick-dials-grid > [data-id] {position:relative;touch-action:pan-y;}
+#quick-dials-grid > [data-id].ivy-dial-moving {z-index:40!important;opacity:.86!important;cursor:grabbing!important;transition:none!important;will-change:transform;}
+#quick-dials-grid .ivy-dial-drag-handle {touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important;}
+body.manual-layout-mode .ivy-drag-handle {touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;cursor:grab;}
+body.manual-layout-mode .ivy-drag-handle:active{cursor:grabbing;}
+
+body.manual-layout-mode #clock-fixed-container.draggable-positioning{transform:none!important;translate:none!important;}
