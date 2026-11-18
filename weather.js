@@ -1,7 +1,10 @@
 /* from <script id="ivy-natural-weather-v37"> */
 
 (()=>{'use strict';
-function init(){
+const bootStats={startedAt:0,shaderMs:0,firstFrameMs:0,parallelShader:false,programs:[],error:null};
+window.IVY_WEATHER_BOOT=bootStats;
+async function init(){
+bootStats.startedAt=performance.now();
 const root=document.getElementById('ivy-weather-scene');if(!root||root.querySelector('.ivy-natural-canvas'))return;root.dataset.ivyHq='preparing';
 const canvas=document.createElement('canvas');canvas.className='ivy-natural-canvas';canvas.setAttribute('aria-hidden','true');root.prepend(canvas);
 const mobileGpu=matchMedia('(pointer:coarse)').matches||Math.min(innerWidth,screen.width||innerWidth)<=600;
@@ -182,8 +185,38 @@ color=(color-.45)*1.025+.45;color=pow(clamp(color,0.,1.),vec3(.97));
 gl_FragColor=vec4(color,1.);
 }
 `;
-function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
-function program(fragment,uniforms){const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,vertexSource));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fragment));gl.bindAttribLocation(p,0,'position');gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));const u={};for(const name of uniforms)u[name]=gl.getUniformLocation(p,name);return {p,u};}
+// V46: Avoid synchronous shader-status polling that can stall Waterfox's UI thread.
+// KHR_parallel_shader_compile lets the driver compile while we yield to the browser.
+const parallel=gl.getExtension('KHR_parallel_shader_compile');bootStats.parallelShader=!!parallel;
+const yieldBrowser=()=>new Promise(resolve=>setTimeout(resolve,24));
+function beginShader(type,source){const sh=gl.createShader(type);if(!sh)throw Error('Shader allocation failed');gl.shaderSource(sh,source);gl.compileShader(sh);return sh;}
+async function program(fragment,uniforms,label){
+ const started=performance.now();let vertex=null,pixel=null,p=null;
+ try{
+  vertex=beginShader(gl.VERTEX_SHADER,vertexSource);
+  pixel=beginShader(gl.FRAGMENT_SHADER,fragment);
+  p=gl.createProgram();if(!p)throw Error('Program allocation failed');
+  gl.attachShader(p,vertex);gl.attachShader(p,pixel);gl.bindAttribLocation(p,0,'position');gl.linkProgram(p);
+  // Allow compositor and user input to run between driver checks.
+  if(parallel){
+   const deadline=performance.now()+20000;
+   while(!gl.getProgramParameter(p,parallel.COMPLETION_STATUS_KHR)){
+    if(performance.now()>deadline)throw Error(label+' shader timed out');
+    await yieldBrowser();
+   }
+  }else{
+   // On drivers without the extension, separate each heavy link from the status query.
+   await yieldBrowser();
+  }
+  if(!gl.getShaderParameter(vertex,gl.COMPILE_STATUS))throw Error(label+' vertex: '+gl.getShaderInfoLog(vertex));
+  if(!gl.getShaderParameter(pixel,gl.COMPILE_STATUS))throw Error(label+' fragment: '+gl.getShaderInfoLog(pixel));
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(label+' link: '+gl.getProgramInfoLog(p));
+  const u={};for(const name of uniforms)u[name]=gl.getUniformLocation(p,name);
+  bootStats.programs.push({name:label,ms:Math.round(performance.now()-started)});
+  return {p,u};
+ }catch(error){if(p)gl.deleteProgram(p);throw error}
+ finally{if(vertex)gl.deleteShader(vertex);if(pixel)gl.deleteShader(pixel)}
+}
 let geometry,scene,glass;
 // Mobile-specific shader budgets: fewer ray steps and fragment uniforms.
 // Small GPUs often fail to link the 48-drop shader; adapt to their actual limit.
@@ -195,10 +228,13 @@ const geometryShader=precision(mobileGpu?geometrySource.replace('i<125','i<62'):
 const sceneShader=precision(mobileGpu?sceneSource.replace('i<64','i<22').replace('/64.','/22.'):sceneSource);
 const glassShader=precision(glassSource.replace(/\b48\b/g,String(dropCount)));
 try{
- geometry=program(geometryShader,['resolution']);
- scene=program(sceneShader,['geometryTex','resolution','sunPosition','skyWeights','clock','cloud','wind','rain','fog','snow','freeze','storm','flash','wetGround','drift']);
- glass=program(glassShader,['sceneTex','precipTex','resolution','drops[0]','freezeGlass','exposure','glassWet']);
-}catch(e){canvas.remove();root.dataset.ivyNatural='unavailable';root.dataset.ivyHq='unavailable';root.dispatchEvent(new Event('ivy-hq-unavailable'));document.documentElement.classList.remove('ivy-natural-boot');console.warn('IVY weather renderer unavailable',e);return;}
+ geometry=await program(geometryShader,['resolution'],'geometry');
+ await yieldBrowser();
+ scene=await program(sceneShader,['geometryTex','resolution','sunPosition','skyWeights','clock','cloud','wind','rain','fog','snow','freeze','storm','flash','wetGround','drift'],'scene');
+ await yieldBrowser();
+ glass=await program(glassShader,['sceneTex','precipTex','resolution','drops[0]','freezeGlass','exposure','glassWet'],'glass');
+ bootStats.shaderMs=Math.round(performance.now()-bootStats.startedAt);
+}catch(e){bootStats.error=String(e);canvas.remove();root.dataset.ivyNatural='unavailable';root.dataset.ivyHq='unavailable';root.dispatchEvent(new Event('ivy-hq-unavailable'));document.documentElement.classList.remove('ivy-natural-boot');console.warn('IVY weather renderer unavailable',e);return;}
 const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
 function texture(filter){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,filter);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
 function renderTarget(filter){const tex=texture(filter),fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);return {tex,fbo};}
@@ -338,7 +374,7 @@ function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!in
  const overlayChanged=drawWeather();if(resized||sceneBudget+1e-6>=1/30||progress<1||flash>.01||paused){scenePass();lastScene=clock;sceneBudget%=1/30;}finalPass(overlayChanged);
  if(window.ivyHqFrameBuffer)window.ivyHqFrameBuffer.capture(gl,width,height);
  if(!firstFrameDone){
-  firstFrameDone=true;
+  firstFrameDone=true;bootStats.firstFrameMs=Math.round(performance.now()-bootStats.startedAt);
   root.classList.add('ivy-natural-active','ivy-hq-blending');
   root.dataset.ivyNatural='blending';root.dataset.ivyHq='crossfade';
   document.documentElement.classList.remove('ivy-natural-boot');
@@ -354,7 +390,7 @@ function frame(now){if(stopped||!root.isConnected)return;if(document.hidden||!in
   }));
  }
  requestAnimationFrame(safeFrame);}
-function fallback(reason){stopped=true;root.classList.remove('ivy-natural-active','ivy-hq-blending','ivy-hq-reveal');canvas.remove();root.dataset.ivyNatural='unavailable';root.dataset.ivyHq='unavailable';root.dispatchEvent(new Event('ivy-hq-unavailable'));document.documentElement.classList.remove('ivy-natural-boot');if(reason)console.warn('IVY Wetter: mobile WebGL fallback',reason);}
+function fallback(reason){bootStats.error=String(reason||'WebGL failed');stopped=true;root.classList.remove('ivy-natural-active','ivy-hq-blending','ivy-hq-reveal');canvas.remove();root.dataset.ivyNatural='unavailable';root.dataset.ivyHq='unavailable';root.dispatchEvent(new Event('ivy-hq-unavailable'));document.documentElement.classList.remove('ivy-natural-boot');if(reason)console.warn('IVY Wetter: mobile WebGL fallback',reason);}
 function safeFrame(time){try{frame(time)}catch(error){fallback(error)}}
 canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();fallback('WebGL context lost');});
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(!document.hidden&&latest)applySnapshot(latest);});
@@ -362,13 +398,14 @@ if(typeof IntersectionObserver==='function')new IntersectionObserver(entries=>{i
 window.addEventListener('ivy-weather-snapshot',event=>applySnapshot(event.detail));
 setInterval(()=>{if(latest&&!document.hidden)applySnapshot(latest);},60000);
 try{applySnapshot(JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null'));}catch(_){}
-window.ivyNaturalWeather={version:44,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,dropCount,mobileGpu,current:{...current},target:{...target},transition:progress})};
+window.ivyNaturalWeather={version:46,applySnapshot,getState:()=>({renderer:root.dataset.ivyNatural,hasObservation,glassReflection:0,waterOnGlass:1,auroraEnabled:true,maxFPS,dropCount,mobileGpu,current:{...current},target:{...target},transition:progress})};
 requestAnimationFrame(safeFrame);
 
 }
+function rootFailure(){const root=document.getElementById('ivy-weather-scene');if(root){root.dataset.ivyHq='unavailable';root.dataset.ivyNatural='unavailable';root.dispatchEvent(new Event('ivy-hq-unavailable'));}}
 function startDeferred(){
   // Wait for two actual paint opportunities: WebGL shader compilation must not delay the first dashboard frame.
-  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(init,180)));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>{init().catch(e=>{bootStats.error=String(e);console.warn('IVY Wetter initialization',e);rootFailure();});},180)));
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startDeferred,{once:true});else startDeferred();
 })();

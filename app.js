@@ -2632,7 +2632,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='4c1f77e9c4da76110140fafaf802fcda971ea19956cdbc049aa7231f297dc493';
+ const CLIENT_SIGNATURE='41cdc6dc4ffa612f727e0b1463f74a4eeffb9646cfb92d6d2cd6deb59286878c';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2772,7 +2772,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
      const remoteHash=String(metadata.hash||'');
      const remoteBuild=String(metadata.build||'');
      if(!/^[a-f0-9]{64}$/.test(remoteHash)){if(manual)status('Ungültige Versionsdatei.');return;}
-     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V45 ist installiert.');return;}
+     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V46 ist installiert.');return;}
      show(remoteHash,remoteBuild);if(manual)status('Neue Version gefunden – im Popup installieren.');
    }catch(err){if(manual)status('Keine Verbindung zum Updateserver – offline weiter nutzbar.');if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
    finally{clearTimeout(timer);lastCheck=Date.now();checking=false}
@@ -2786,7 +2786,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:45};
+ window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:46};
 })();
 
 ;
@@ -2960,7 +2960,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  async function diagnostics(){
   const nav=performance.getEntriesByType('navigation')[0],paint=performance.getEntriesByType('paint');
   const summary={build:document.querySelector('meta[name="ivy-build"]')?.content||'?',mode:'hq-default',weather:$('ivy-weather-scene')?.dataset.ivyNatural,
-    iconCache:window.ivyIconCache?.stats?.(),cachedWeatherFrames:window.ivyHqFrameBuffer?.getState?.(),backgroundReadyAt:Math.round(window.IVY_PARTICLES?.readyAt||0),hqState:$('ivy-weather-scene')?.dataset.ivyHq||'not-started',
+    iconCache:window.ivyIconCache?.stats?.(),cachedWeatherFrames:window.ivyHqFrameBuffer?.getState?.(),backgroundReadyAt:Math.round(window.IVY_PARTICLES?.readyAt||0),hqState:$('ivy-weather-scene')?.dataset.ivyHq||'not-started',weatherBoot:window.IVY_WEATHER_BOOT||null,
     links:document.querySelectorAll('#quick-dials-grid>[data-id]').length,loadedIcons:document.querySelectorAll('#quick-dials-grid .ivy-icon-loaded').length,
     domMs:Math.round(nav?.domContentLoadedEventEnd||0),loadMs:Math.round(nav?.loadEventEnd||0),firstPaintMs:Math.round(paint.find(e=>e.name==='first-paint')?.startTime||0),
     fcpMs:Math.round(paint.find(e=>e.name==='first-contentful-paint')?.startTime||0),swControlled:!!navigator.serviceWorker?.controller,

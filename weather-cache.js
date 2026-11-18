@@ -15,7 +15,7 @@
  function capture(gl,w,h){
   if(document.hidden||root.dataset.ivyHq==='unavailable')return;
   const now=Date.now();if(!first){first=now;return}
-  if(now-first<14000||now-lastCapture<20*60*1000)return;
+  if(now-first<60000||now-lastCapture<20*60*1000)return;
   const s=last();if(!s?.current||!city()||w<2||h<2||w*h>1100000)return;
   // One readback after warm-up; never a frame-by-frame buffer recorder.
   lastCapture=now;

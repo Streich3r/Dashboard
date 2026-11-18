@@ -1,7 +1,7 @@
-/* IVY Dashboard V45 – atomic offline-first shell; one active build cache. */
+/* IVY Dashboard V46 – atomic offline-first shell; one active build cache. */
 'use strict';
-const BUILD='45';
-const CACHE_NAME='ivy-dashboard-shell-natural-v45';
+const BUILD='46';
+const CACHE_NAME='ivy-dashboard-shell-natural-v46';
 const CACHE_PREFIX='ivy-dashboard-shell-';
 const SHELL_FILES=["./index.html","./app.css","./particles.js","./app.js","./weather.js","./weather-cache.js","./version.json","./manifest.json","./icons/favicon.ico","./icons/favicon-16x16.png","./icons/favicon-32x32.png","./icons/favicon-48x48.png","./icons/favicon-64x64.png","./icons/apple-touch-icon.png","./icons/apple-touch-icon-167x167.png","./icons/apple-touch-icon-152x152.png","./icons/icon-128.png","./icons/icon-192.png","./icons/icon-256.png","./icons/icon-512.png"];
 const base=new URL(self.registration.scope);
@@ -37,7 +37,7 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   // Do not skipWaiting: user confirmation is required on an existing installation.
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  // Once the fully verified V45 worker is active, retain exactly ONE app shell.
+  // Once the fully verified V46 worker is active, retain exactly ONE app shell.
   // Do not touch persistent user data, independent favicon caches, or saved weather previews.
   const stale=(await caches.keys()).filter(name=>name.startsWith(CACHE_PREFIX)&&name!==CACHE_NAME);
   await Promise.all(stale.map(name=>caches.delete(name)));
