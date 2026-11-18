@@ -973,7 +973,7 @@ window.hideAddModal = () => {
             return data;
         }
         function ivyDownloadBackup(name='IVY_Dashboard_Backup.json'){
-            const data={format:'ivy-dashboard-backup',version:47,createdAt:new Date().toISOString(),data:ivyBackupData()};
+            const data={format:'ivy-dashboard-backup',version:document.querySelector('meta[name="ivy-build"]')?.content||'48',createdAt:new Date().toISOString(),data:ivyBackupData()};
             const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
             const url=URL.createObjectURL(blob);
             const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
@@ -2443,10 +2443,6 @@ function getCachedSnapshot(){try{return JSON.parse(localStorage.getItem('ivyWeat
 function makeLayers(){
  const scene=$('ivy-weather-scene');if(!scene)return;
  const data=scene.querySelector('.ivy-weather-data');if(!data)return;
- ['ivy-weather-grid','ivy-weather-aurora','ivy-weather-haze','ivy-weather-snow','ivy-weather-lightning','ivy-v27-wind','ivy-v27-moonshade','ivy-v27-sunrays'].forEach(cls=>{
-  if(scene.querySelector('.'+cls))return;
-  const el=document.createElement('div');el.className=cls;el.setAttribute('aria-hidden','true');scene.insertBefore(el,data)
- });
  if(!$('ivy-v27-sun-times')){
   const el=document.createElement('div');el.id='ivy-v27-sun-times';el.innerHTML='<span id="ivy-v27-sunrise">↑ --:--</span><span id="ivy-v27-sunset">↓ --:--</span>';
   data.appendChild(el);
@@ -2485,7 +2481,6 @@ function render(snapshotInput,live=false){
  const y=phase==='night'?22:clamp(78-(sun?.altitude??40)*1.08,13,77);
  scene.style.setProperty('--ivy-sun-x',x.toFixed(2)+'%');
  scene.style.setProperty('--ivy-sun-y',y.toFixed(2)+'%');
- const moonShade=scene.querySelector('.ivy-v27-moonshade');if(moonShade){const moon=moonPhase(now);moonShade.style.setProperty('--ivy-moon-shift',(Math.cos(moon*Math.PI*2)*30).toFixed(0)+'px')}
  const city=$('ivy-weather-city'),temp=$('ivy-weather-temp'),cond=$('ivy-weather-condition'),stats=$('ivy-weather-stats');
  if(city)city.textContent=s.city||'Wetter';
  if(temp)temp.textContent=Number.isFinite(+c.temperature_2m)?Math.round(c.temperature_2m)+'°':'--°';
@@ -2585,41 +2580,6 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 
 
 ;
-/* from <script id="ivy-sci-fi-weather-v28-script"> */
-
-(() => {
- function setup(){
-   const scene=document.getElementById('ivy-weather-scene');
-   if(!scene||scene.dataset.ivy28Ready)return;
-   scene.dataset.ivy28Ready='true';
-   let snow=scene.querySelector('.ivy-weather-snow');
-   if(!snow){snow=document.createElement('div');snow.className='ivy-weather-snow';snow.setAttribute('aria-hidden','true');scene.insertBefore(snow,scene.querySelector('.ivy-weather-data'));}
-   // Fixed varied positions make the weather look natural without frequent DOM work.
-   for(let i=0;i<19;i++){
-     const flake=document.createElement('span');flake.className='ivy28-flake';flake.textContent=i%3===0?'✳':'❄';
-     flake.style.setProperty('--fx',(((i*47+13)%97)+1)+'%');
-     flake.style.setProperty('--fs',(i%4===0?11:i%3===0?8:6)+'px');
-     flake.style.setProperty('--fo',(0.40+(i%5)*.12).toFixed(2));
-     flake.style.setProperty('--ft',(6+(i%6)*.83).toFixed(2)+'s');
-     flake.style.setProperty('--fd',(-((i*23)%78)/10).toFixed(1)+'s');
-     flake.style.setProperty('--drift',((i%2?-1:1)*(12+i%5*7))+'px');
-     flake.setAttribute('aria-hidden','true');snow.appendChild(flake);
-   }
-   let lightning=scene.querySelector('.ivy-weather-lightning');
-   if(!lightning){lightning=document.createElement('div');lightning.className='ivy-weather-lightning';lightning.setAttribute('aria-hidden','true');scene.insertBefore(lightning,scene.querySelector('.ivy-weather-data'));}
-   if(!lightning.querySelector('.ivy28-bolt')){
-     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-     svg.setAttribute('class','ivy28-bolt');svg.setAttribute('viewBox','0 0 100 160');svg.setAttribute('aria-hidden','true');
-     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-     path.setAttribute('d','M64 2 L28 67 L51 66 L20 150 L88 53 L60 57 L82 5 Z');
-     path.setAttribute('fill','#e2f8ff');path.setAttribute('stroke','#8bd9ff');path.setAttribute('stroke-width','1.2');
-     svg.appendChild(path);lightning.appendChild(svg);
-   }
- }
- if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
-})();
-
-;
 /* from <script id="ivy-update-monitor-v37"> */
 
 (()=>{
@@ -2628,7 +2588,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='4084d6530a57752e4376278d49d3a038b7e193eb2a237377fa4d0e2d1e056b71';
+ const CLIENT_SIGNATURE='c7cfc1dc5039c7a681e1ae8de90d5ac70963447dff692b5afbaabfe7d90806d3';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2768,7 +2728,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
      const remoteHash=String(metadata.hash||'');
      const remoteBuild=String(metadata.build||'');
      if(!/^[a-f0-9]{64}$/.test(remoteHash)){if(manual)status('Ungültige Versionsdatei.');return;}
-     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V46 ist installiert.');return;}
+     if(remoteHash===CLIENT_SIGNATURE&&remoteBuild===CURRENT_BUILD){popup.hidden=true;availableHash='';availableBuild='';if(manual)status('Alles aktuell – Version V'+CURRENT_BUILD+' ist installiert.');return;}
      show(remoteHash,remoteBuild);if(manual)status('Neue Version gefunden – im Popup installieren.');
    }catch(err){if(manual)status('Keine Verbindung zum Updateserver – offline weiter nutzbar.');if(err?.name!=='AbortError')console.debug('IVY Updateprüfung:',err)}
    finally{clearTimeout(timer);lastCheck=Date.now();checking=false}
@@ -2782,85 +2742,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:47};
-})();
-
-;
-/* from <script id="ivy-weather-v30-astronomy"> */
-
-(()=>{
- 'use strict';
- const $=id=>document.getElementById(id);
- const rad=Math.PI/180;
- function norm(x){return (x%360+360)%360}
- function moonPosition(lat,lon,now){
-  // Low-precision lunar ephemeris: ecliptic longitude/latitude -> RA/declination -> horizontal coordinates.
-  const jd=now/86400000+2440587.5,d=jd-2451545;
-  const L=(218.316+13.176396*d)*rad,M=(134.963+13.064993*d)*rad,F=(93.272+13.229350*d)*rad;
-  const l=L+6.289*rad*Math.sin(M),b=5.128*rad*Math.sin(F),e=(23.4397-.0000004*d)*rad;
-  const ra=Math.atan2(Math.sin(l)*Math.cos(e)-Math.tan(b)*Math.sin(e),Math.cos(l));
-  const dec=Math.asin(Math.sin(b)*Math.cos(e)+Math.cos(b)*Math.sin(e)*Math.sin(l));
-  const gmst=norm(280.46061837+360.98564736629*(jd-2451545));
-  const ha=norm(gmst+lon-ra/rad)*rad,phi=lat*rad;
-  const alt=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(ha))/rad;
-  const az=norm(Math.atan2(Math.sin(ha),Math.cos(ha)*Math.sin(phi)-Math.tan(dec)*Math.cos(phi))/rad+180);
-  return {altitude:alt,azimuth:az};
- }
- function moonPhase(t){return (((t-Date.UTC(2000,0,6,18,14))/(86400000*29.530588853))%1+1)%1}
- function moonLitPath(k){
-  const R=21,C=24,n=50,left=[],right=[];
-  for(let i=0;i<=n;i++){
-   const y=-R+2*R*i/n,edge=Math.sqrt(Math.max(0,R*R-y*y));
-   if(k<=.5){left.push([C+(1-4*k)*edge,C+y]);right.push([C+edge,C+y]);}
-   else{left.push([C-edge,C+y]);right.push([C+(4*k-3)*edge,C+y]);}
-  }
-  const ps=[...right,...left.reverse()];
-  return 'M'+ps.map(([x,y])=>x.toFixed(2)+' '+y.toFixed(2)).join('L')+'Z';
- }
- const CLOUDS=[
-  'M4 70 C8 59 21 55 33 57 C34 43 44 34 56 36 C65 21 78 20 90 28 C99 16 116 22 121 34 C138 28 151 39 153 51 C165 50 177 60 178 70 C176 81 163 84 150 83 L29 82 C15 81 7 79 4 70Z',
-  'M6 70 C12 60 23 58 34 59 C35 48 46 43 56 46 C65 29 79 27 91 37 C101 32 113 36 119 45 C128 42 138 48 140 57 C156 52 169 59 172 70 C170 78 160 82 146 82 L30 81 C15 80 7 77 6 70Z',
-  'M7 72 C12 63 24 60 36 61 C37 53 47 47 59 48 C70 37 84 39 93 45 C105 38 120 44 125 55 C144 50 158 60 162 69 C165 80 150 84 137 83 L32 82 C19 82 10 78 7 72Z'
- ];
- function cloudSvg(index){
-  const id='ivy30cloudgrad'+index;
-  return `<svg viewBox="0 0 184 102" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2=".20" y2="1"><stop offset="0" stop-color="#e3f5ff" stop-opacity=".89"/><stop offset=".45" stop-color="#c5dff7" stop-opacity=".74"/><stop offset="1" stop-color="#648caf" stop-opacity=".24"/></linearGradient></defs><path d="${CLOUDS[index]}" fill="url(#${id})"/><path class="c-edge" d="M22 65 Q39 60 52 62 M82 42 Q102 36 117 51 M132 65 Q147 62 158 70" fill="none" stroke="#f1fcff" stroke-opacity=".24" stroke-width="1.2" stroke-linecap="round"/></svg>`;
- }
- function skyCoordinates(pos){
-  // 2D southern-sky projection: east on the left, west on the right.
-  const a=pos.azimuth*rad,alt=pos.altitude;
-  return {x:Math.max(7,Math.min(93,50-43*Math.sin(a))),y:Math.max(10,Math.min(88,85-76*Math.sin(Math.min(90,Math.max(0,alt))*rad)))};
- }
- function init(){
-  const scene=$('ivy-weather-scene');if(!scene||scene.dataset.ivy30Ready)return;
-  scene.dataset.ivy30Ready='1';
-  const data=scene.querySelector('.ivy-weather-data');if(!data)return;
-  const bodies=document.createElement('div');bodies.className='ivy30-sky-body';bodies.setAttribute('aria-hidden','true');
-  const sun=document.createElement('div');sun.className='ivy30-orb ivy30-sun';sun.setAttribute('aria-hidden','true');
-  const moon=document.createElement('div');moon.className='ivy30-orb ivy30-moon';moon.setAttribute('aria-hidden','true');
-  moon.innerHTML='<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="ivy30moonlight" x1=".18" y1=".18" x2=".9" y2="1"><stop offset="0" stop-color="#fbfdff"/><stop offset=".52" stop-color="#d5e8ff"/><stop offset="1" stop-color="#94b2e7"/></linearGradient></defs><path class="ivy30-lit" fill="url(#ivy30moonlight)"/></svg>';
-  bodies.append(sun,moon);scene.insertBefore(bodies,data);
-  const field=document.createElement('div');field.className='ivy30-cloud-field';field.setAttribute('aria-hidden','true');
-  CLOUDS.forEach((_,i)=>{const div=document.createElement('div');div.className='ivy30-cloud c'+(i+1);div.innerHTML=cloudSvg(i);field.append(div)});
-  scene.insertBefore(field,data);
-  function update(){
-   let cache=null;try{cache=JSON.parse(localStorage.getItem('ivyWeatherSnapshot')||'null')}catch(_){}
-   if(!cache||!Number.isFinite(Number(cache.latitude))||!Number.isFinite(Number(cache.longitude))){sun.style.opacity='0';moon.style.opacity='0';return}
-   const now=Date.now(),lat=Number(cache.latitude),lon=Number(cache.longitude);
-   const sunPos=window.ivyV27Weather?.solarPosition?.(lat,lon,now),moonPos=moonPosition(lat,lon,now);
-   const weather=scene.dataset.weather||'clear';
-   const cloudOcclusion={clear:1,partly:.90,cloudy:.27,rain:.13,showers:.13,drizzle:.36,snow:.24,sleet:.20,storm:.08,fog:.14}[weather]??.84;
-   function move(el,pos){if(!pos||pos.altitude<=0){el.style.opacity='0';return false}const c=skyCoordinates(pos);el.style.left=c.x+'%';el.style.top=c.y+'%';el.style.opacity=String(cloudOcclusion);return true}
-   move(sun,sunPos);
-   move(moon,moonPos);
-   const k=moonPhase(now);moon.querySelector('.ivy30-lit').setAttribute('d',moonLitPath(k));
-  }
-  update();setInterval(update,60*1000);
-  const old=window.ivyV27Weather?.renderSnapshot;
-  if(typeof old==='function')window.ivyV27Weather.renderSnapshot=function(...args){const r=old.apply(this,args);update();return r};
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()},{passive:true});
- }
- if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+ window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),get version(){return CURRENT_BUILD}};
 })();
 
 ;
@@ -2896,7 +2778,8 @@ function init(){const modal=$('settings-modal');const outer=modal?.firstElementC
  $('ivy-backup-export')?.addEventListener('click',()=>window.exportSettings?.());
  $('ivy-backup-import')?.addEventListener('click',()=>$('import-file-input')?.click());
  const updates=addGroup(section,'updates','Updates & Offline');
- updates.innerHTML='<p class="ivy-v37-help">Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.</p><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><button id="ivy-v37-check-update" type="button" class="ivy-v37-update-button">↻ Jetzt nach Updates suchen</button><small>Installiert: V47</small></div><output id="ivy-v37-update-status" role="status" aria-live="polite" class="ivy-v37-update-status">Automatische Prüfung im Hintergrund aktiviert.</output><button id="ivy-v37-weather-refresh" type="button" class="ivy-v37-update-button">☁ Wetter jetzt aktualisieren</button><p class="ivy-v37-help">Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.</p>';
+ updates.innerHTML='<p class="ivy-v37-help">Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.</p><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><button id="ivy-v37-check-update" type="button" class="ivy-v37-update-button">↻ Jetzt nach Updates suchen</button><small id="ivy-installed-version"></small></div><output id="ivy-v37-update-status" role="status" aria-live="polite" class="ivy-v37-update-status">Automatische Prüfung im Hintergrund aktiviert.</output><button id="ivy-v37-weather-refresh" type="button" class="ivy-v37-update-button">☁ Wetter jetzt aktualisieren</button><p class="ivy-v37-help">Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.</p>';
+ const installed=$('ivy-installed-version');if(installed)installed.textContent='Installiert: V'+(document.querySelector('meta[name="ivy-build"]')?.content||'?');
  $('ivy-v37-check-update')?.addEventListener('click',()=>{const m=window.ivyUpdateMonitor;if(m?.checkManual)m.checkManual();else $('ivy-v37-update-status').textContent='Updateprüfung ist noch nicht bereit.'});
  $('ivy-v37-weather-refresh')?.addEventListener('click',()=>{const city=$('weather-city-input')?.value.trim()||localStorage.getItem('weatherCity');const status=$('ivy-v37-update-status');if(!city){status.textContent='Bitte zuerst einen Wetterstandort festlegen.';return}if(!navigator.onLine){status.textContent='Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.';return}if(typeof window.ivyRefreshWeather==='function'){window.ivyRefreshWeather(city);status.textContent='Wetteraktualisierung gestartet.'}});
  if(footer){footer.classList.add('ivy-v37-footer');section.append(footer)}
@@ -2912,12 +2795,12 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 
 ;
 
-/* IVY V47: one lightweight Canvas2D weather renderer, no shader programs or GPU readbacks. */
+/* IVY V48: a single Canvas2D sky-weather engine; no old DOM animation layers. */
 
 /* IVY V47: initialize simple weather after the dashboard UI has painted. */
 (()=>{'use strict';
   const $=id=>document.getElementById(id);
- const quality=()=>'auto';
+ const quality=()=>'canvas2d-sky';
  function init(){  const updates=$('ivy-v37-group-updates')?.querySelector('.ivy-v37-content');
   if(updates&&!$('ivy-v39-copy-diagnostics')){
    const btn=document.createElement('button');btn.type='button';btn.className='ivy-v37-update-button';btn.id='ivy-v39-copy-diagnostics';btn.textContent='⧉ Lade-Diagnose kopieren';

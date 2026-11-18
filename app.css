@@ -2551,37 +2551,10 @@ html.ivy-no-dynamic-borders #profile-fixed-container>div,html.ivy-no-dynamic-bor
 /* V38: never conceal the cached shell during startup or animate it in as fragments. */
 body.ivy-ready #weather-fixed-container,body.ivy-ready #profile-fixed-container,body.ivy-ready #dashboard-container,
 body.ivy-ready #settings-fixed-container,body.ivy-ready #import-fixed-container,body.ivy-ready #light-mode-fixed-container{transition:none!important}
-/* Hide the old weather engine until the new renderer is ready. Fallback appears only on renderer failure. */
-html.ivy-natural-boot #ivy-weather-scene>:not(.ivy-natural-canvas):not(.ivy-weather-data):not(#ivy-v23-weather-link):not(.ivy-hq-still),
-#ivy-weather-scene[data-ivy-natural="starting"]>:not(.ivy-natural-canvas):not(.ivy-weather-data):not(#ivy-v23-weather-link):not(.ivy-hq-still){display:none!important;animation:none!important}
-html.ivy-natural-boot #ivy-weather-scene,#ivy-weather-scene[data-ivy-natural="starting"]{background:linear-gradient(170deg,#45627a,#758da6 62%,#657d88)!important}
-#ivy-weather-scene[data-ivy-natural="fallback-2d"] > :not(.ivy-v39-lite-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link):not(.ivy-hq-still){display:none!important;animation:none!important}
-#ivy-weather-scene .ivy-v39-lite-canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:0!important;display:block!important;pointer-events:none!important}
-
-
-/* V39: lightweight weather starts instantly; no legacy weather overlays. */
-#ivy-weather-scene[data-ivy-natural="fallback"] > :not(.ivy-v39-lite-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link):not(.ivy-hq-still),
-#ivy-weather-scene[data-ivy-natural="starting"] > :not(.ivy-v39-lite-canvas):not(.ivy-natural-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link):not(.ivy-hq-still){display:none!important;animation:none!important}
-#ivy-weather-scene[data-ivy-natural="webgl"] > .ivy-v39-lite-canvas{display:none!important}
-#ivy-weather-scene .ivy-v39-lite-canvas{contain:paint}
 #quick-dials-grid>div[data-id]{contain:layout style}
 #quick-dials-grid .quick-dial-icon{background:#182c49;object-fit:contain;will-change:auto;transition:opacity .14s ease}
-#settings-modal .ivy-v39-weather-quality{margin:10px 0;padding:12px;background:rgba(17,27,49,.58);border:1px solid rgba(114,190,230,.25);border-radius:12px;display:grid;gap:7px}
-#settings-modal .ivy-v39-weather-quality label{color:#e9f9ff;font-size:13px;font-weight:600}
-#settings-modal .ivy-v39-weather-quality select{padding:10px;color:#f3fbff;background:#1a2945;border:1px solid rgba(114,190,230,.35);border-radius:9px;max-width:100%;font-size:13px}
-#settings-modal .ivy-v39-weather-quality small{color:#a9c2d3;line-height:1.5;font-size:11px}
-
 /* V40 immediate background: paints before JS, then independent particle canvas takes over. */
 #ivy-particles-background{background:radial-gradient(ellipse 65% 55% at 18% 15%,rgba(19,79,119,.25),transparent 85%),radial-gradient(ellipse 58% 65% at 84% 80%,rgba(88,41,152,.21),transparent 85%),#02030a!important}
-/* Keep the lite scenery on top until the first full WebGL frame has rendered. */
-#ivy-weather-scene.ivy-natural-active.ivy-hq-blending>.ivy-v39-lite-canvas{display:block!important;position:absolute!important;inset:0!important;z-index:1!important;opacity:1!important;transition:opacity .52s ease-in-out!important;pointer-events:none!important}
-#ivy-weather-scene.ivy-natural-active.ivy-hq-blending.ivy-hq-reveal>.ivy-v39-lite-canvas{opacity:0!important}
-#ivy-weather-scene.ivy-natural-active>.ivy-natural-canvas{z-index:0!important}
-@media(prefers-reduced-motion:reduce){#ivy-weather-scene.ivy-natural-active.ivy-hq-blending>.ivy-v39-lite-canvas{transition-duration:.01s!important}}
-
-
-
-
 /* IVY unified layout and visibility: the weather toggle cannot hide its sibling profile. */
 @media (max-width:900px){
  html body:not(.ivy-v15-links-open) #ivy-v13-header{display:grid!important;visibility:visible!important;opacity:1!important;pointer-events:none!important;}
@@ -2597,29 +2570,13 @@ html body.ivy-v20-hide-weather #weather-fixed-container{display:none!important;v
 html body.ivy-v20-hide-profile #profile-fixed-container{display:none!important;visibility:hidden!important;pointer-events:none!important;}
 html body:not(.ivy-v15-links-open) #ivy-v13-header[data-ivy-show-weather="false"]{justify-content:flex-end!important;}
 html body:not(.ivy-v15-links-open) #ivy-v13-header[data-ivy-show-weather="false"]>#profile-fixed-container{margin-left:auto!important;}
-/* Only one active weather renderer: a cached still until original WebGL animation is ready. */
-#ivy-weather-scene>.ivy-hq-still{
- position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
- object-fit:cover!important;z-index:2!important;display:block!important;
- opacity:0;pointer-events:none;transition:opacity .55s ease;transform:none!important;
-}
-#ivy-weather-scene>.ivy-hq-still.ivy-unused{display:none}
-#ivy-weather-scene.ivy-hq-still-visible>.ivy-hq-still{opacity:1!important;display:block!important}
-#ivy-weather-scene[data-ivy-natural="webgl"]>.ivy-hq-still{opacity:0!important}
-#ivy-weather-scene .ivy-weather-data{position:relative!important;z-index:6!important}
-/* In the rare case WebGL fails, native CSS sky and precipitation remain visible. */
-#ivy-weather-scene[data-ivy-natural="unavailable"]{background:linear-gradient(165deg,#304a6a,#67879a 60%,#355a64)!important}
-#ivy-weather-scene[data-ivy-natural="unavailable"]>.ivy-weather-data{display:flex!important}
-@media(prefers-reduced-motion:reduce){#ivy-weather-scene>.ivy-hq-still{transition:none!important}}
-
-/* V47 single Canvas2D weather renderer: older unused weather layers are disabled. */
-#ivy-weather-scene{position:relative!important;isolation:isolate;background:#4c7192!important;overflow:hidden!important}
-#ivy-weather-scene > .ivy-natural-canvas{position:absolute!important;inset:0!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:100%!important;z-index:0!important;pointer-events:none!important;contain:strict}
-#ivy-weather-scene > :not(.ivy-natural-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link){display:none!important;animation:none!important}
-#ivy-weather-scene > .ivy-weather-data{display:flex!important;position:relative!important;z-index:6!important;pointer-events:none}
-#ivy-weather-scene > .ivy-weather-data input{pointer-events:auto}
-#ivy-weather-scene #ivy-v27-sun-times{position:relative;z-index:7}
-#ivy-weather-scene .ivy-weather-status{display:none!important}
+/* Unified canvas-only weather and user backups in settings. */
 .ivy-backup-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
-/* Older drag controls must not resurrect the removed import/export toolbar. */
 #import-fixed-container,#export-fixed-container{display:none!important}
+#ivy-weather-scene > :not(.ivy-natural-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link){display:none!important;animation:none!important}
+#ivy-weather-scene #ivy-v27-sun-times{position:relative;z-index:7}
+/* IVY V48: single, sky-only Canvas2D weather – no mountains, faux layers or reflections. */
+#ivy-weather-scene{background:linear-gradient(170deg,#18325c 0%,#698aa9 58%,#a7bbc7 100%)!important;overflow:hidden!important;isolation:isolate!important}
+#ivy-weather-scene>.ivy-natural-canvas{inset:0!important;display:block!important;width:100%!important;height:100%!important;position:absolute!important;z-index:1!important;pointer-events:none!important;opacity:1!important;visibility:visible!important}
+#ivy-weather-scene>.ivy-weather-data{z-index:6!important;display:flex!important;position:relative!important;text-shadow:0 2px 12px rgba(10,20,45,.64)}
+#ivy-weather-scene>.ivy-weather-status{display:none!important}
