@@ -74,6 +74,7 @@ function getFaviconUrl(url) {
         const DRAGGABLE_ITEMS = [
             'weather-fixed-container', 
             'profile-fixed-container', 
+            'clock-fixed-container', 
             'settings-fixed-container', 
             
             // 'export-fixed-container',
@@ -189,6 +190,7 @@ function readIvySearchControls(s){
             const fixedContainers = [ 
                 document.getElementById('weather-card'),
                 document.querySelector('#profile-fixed-container > div'),
+                document.querySelector('#clock-fixed-container > div'),
                 document.querySelector('#settings-fixed-container > div'),
 		document.querySelector('#light-mode-fixed-container > div'),
 
@@ -1128,7 +1130,7 @@ function toggleManualLayout(enable, shouldSave = true) {
 }
 function makeDraggable(el) {
     removeDraggable(el);
-    if(window.innerWidth<=900)return;
+    if(window.innerWidth>900)return;
     let state = null;
     const excluded = 'input,button,select,textarea,iframe,a,label,[contenteditable="true"]';
     function down(e) {
@@ -1199,14 +1201,14 @@ document.addEventListener('keydown', e => {
 function ivyIsPhoneLayout(){return matchMedia('(max-width:767px)').matches;}
 function ivySyncMobileCards(){
   if (!ivyIsPhoneLayout()) {
-    ['weather','profile'].forEach(n=>{
+    ['weather','profile','clock'].forEach(n=>{
       document.getElementById(n+'-fixed-container')?.classList.remove('ivy-card-open');
       document.getElementById('ivy-mobile-'+n)?.setAttribute('aria-expanded','false');
     });
   }
 }
-function ivyToggleMobileCard(name){ if(window.innerWidth<=900)return;
-  for(const n of ['weather','profile']){
+function ivyToggleMobileCard(name){ if(window.innerWidth>900)return;
+  for(const n of ['weather','profile','clock']){
     const el=document.getElementById(n+'-fixed-container');
     const btn=document.getElementById('ivy-mobile-'+n);
     const on=(n===name)&&!el.classList.contains('ivy-card-open');
@@ -1353,11 +1355,12 @@ function ivyPersistDialOrder(){
 function ivyInitV11(){
   document.getElementById('ivy-mobile-weather')?.addEventListener('click',()=>ivyToggleMobileCard('weather'));
   document.getElementById('ivy-mobile-profile')?.addEventListener('click',()=>ivyToggleMobileCard('profile'));
+  document.getElementById('ivy-mobile-clock')?.addEventListener('click',()=>ivyToggleMobileCard('clock'));
   document.getElementById('modal-icon-url')?.addEventListener('input',ivyUpdateIconPreview);
   document.getElementById('modal-url')?.addEventListener('input',ivyUpdateIconPreview);
   document.addEventListener('pointerdown',e=>{
-    if(e.target.closest('#ivy-mobile-toolbar,#weather-fixed-container,#profile-fixed-container'))return;
-    for(const name of ['weather','profile']){
+    if(e.target.closest('#ivy-mobile-toolbar,#weather-fixed-container,#profile-fixed-container,#clock-fixed-container'))return;
+    for(const name of ['weather','profile','clock']){
       document.getElementById(name+'-fixed-container')?.classList.remove('ivy-card-open');
       document.getElementById('ivy-mobile-'+name)?.setAttribute('aria-expanded','false');
     }
@@ -1966,7 +1969,7 @@ function setXY(id,x,y){const t=target(id);if(!t)return;
 function attach(){if(layer)return;
  layer=document.createElement('div');layer.className='ivy19-drag-portals';layer.setAttribute('aria-label','Mobiles Layout bearbeiten');document.body.appendChild(layer);
  for(const id of IDS){const t=target(id);if(!t)continue;
- const grip=document.createElement('button');grip.type='button';grip.dataset.ivyTarget=id;grip.textContent='⠿';grip.setAttribute('aria-label',({ 'weather-fixed-container':'Wetterkarte','profile-fixed-container':'Profilkarte','settings-fixed-container':'Einstellungen','light-mode-fixed-container':'Helligkeitsbutton','ivy-v15-links-launcher':'Links-Button','ivy19-search':'Suchfeld'}[id]||'Element')+' verschieben');
+ const grip=document.createElement('button');grip.type='button';grip.dataset.ivyTarget=id;grip.textContent='⠿';grip.setAttribute('aria-label',({ 'weather-fixed-container':'Wetterkarte','profile-fixed-container':'Profilkarte','clock-fixed-container':'Uhrkarte','settings-fixed-container':'Einstellungen','light-mode-fixed-container':'Helligkeitsbutton','ivy-v15-links-launcher':'Links-Button','ivy19-search':'Suchfeld'}[id]||'Element')+' verschieben');
  layer.appendChild(grip);
  grip.addEventListener('pointerdown',ev=>{
   if(!enabled()||(ev.button!==undefined&&ev.button!==0))return;
@@ -2588,7 +2591,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='c7cfc1dc5039c7a681e1ae8de90d5ac70963447dff692b5afbaabfe7d90806d3';
+ const CLIENT_SIGNATURE='207f34b6a6db1ff65a6d494e3d44d48231176bce8991af36b9f2385aebc50640';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2752,7 +2755,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 'use strict';
 const $=id=>document.getElementById(id);
 const key='ivyDashboardSettingsOpenV37';
-const labels={'Design & Farben':'Farben & Darstellung','Suchfeld, Glow & Suchmaschinenmenü':'Suchfeld & Effekte','Hintergründe & Ränder':'Hintergründe & Rahmen','Wetter':'Wetter & Standort','Größen & Layout':'Größen & Geräteprofile','Suche & Verhalten':'Suche & Bedienung'};
+const labels={'Design & Farben':'Farben & Darstellung','Suchfeld, Glow & Suchmaschinenmenü':'Suchfeld & Effekte','Hintergründe & Ränder':'Hintergründe & Rahmen','Wetter':'Wetter & Standort','Uhr':'Uhr & Zeit','Größen & Layout':'Größen & Geräteprofile','Suche & Verhalten':'Suche & Bedienung'};
 let groups=[],searching=false,saved={};
 function read(){try{return JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(_){return {}}}
 function persist(){if(searching)return;try{localStorage.setItem(key,JSON.stringify(saved))}catch(_){}}
@@ -2765,7 +2768,7 @@ function init(){const modal=$('settings-modal');const outer=modal?.firstElementC
  section.before(toolbar);if(title)title.style.display='none';
  let target=null,footer=null,index=0;
  for(const node of [...section.children]){
-  if(node.matches('h4')){const original=node.textContent.trim();const label=labels[original]||original;const id=['colors','searchfx','borders','weather','sizes','behavior'][index++]||'section-'+index;target=addGroup(section,id,label);node.remove();continue}
+  if(node.matches('h4')){const original=node.textContent.trim();const label=labels[original]||original;const id=['colors','searchfx','borders','weather','clock','sizes','behavior'][index++]||'section-'+index;target=addGroup(section,id,label);node.remove();continue}
   if(node.classList.contains('mt-6')&&node.classList.contains('border-t')){footer=node;continue}
   if(target)target.append(node);
  }
@@ -2795,7 +2798,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 
 ;
 
-/* IVY V48: a single Canvas2D sky-weather engine; no old DOM animation layers. */
+/* IVY V49: a single configurable Canvas2D sky-weather engine; no old DOM animation layers. */
 
 /* IVY V47: initialize simple weather after the dashboard UI has painted. */
 (()=>{'use strict';
@@ -2821,7 +2824,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
  async function diagnostics(){
   const nav=performance.getEntriesByType('navigation')[0],paint=performance.getEntriesByType('paint');
-  const summary={build:document.querySelector('meta[name="ivy-build"]')?.content||'?',mode:'canvas2d',weather:$('ivy-weather-scene')?.dataset.ivyNatural,
+  const summary={build:document.querySelector('meta[name="ivy-build"]')?.content||'?',mode:'canvas2d-configurable',weather:$('ivy-weather-scene')?.dataset.ivyNatural,
     iconCache:window.ivyIconCache?.stats?.(),backgroundReadyAt:Math.round(window.IVY_PARTICLES?.readyAt||0),weatherState:$('ivy-weather-scene')?.dataset.ivyHq||'not-started',weatherBoot:window.IVY_WEATHER_BOOT||null,
     links:document.querySelectorAll('#quick-dials-grid>[data-id]').length,loadedIcons:document.querySelectorAll('#quick-dials-grid .ivy-icon-loaded').length,
     domMs:Math.round(nav?.domContentLoadedEventEnd||0),loadMs:Math.round(nav?.loadEventEnd||0),firstPaintMs:Math.round(paint.find(e=>e.name==='first-paint')?.startTime||0),
@@ -2833,4 +2836,33 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
   return JSON.stringify({...summary,assets},null,2);
  }
  window.ivyV39Performance={weatherQuality:quality,diagnostics};
+})();
+
+
+;
+/* IVY V49 extras — weather controls + clock card */
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const DEFAULTS={weatherAurora:true,weatherDroplets:true,weatherIntensity:80,weatherAnimationSpeed:100,weatherClouds:70,clockVisible:true,clockUse24h:true,clockShowSeconds:false,clockShowDate:true,clockShowWeekday:true,clockShowTimezone:false,clockStyle:'glass',clockScale:100};
+ let preview={...DEFAULTS};
+ function read(){let s={};try{s=JSON.parse(localStorage.getItem('dashboardSettings')||'{}')||{}}catch(_){s={}};return {...DEFAULTS,...s};}
+ function collect(base){const s={...(base||read())};
+  const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockVisible:'setting-clock-visible',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'};
+  for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; s[key]=el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;}
+  return s;
+ }
+ function syncOutputs(s){const pairs=[['setting-weather-intensity-value',s.weatherIntensity],['setting-weather-speed-value',s.weatherAnimationSpeed],['setting-weather-clouds-value',s.weatherClouds],['setting-clock-scale-value',s.clockScale]]; for(const [id,val] of pairs){const el=$(id); if(el)el.textContent=String(val)+'%';}}
+ function apply(s){preview={...DEFAULTS,...s}; syncOutputs(preview); document.body.classList.toggle('ivy-v49-hide-clock', preview.clockVisible===false); document.documentElement.style.setProperty('--ivy-clock-scale',(Number(preview.clockScale||100)/100).toFixed(2)); const face=$('ivy-clock-face'); if(face) face.dataset.style=preview.clockStyle||'glass'; window.dispatchEvent(new CustomEvent('ivy-settings-changed',{detail:preview})); updateClock(preview);}
+ function save(s){const merged={...read(),...s}; try{localStorage.setItem('dashboardSettings',JSON.stringify(merged))}catch(_){} apply(merged);}
+ function populate(s){const map={weatherAurora:'setting-weather-aurora',weatherDroplets:'setting-weather-droplets',weatherIntensity:'setting-weather-intensity',weatherAnimationSpeed:'setting-weather-speed',weatherClouds:'setting-weather-clouds',clockVisible:'setting-clock-visible',clockUse24h:'setting-clock-24h',clockShowSeconds:'setting-clock-seconds',clockShowDate:'setting-clock-date',clockShowWeekday:'setting-clock-weekday',clockShowTimezone:'setting-clock-timezone',clockStyle:'setting-clock-style',clockScale:'setting-clock-scale'}; for(const [key,id] of Object.entries(map)){const el=$(id); if(!el) continue; if(el.type==='checkbox') el.checked=!!s[key]; else el.value=s[key];} syncOutputs(s); }
+ let clockTimer=0;
+ function updateClock(s){const time=$('ivy-clock-time'),date=$('ivy-clock-date'),zone=$('ivy-clock-zone'); if(!time||!date||!zone) return; const now=new Date(); try{time.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h}).format(now);}catch(_){time.textContent=now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:s.clockShowSeconds?'2-digit':undefined,hour12:!s.clockUse24h});} const dateParts=[]; if(s.clockShowWeekday) dateParts.push(new Intl.DateTimeFormat('de-DE',{weekday:'long'}).format(now)); if(s.clockShowDate) dateParts.push(new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(now)); date.textContent=dateParts.join(' · '); date.style.display=dateParts.length?'block':'none'; const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Local'; zone.textContent=tz.replace(/_/g,' '); zone.style.display=s.clockShowTimezone?'block':'none'; clearTimeout(clockTimer); const delay=s.clockShowSeconds?250:(60000 - (now.getSeconds()*1000+now.getMilliseconds()) + 30); clockTimer=setTimeout(()=>updateClock(read()), delay); }
+ // patch existing setting lifecycle
+ const oldShow=window.showSettingsModal, oldLive=window.liveUpdateSettings, oldSave=window.saveSettings, oldCancel=window.cancelSettings;
+ window.showSettingsModal=function(){ if(typeof oldShow==='function') oldShow(); const s=read(); populate(s); apply(s); };
+ window.liveUpdateSettings=function(){ if(typeof oldLive==='function') oldLive(); const s=collect(read()); apply(s); };
+ window.saveSettings=function(){ if(typeof oldSave==='function') oldSave(); const s=collect(read()); save(s); };
+ window.cancelSettings=function(){ if(typeof oldCancel==='function') oldCancel(); apply(read()); };
+ function initClockMobile(){ $('ivy-mobile-clock')?.addEventListener('click',()=>{ if(window.innerWidth>900) return; for(const n of ['weather','profile','clock']){ const el=document.getElementById(n+'-fixed-container'); const btn=document.getElementById('ivy-mobile-'+n); if(!el||!btn) continue; const on=(n==='clock')&&!el.classList.contains('ivy-card-open'); el.classList.toggle('ivy-card-open',on); btn.setAttribute('aria-expanded',String(on)); } }); }
+ if(document.readyState!=='loading'){ apply(read()); initClockMobile(); } else document.addEventListener('DOMContentLoaded',()=>{ apply(read()); initClockMobile(); },{once:true});
 })();

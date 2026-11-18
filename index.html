@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="48">
+<meta name="ivy-build" content="49">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -33,6 +33,7 @@
 <div id="ivy-mobile-toolbar" aria-label="Mobile Dashboard-Leiste">
 <button id="ivy-mobile-weather" type="button" aria-expanded="false" aria-controls="weather-fixed-container" title="Wetterkarte öffnen">☁ <span>Wetter</span></button>
 <button id="ivy-mobile-profile" type="button" aria-expanded="false" aria-controls="profile-fixed-container" title="Profilkarte öffnen">◉ <span>Profil</span></button>
+<button id="ivy-mobile-clock" type="button" aria-expanded="false" aria-controls="clock-fixed-container" title="Uhrkarte öffnen">◷ <span>Uhr</span></button>
 </div>
 <div class="fixed top-8 left-8 z-50 draggable-container" id="weather-fixed-container">
 <div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
@@ -56,6 +57,15 @@
 <img alt="Profilbild" class="w-20 h-20 rounded-full border-4 border-indigo-500/80 shadow-xl transition transform duration-300 hover:scale-105 object-cover" id="profile-image" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 rx=%2240%22 fill=%22%230d111f%22/%3E%3Ctext x=%2240%22 y=%2254%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2242%22%3EU%3C/text%3E%3C/svg%3E';" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='40' fill='%230d111f'/%3E%3Ctext x='40' y='54' text-anchor='middle' fill='white' font-size='42' font-family='sans-serif'%3EU%3C/text%3E%3C/svg%3E"/>
 </label>
 <p class="text-xs text-white/50 mt-1" id="user-id-display"></p>
+</div>
+</div>
+<div class="fixed top-8 left-1/2 z-50 draggable-container" id="clock-fixed-container">
+<div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 compensated-p2 ivy-clock-card">
+<div class="ivy-clock-face" id="ivy-clock-face" role="region" aria-label="Aktuelle Uhrzeit">
+<div class="ivy-clock-time" id="ivy-clock-time">--:--</div>
+<div class="ivy-clock-date" id="ivy-clock-date">--</div>
+<div class="ivy-clock-zone" id="ivy-clock-zone">Europe/Berlin</div>
+</div>
 </div>
 </div>
 <div class="flex justify-center items-start lg:items-center py-8" id="dashboard-container">
@@ -222,6 +232,20 @@
 <label class="text-white" for="setting-weather-location-visible">Standort-Suchfeld unter der Wetterkarte anzeigen</label>
 <input class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500" id="setting-weather-location-visible" onchange="liveUpdateSettings()" type="checkbox" checked/>
 </div>
+<div class="ivy-setting-line"><label for="setting-weather-aurora">Aurora anzeigen</label><input id="setting-weather-aurora" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-weather-droplets">Fenstertropfen anzeigen</label><input id="setting-weather-droplets" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-weather-intensity">Effektstärke <output id="setting-weather-intensity-value">80%</output></label><input id="setting-weather-intensity" type="range" min="0" max="100" step="5" value="80" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-weather-speed">Animationsgeschwindigkeit <output id="setting-weather-speed-value">100%</output></label><input id="setting-weather-speed" type="range" min="30" max="200" step="5" value="100" oninput="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-weather-clouds">Wolkendichte <output id="setting-weather-clouds-value">70%</output></label><input id="setting-weather-clouds" type="range" min="0" max="100" step="5" value="70" oninput="liveUpdateSettings()"></div>
+<h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Uhr</h4>
+<div class="ivy-setting-line"><label for="setting-clock-visible">Uhrkarte anzeigen</label><input id="setting-clock-visible" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-clock-24h">24-Stunden-Format</label><input id="setting-clock-24h" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-clock-seconds">Sekunden anzeigen</label><input id="setting-clock-seconds" type="checkbox" onchange="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-clock-date">Datum anzeigen</label><input id="setting-clock-date" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-clock-weekday">Wochentag anzeigen</label><input id="setting-clock-weekday" type="checkbox" onchange="liveUpdateSettings()" checked></div>
+<div class="ivy-setting-line"><label for="setting-clock-timezone">Zeitzone anzeigen</label><input id="setting-clock-timezone" type="checkbox" onchange="liveUpdateSettings()"></div>
+<div class="ivy-setting-line"><label for="setting-clock-style">Darstellung</label><select id="setting-clock-style" onchange="liveUpdateSettings()"><option value="glass">Glas</option><option value="minimal">Minimal</option><option value="glow">Glow</option></select></div>
+<div class="ivy-setting-line"><label for="setting-clock-scale">Kartengröße <output id="setting-clock-scale-value">100%</output></label><input id="setting-clock-scale" type="range" min="80" max="140" step="5" value="100" oninput="liveUpdateSettings()"></div>
 <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Größen &amp; Layout</h4>
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">
 <label class="text-white" for="setting-weather-width">Wetter-Karten-Breite (Tailwind-Klasse):</label>
