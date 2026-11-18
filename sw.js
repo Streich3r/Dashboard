@@ -1,124 +1,64 @@
-/* IVY Dashboard V36 – offline-first shell; updates only after user confirms.
-   Weather/API traffic and personal settings are never stored in this cache. */
+/* IVY Dashboard V38 – verified, atomic offline-first shell. */
 'use strict';
-const BUILD='37';
-const CACHE_NAME='ivy-dashboard-shell-natural-v37';
+const BUILD='38';
+const CACHE_NAME='ivy-dashboard-shell-natural-v38';
 const CACHE_PREFIX='ivy-dashboard-shell-';
-const SHELL_FILES=['./index.html','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
-const scopeURL=new URL(self.registration.scope);
-const indexURL=new URL('./index.html',scopeURL).href;
-const indexPath=new URL(indexURL).pathname;
-const assetURLs=new Set(SHELL_FILES.slice(1).map(path=>new URL(path,scopeURL).href));
-
-async function fetchFresh(url){
- const res=await fetch(url,{cache:'no-store'});
- if(!res.ok||res.type!=='basic')throw new Error('IVY: aktuelle Datei nicht erreichbar');
- return res;
-}
-
-self.addEventListener('install',event=>{
- event.waitUntil((async()=>{
-  // Preload the complete new shell. An existing installation stays active until
-  // the user chooses to apply the update (NO unconditional skipWaiting).
-  const html=await fetchFresh(indexURL);
+const SHELL_FILES=['./index.html','./ivy-shell-v38.css','./ivy-app-v38.js','./version.json','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
+const base=new URL(self.registration.scope);
+const indexURL=new URL('./index.html',base).href;
+const homeURL=new URL('./',base).href;
+const requiredAssets=new Set(SHELL_FILES.slice(1).map(p=>new URL(p,base).href));
+async function sha(text){const value=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return Array.from(new Uint8Array(value),v=>v.toString(16).padStart(2,'0')).join('')}
+async function fresh(url){const res=await fetch(url,{cache:'no-store'});if(!res.ok||res.type!=='basic')throw new Error('Shell-Datei fehlt: '+url);return res;}
+self.addEventListener('install',event=>event.waitUntil((async()=>{
+  // Never activate an incomplete deployment: first verify every file and the HTML fingerprint.
+  const resources=await Promise.all(SHELL_FILES.map(async path=>[new URL(path,base).href,await fresh(new URL(path,base).href)]));
+  const byURL=new Map(resources);
+  const index=await byURL.get(indexURL).clone().text();
+  const metadata=await byURL.get(new URL('./version.json',base).href).clone().json();
+  if(metadata.build!==BUILD||metadata.hash!==await sha(index))throw new Error('Version oder HTML-Hash inkonsistent');
+  const style=await byURL.get(new URL('./ivy-shell-v38.css',base).href).clone().text();
+  const script=await byURL.get(new URL('./ivy-app-v38.js',base).href).clone().text();
+  if(!index.includes('ivy-shell-v38.css')||!index.includes('ivy-app-v38.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length)throw new Error('Unvollständiger App-Build');
   const cache=await caches.open(CACHE_NAME);
-  await cache.put(indexURL,html);
-  await Promise.allSettled(SHELL_FILES.slice(1).map(async file=>{
-   const url=new URL(file,scopeURL).href;
-   const res=await fetchFresh(url);
-   await cache.put(url,res);
-  }));
- })());
-});
-
-self.addEventListener('activate',event=>{
- event.waitUntil((async()=>{
-  // Only the newly activated worker discards superseded app-shell caches.
-  const names=await caches.keys();
-  await Promise.all(names.filter(name=>name.startsWith(CACHE_PREFIX)&&name!==CACHE_NAME)
-   .map(name=>caches.delete(name)));
+  try{await Promise.all(resources.map(([url,res])=>cache.put(url,res)))}catch(error){await caches.delete(CACHE_NAME);throw error}
+  // Do not skipWaiting: user confirmation is required on an existing installation.
+})()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+  await Promise.all((await caches.keys()).filter(n=>n.startsWith(CACHE_PREFIX)&&n!==CACHE_NAME).map(n=>caches.delete(n)));
   await self.clients.claim();
- })());
-});
-
+})()));
 self.addEventListener('fetch',event=>{
- const req=event.request;
- if(req.method!=='GET')return;
- const url=new URL(req.url);
- if(url.origin!==self.location.origin||!url.href.startsWith(scopeURL.href))return;
- if(url.searchParams.has('ivy_update_probe')||url.searchParams.has('ivy_update_apply'))return;
- const navigation=req.mode==='navigate';
- const home=url.pathname===scopeURL.pathname||url.pathname===indexPath;
- if(navigation&&!home)return;
- if(!navigation&&!assetURLs.has(url.href))return;
- const forceFresh=navigation&&url.searchParams.has('ivy_refresh');
+ const req=event.request;if(req.method!=='GET')return;
+ const u=new URL(req.url);if(u.origin!==base.origin||!u.pathname.startsWith(base.pathname))return;
+ if(u.searchParams.has('ivy_update_probe')||u.searchParams.has('ivy_update_apply'))return;
+ const nav=req.mode==='navigate';
+ if(nav&&u.pathname!==base.pathname&&u.pathname!==new URL(indexURL).pathname)return;
+ if(!nav&&!requiredAssets.has(u.href))return;
  event.respondWith((async()=>{
-  const cache=await caches.open(CACHE_NAME);
-  const key=navigation?indexURL:url.href;
-  const cached=await cache.match(key);
-  // Every ordinary visit opens the local app instantly. Online/offline are equal.
-  if(cached&&!forceFresh)return cached;
-  try{
-   const res=await fetchFresh(req);
-   // Only an explicit accepted update/recovery replaces cached index.html.
-   // If this write fails, the previously cached copy remains available.
-   await cache.put(key,res.clone());
-   return res;
-  }catch(_){return cached||(navigation?await cache.match(indexURL):null)||Response.error()}
+   const cache=await caches.open(CACHE_NAME);
+   const key=nav?indexURL:u.href;
+   const old=await cache.match(key);
+   if(old)return old;
+   try{
+      // Only first/uncached assets may come from network; never silently replace a cached document.
+      const result=await fetch(req);
+      if(result.ok&&!nav)await cache.put(key,result.clone());
+      return result;
+   }catch(_){return nav?(await cache.match(indexURL)||Response.error()):Response.error()}
  })());
 });
-
-async function normalizedHash(html){
- const normalized=html.replace(/const CLIENT_SIGNATURE='[a-f0-9]{64}';/,
-  "const CLIENT_SIGNATURE='"+'0'.repeat(64)+"';");
- const bytes=new TextEncoder().encode(normalized);
- const digest=await crypto.subtle.digest('SHA-256',bytes);
- return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
-}
-function reply(event,data){
- try{event.ports?.[0]?.postMessage(data)}catch(_){}
-}
+function reply(event,data){try{event.ports?.[0]?.postMessage(data)}catch(_){}}
 self.addEventListener('message',event=>{
  if(event.data?.type==='IVY_DASHBOARD_GET_BUILD'){
-  event.waitUntil((async()=>{
-   try{
-    const cache=await caches.open(CACHE_NAME);
-    const html=await (await cache.match(indexURL))?.text();
-    reply(event,{ok:true,build:BUILD,hash:html?await normalizedHash(html):''});
-   }catch(_){reply(event,{ok:false,build:BUILD})}
-  })());
-  return;
+  event.waitUntil((async()=>{try{
+    const cache=await caches.open(CACHE_NAME);const resp=await cache.match(indexURL);
+    const html=resp?await resp.text():null;
+    reply(event,{ok:!!html,build:BUILD,hash:html?await sha(html):''});
+  }catch(_){reply(event,{ok:false,build:BUILD})}})());return;
  }
  if(event.data?.type==='IVY_DASHBOARD_ACTIVATE_UPDATE'){
-  // Caller is an already loaded V36 page or a user-confirmed update.
-  event.waitUntil((async()=>{
-   reply(event,{ok:true,build:BUILD});
-   await self.skipWaiting();
-  })());
-  return;
+  event.waitUntil((async()=>{reply(event,{ok:true,build:BUILD});await self.skipWaiting()})());return;
  }
- if(event.data?.type==='IVY_DASHBOARD_APPLY_SHELL'){
-  event.waitUntil((async()=>{
-   try{
-    const requestedHash=String(event.data.hash||'');
-    if(!/^[a-f0-9]{64}$/.test(requestedHash))throw new Error('Ungültiger Fingerabdruck');
-    const freshURL=new URL(indexURL);
-    freshURL.searchParams.set('ivy_update_apply',String(Date.now()));
-    const fresh=await fetchFresh(freshURL.href);
-    const html=await fresh.clone().text();
-    if(!/<!doctype html/i.test(html.slice(0,100))||
-       await normalizedHash(html)!==requestedHash)throw new Error('Veröffentlichung nicht identisch; bitte erneut prüfen');
-    // Atomic cache entry replacement, only on user approval.
-    const cache=await caches.open(CACHE_NAME);
-    await cache.put(indexURL,fresh);
-    // Refresh local shell assets too; API/weather data stay excluded.
-    await Promise.allSettled(SHELL_FILES.slice(1).map(async file=>{
-      const url=new URL(file,scopeURL).href;
-      const asset=await fetchFresh(url);
-      await cache.put(url,asset);
-    }));
-    reply(event,{ok:true,hash:requestedHash});
-   }catch(err){reply(event,{ok:false,error:String(err.message||err)})}
-  })());
- }
+ // Deliberately no APPLY_SHELL: mixed generations must never be assembled in place.
 });
