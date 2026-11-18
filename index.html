@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="46">
+<meta name="ivy-build" content="47">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -25,7 +25,7 @@
 
 <link rel="stylesheet" href="./app.css"/>
 <script defer src="./particles.js"></script>
-<script defer src="./weather-cache.js"></script>
+
 </head>
 <body class="ivy-ready" id="body-root">
 <button id="ivy-v15-links-launcher" class="ivy-v15-mobile-only" type="button" aria-expanded="false" aria-label="Links im Vollbild öffnen" onclick="window.ivyV15Links?.open()"><span class="ivy-v15-launch-ring"></span><span class="ivy-v15-launch-icon" aria-hidden="true">⌘</span><span class="ivy-v15-launch-text">LINKS</span></button>
@@ -38,10 +38,6 @@
 <div class="dynamic-bg rounded-xl shadow-2xl transition duration-300 w-56 compensated-p2" id="weather-card">
 <div class="ivy-weather-scene" id="ivy-weather-scene" data-ivy-natural="fallback" role="region" aria-label="Aktuelles Wetter">
 
-<div class="ivy-weather-stars" aria-hidden="true"></div>
-<div class="ivy-weather-orb" id="ivy-weather-orb" aria-hidden="true"></div>
-<div class="ivy-weather-cloud cloud-a" aria-hidden="true"></div><div class="ivy-weather-cloud cloud-b" aria-hidden="true"></div>
-<div class="ivy-weather-rain" id="ivy-weather-rain" aria-hidden="true"></div>
 <div class="ivy-weather-data">
 <div class="ivy-weather-city" id="ivy-weather-city">Wetter</div>
 <div class="ivy-weather-temp" id="ivy-weather-temp">--°</div>
@@ -170,24 +166,10 @@
 </button>
 </div>
 </div>
-<div class="fixed bottom-8 right-24 z-50 draggable-container" id="import-fixed-container">
-<div class="dynamic-bg rounded-full shadow-2xl transition duration-300 compensated-p2 dynamic-border border-2 flex space-x-2">
-<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="import-button" onclick="document.getElementById('import-file-input').click()" title="Einstellungen und Links importieren">
-<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-<button class="p-1 rounded-full hover:bg-gray-700/50 transition duration-150" id="export-button" onclick="exportSettings()" title="Einstellungen und Links exportieren">
-<svg class="h-6 w-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0L8 12m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-</svg>
-</button>
-<input accept=".json" id="import-file-input" onchange="importSettings(event)" style="display: none;" type="file"/>
-</div>
-</div>
 <div class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-start pt-8 pb-8 z-50 overflow-y-auto" id="settings-modal">
 <div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
 <h3 class="text-xl font-bold text-white mb-4">Dashboard-Einstellungen</h3>
+<input accept="application/json,.json" id="import-file-input" onchange="importSettings(event)" style="display:none" type="file"/>
 <div class="space-y-4">
 <h4 class="text-sm font-semibold text-indigo-400 border-b border-gray-700 pb-1 mb-2">Design &amp; Farben</h4>
 <div class="flex items-center justify-between p-2 bg-gray-700 rounded-lg">

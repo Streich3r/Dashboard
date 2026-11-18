@@ -2611,3 +2611,15 @@ html body:not(.ivy-v15-links-open) #ivy-v13-header[data-ivy-show-weather="false"
 #ivy-weather-scene[data-ivy-natural="unavailable"]{background:linear-gradient(165deg,#304a6a,#67879a 60%,#355a64)!important}
 #ivy-weather-scene[data-ivy-natural="unavailable"]>.ivy-weather-data{display:flex!important}
 @media(prefers-reduced-motion:reduce){#ivy-weather-scene>.ivy-hq-still{transition:none!important}}
+
+/* V47 single Canvas2D weather renderer: older unused weather layers are disabled. */
+#ivy-weather-scene{position:relative!important;isolation:isolate;background:#4c7192!important;overflow:hidden!important}
+#ivy-weather-scene > .ivy-natural-canvas{position:absolute!important;inset:0!important;display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:100%!important;z-index:0!important;pointer-events:none!important;contain:strict}
+#ivy-weather-scene > :not(.ivy-natural-canvas):not(.ivy-weather-data):not(.ivy-weather-status):not(#ivy-v23-weather-link){display:none!important;animation:none!important}
+#ivy-weather-scene > .ivy-weather-data{display:flex!important;position:relative!important;z-index:6!important;pointer-events:none}
+#ivy-weather-scene > .ivy-weather-data input{pointer-events:auto}
+#ivy-weather-scene #ivy-v27-sun-times{position:relative;z-index:7}
+#ivy-weather-scene .ivy-weather-status{display:none!important}
+.ivy-backup-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+/* Older drag controls must not resurrect the removed import/export toolbar. */
+#import-fixed-container,#export-fixed-container{display:none!important}

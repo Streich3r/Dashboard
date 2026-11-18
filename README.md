@@ -1,5 +1,1 @@
-IVY Dashboard V46 – Waterfox WebGL-Freeze-Fix.
-
-Die hochwertige Wetterlandschaft bleibt erhalten. Die Shader werden schrittweise gestartet, nach Möglichkeit über KHR_parallel_shader_compile ohne blockierende Statusprüfungen. Eine direkte GPU-Rücklesung des Wetterbildes findet frühestens nach 60 Sekunden statt.
-
-Feste Dateinamen, Offline-First und bestätigtes Update bleiben erhalten. Alle Dateien inklusive icons/ hochladen. Diagnostik: weatherBoot zeigt Programmzeiten, ersten HQ-Frame und mögliche Fehler.
+IVY Dashboard V47 – schlichter Canvas2D-Wetterrenderer ohne WebGL-Shader. Import/Export unter Einstellungen > Datensicherung. Stabile Dateinamen, vollständiges Offline-Paket und atomare Installation mit Bestätigung. Alle Dateien inklusive icons/ gemeinsam veröffentlichen. Bestehende persönliche Daten bleiben im LocalStorage erhalten.

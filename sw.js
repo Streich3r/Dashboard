@@ -1,9 +1,9 @@
-/* IVY Dashboard V46 – atomic offline-first shell; one active build cache. */
+/* IVY Dashboard V47 – atomic offline-first shell; one active build cache. */
 'use strict';
-const BUILD='46';
-const CACHE_NAME='ivy-dashboard-shell-natural-v46';
+const BUILD='47';
+const CACHE_NAME='ivy-dashboard-shell-natural-v47';
 const CACHE_PREFIX='ivy-dashboard-shell-';
-const SHELL_FILES=["./index.html","./app.css","./particles.js","./app.js","./weather.js","./weather-cache.js","./version.json","./manifest.json","./icons/favicon.ico","./icons/favicon-16x16.png","./icons/favicon-32x32.png","./icons/favicon-48x48.png","./icons/favicon-64x64.png","./icons/apple-touch-icon.png","./icons/apple-touch-icon-167x167.png","./icons/apple-touch-icon-152x152.png","./icons/icon-128.png","./icons/icon-192.png","./icons/icon-256.png","./icons/icon-512.png"];
+const SHELL_FILES=["./index.html","./app.css","./particles.js","./app.js","./weather.js","./version.json","./manifest.json","./icons/favicon.ico","./icons/favicon-16x16.png","./icons/favicon-32x32.png","./icons/favicon-48x48.png","./icons/favicon-64x64.png","./icons/apple-touch-icon.png","./icons/apple-touch-icon-167x167.png","./icons/apple-touch-icon-152x152.png","./icons/icon-128.png","./icons/icon-192.png","./icons/icon-256.png","./icons/icon-512.png"];
 const base=new URL(self.registration.scope);
 const indexURL=new URL('./index.html',base).href;
 const homeURL=new URL('./',base).href;
@@ -30,14 +30,14 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   const style=await byURL.get(new URL('./app.css',base).href).clone().text();
   const particles=await byURL.get(new URL('./particles.js',base).href).clone().text();
   const script=await byURL.get(new URL('./app.js',base).href).clone().text();
-  const buffer=await byURL.get(new URL('./weather-cache.js',base).href).clone().text();
-  if(!index.includes('app.css')||!index.includes('particles.js')||!index.includes('app.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length||!particles.includes('IVY_PARTICLES')||!index.includes('weather-cache.js')||!buffer.includes('ivyHqFrameBuffer'))throw new Error('Unvollständiger App-Build');
+
+  if(!index.includes('app.css')||!index.includes('particles.js')||!index.includes('app.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length||!particles.includes('IVY_PARTICLES'))throw new Error('Unvollständiger App-Build');
   const cache=await caches.open(CACHE_NAME);
   try{await Promise.all(resources.map(([url,res])=>cache.put(url,res)))}catch(error){await caches.delete(CACHE_NAME);throw error}
   // Do not skipWaiting: user confirmation is required on an existing installation.
 })()));
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  // Once the fully verified V46 worker is active, retain exactly ONE app shell.
+  // Once the fully verified V47 worker is active, retain exactly ONE app shell.
   // Do not touch persistent user data, independent favicon caches, or saved weather previews.
   const stale=(await caches.keys()).filter(name=>name.startsWith(CACHE_PREFIX)&&name!==CACHE_NAME);
   await Promise.all(stale.map(name=>caches.delete(name)));

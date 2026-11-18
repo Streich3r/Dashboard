@@ -75,7 +75,7 @@ function getFaviconUrl(url) {
             'weather-fixed-container', 
             'profile-fixed-container', 
             'settings-fixed-container', 
-            'import-fixed-container', 
+            
             // 'export-fixed-container',
 	    // Overlay itself must always cover the entire viewport
 
@@ -190,8 +190,6 @@ function readIvySearchControls(s){
                 document.getElementById('weather-card'),
                 document.querySelector('#profile-fixed-container > div'),
                 document.querySelector('#settings-fixed-container > div'),
-                document.querySelector('#import-fixed-container > div'),
-                document.querySelector('#export-fixed-container > div'),
 		document.querySelector('#light-mode-fixed-container > div'),
 
             ].filter(el => el);
@@ -211,7 +209,7 @@ function readIvySearchControls(s){
 
 const accentIcons = [
                 // Alle Buttons in den festen Containern
-                ...document.querySelectorAll('#settings-fixed-container svg, #import-fixed-container svg, #export-fixed-container svg'),
+                ...document.querySelectorAll('#settings-fixed-container svg'),
 		document.querySelector('#light-mode-close-btn svg'),
                 document.querySelector('#light-mode-fixed-container svg'),
                 //document.querySelector('#light-mode-overlay svg'),
@@ -967,15 +965,15 @@ window.hideAddModal = () => {
         // IMPORT / EXPORT FUNKTIONEN
         // =================================================================
 
-        const IVY_POSITION_KEY=/(?:_(?:desktop|mobile))?_(?:top|left)_rel$|^ivyV14Workspace_(?:mobile|desktop)$|^ivyV15MobileWidgets$|^ivyV18MobileLayout$|^ivyV20DeviceSizes$|^ivyV20DisplayPrefs$/;
+        const IVY_POSITION_KEY=/(?:_(?:desktop|mobile))?_(?:top|left)_rel$|^ivyV14Workspace_(?:mobile|desktop)$|^ivyV15MobileWidgets$|^ivyV18MobileLayout$|^ivyV20DeviceSizes$|^ivyV20DisplayPrefs$|^ivyV37|^ivy[A-Z]|^ivy_/;
         function ivyBackupData(){
             const data={};
-            const keys=[...new Set([...LOCAL_STORAGE_KEYS,...Object.keys(localStorage).filter(k=>IVY_POSITION_KEY.test(k))])];
+            const keys=[...new Set([...LOCAL_STORAGE_KEYS,...Object.keys(localStorage).filter(k=>IVY_POSITION_KEY.test(k)&&!/(?:Frames|Cache|VersionHash|UpdateProbe)/i.test(k))])];
             for(const key of keys){const v=localStorage.getItem(key);if(v!==null)data[key]=v}
             return data;
         }
         function ivyDownloadBackup(name='IVY_Dashboard_Backup.json'){
-            const data={format:'ivy-dashboard-backup',version:20,createdAt:new Date().toISOString(),data:ivyBackupData()};
+            const data={format:'ivy-dashboard-backup',version:47,createdAt:new Date().toISOString(),data:ivyBackupData()};
             const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
             const url=URL.createObjectURL(blob);
             const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
@@ -991,7 +989,7 @@ window.hideAddModal = () => {
                     const data=parsed?.format==='ivy-dashboard-backup'?parsed.data:parsed;
                     if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Ungültiges Datenformat');
                     const entries=Object.entries(data).filter(([key,value])=>
-                        (LOCAL_STORAGE_KEYS.includes(key)||IVY_POSITION_KEY.test(key))&&typeof value==='string');
+                        (LOCAL_STORAGE_KEYS.includes(key)||(IVY_POSITION_KEY.test(key)&&!/(?:Frames|Cache|VersionHash|UpdateProbe)/i.test(key)))&&typeof value==='string');
                     if(!entries.length)throw Error('Keine IVY-Einstellungen im Backup');
                     if(!confirm('IVY-Backup importieren? Deine aktuellen Links, Positionen und Einstellungen werden durch die Werte in dieser Datei ersetzt.'))return;
                     for(const [key,value] of entries)localStorage.setItem(key,value);
@@ -1057,7 +1055,6 @@ const DEFAULT_FIXED_POSITIONS = {
     'weather-fixed-container': { top: '2rem', left: '2rem', right: 'auto', bottom: 'auto' },
     'profile-fixed-container': { top: '2rem', right: '2rem', left: 'auto', bottom: 'auto' },
     'settings-fixed-container': { bottom: '2rem', right: '2rem', left: 'auto', top: 'auto' },
-    'import-fixed-container': { bottom: '2rem', right: '6rem', left: 'auto', top: 'auto' },
     'light-mode-fixed-container': { bottom: '2rem', left: '2rem', right: 'auto', top: 'auto' }
 };
 function positionKey(id) { return id + (window.matchMedia('(max-width: 767px)').matches ? '_mobile' : '_desktop'); }
@@ -1472,7 +1469,7 @@ function applySizes(){
   root.style.setProperty('--ivy-v13-icon',clamp(s.iconSize,20,112)+'px');
   root.style.setProperty('--ivy-v13-btn',clamp(s.buttonSize,36,80)+'px');
   // Profile and weather are independently measured by the V27 layout controller.
-  for(const selector of ['#settings-fixed-container button','#import-fixed-container button','#light-mode-fixed-container button']){
+  for(const selector of ['#settings-fixed-container button','#light-mode-fixed-container button']){
     for(const button of document.querySelectorAll(selector)){
       button.style.setProperty('min-width',clamp(s.buttonSize,36,80)+'px','important');
       button.style.setProperty('min-height',clamp(s.buttonSize,36,80)+'px','important');
@@ -1793,7 +1790,7 @@ const $=id=>document.getElementById(id);
 const root=document.documentElement;
 const MOBILE=()=>window.matchMedia('(max-width:900px)').matches;
 const KEY='ivyV18MobileLayout';
-const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','import-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy18-search'];
+const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy18-search'];
 const clamp=(v,a,b)=>Math.max(a,Math.min(Math.max(a,b),v));
 const vp=()=>({w:Math.max(1,window.innerWidth),h:Math.max(1,window.innerHeight)});
 let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
@@ -1820,7 +1817,6 @@ function defaults(id,v,box){
  if(id==='weather-fixed-container')return{x:safe,y:safe};
  if(id==='profile-fixed-container')return{x:sw,y:safe};
  if(id==='settings-fixed-container')return{x:sw,y:sh};
- if(id==='import-fixed-container')return{x:clamp(sw-82,safe,sw),y:sh};
  if(id==='light-mode-fixed-container')return{x:safe,y:sh};
  if(id==='ivy18-search')return{x:clamp((v.w-box.width)/2,safe,sw),y:clamp(defaultCardsBottom+8,safe,sh)};
  if(id==='ivy-v15-links-launcher'){
@@ -1911,7 +1907,7 @@ function setup(){
  if(initialized)return;
  const links=linksSection(),search=searchSection(),launch=$('ivy-v15-links-launcher');if(!links||!search||!launch)return;initialized=true;
  links.id='ivy-v15-links-view';
- for(const id of ['settings-fixed-container','import-fixed-container','light-mode-fixed-container']){const e=$(id);if(e&&e.parentElement!==document.body)document.body.appendChild(e)}
+ for(const id of ['settings-fixed-container','light-mode-fixed-container']){const e=$(id);if(e&&e.parentElement!==document.body)document.body.appendChild(e)}
  const modalIDs=['settings-modal','add-modal'];
  for(const id of modalIDs){const e=$(id);if(e&&e.parentElement!==document.body)document.body.appendChild(e)}
  const heading=$('ivy-v15-links-head');if(heading){heading.querySelector('.ivy-v15-back')?.addEventListener('click',ev=>{ev.stopPropagation();closeLinks()})}
@@ -1941,7 +1937,7 @@ setTimeout(setup,0);
 (()=>{
 'use strict';
 const KEY='ivyV18MobileLayout';
-const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','import-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy19-search'];
+const IDS=['weather-fixed-container','profile-fixed-container','settings-fixed-container','light-mode-fixed-container','ivy-v15-links-launcher','ivy19-search'];
 const $=id=>document.getElementById(id);
 const isMobile=()=>window.matchMedia('(max-width:900px)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -1970,7 +1966,7 @@ function setXY(id,x,y){const t=target(id);if(!t)return;
 function attach(){if(layer)return;
  layer=document.createElement('div');layer.className='ivy19-drag-portals';layer.setAttribute('aria-label','Mobiles Layout bearbeiten');document.body.appendChild(layer);
  for(const id of IDS){const t=target(id);if(!t)continue;
- const grip=document.createElement('button');grip.type='button';grip.dataset.ivyTarget=id;grip.textContent='⠿';grip.setAttribute('aria-label',({ 'weather-fixed-container':'Wetterkarte','profile-fixed-container':'Profilkarte','settings-fixed-container':'Einstellungen','import-fixed-container':'Import und Export','light-mode-fixed-container':'Helligkeitsbutton','ivy-v15-links-launcher':'Links-Button','ivy19-search':'Suchfeld'}[id]||'Element')+' verschieben');
+ const grip=document.createElement('button');grip.type='button';grip.dataset.ivyTarget=id;grip.textContent='⠿';grip.setAttribute('aria-label',({ 'weather-fixed-container':'Wetterkarte','profile-fixed-container':'Profilkarte','settings-fixed-container':'Einstellungen','light-mode-fixed-container':'Helligkeitsbutton','ivy-v15-links-launcher':'Links-Button','ivy19-search':'Suchfeld'}[id]||'Element')+' verschieben');
  layer.appendChild(grip);
  grip.addEventListener('pointerdown',ev=>{
   if(!enabled()||(ev.button!==undefined&&ev.button!==0))return;
@@ -1998,7 +1994,7 @@ function placeHandles(){if(!layer)return;const show=enabled();layer.style.displa
   const t=target(grip.dataset.ivyTarget),r=t?.getBoundingClientRect();if(!r||r.width<1||r.height<1){grip.style.display='none';continue}
   grip.style.display='flex';
   // Above each toolbar control: avoids stealing its normal click/tap area.
-  const control=['settings-fixed-container','import-fixed-container','light-mode-fixed-container'].includes(grip.dataset.ivyTarget);
+  const control=['settings-fixed-container','light-mode-fixed-container'].includes(grip.dataset.ivyTarget);
   const x=clamp(r.right-36,4,Math.max(4,v.w-42));
   const y=clamp(control?r.top-41:r.top+4,4,Math.max(4,v.h-42));
   grip.style.left=Math.round(x)+'px';grip.style.top=Math.round(y)+'px';
@@ -2632,7 +2628,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='41cdc6dc4ffa612f727e0b1463f74a4eeffb9646cfb92d6d2cd6deb59286878c';
+ const CLIENT_SIGNATURE='4084d6530a57752e4376278d49d3a038b7e193eb2a237377fa4d0e2d1e056b71';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2786,7 +2782,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  window.addEventListener('online',()=>check(true));
  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check(false)});
- window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:46};
+ window.ivyUpdateMonitor={check:()=>check(true),checkManual:()=>check(true,true),version:47};
 })();
 
 ;
@@ -2895,8 +2891,12 @@ function init(){const modal=$('settings-modal');const outer=modal?.firstElementC
  for(const id of ['setting-weather-width','setting-profile-size','setting-quickdial-size']){
   const el=$(id);if(el){const row=el.closest('div.flex')||el.parentElement;row?.classList.add('ivy-v37-hidden-row')}
  }
+ const backups=addGroup(section,'backup','Datensicherung · Import & Export');
+ backups.innerHTML='<p class="ivy-v37-help">Exportiert gespeicherte Links, Einstellungen, Profil, Wetterort und Layoutpositionen. Ein Import ersetzt nur die enthaltenen gespeicherten Werte; zuvor ein Backup erstellen.</p><div class="ivy-backup-actions"><button type="button" class="ivy-v37-update-button" id="ivy-backup-export">↓ Backup exportieren</button><button type="button" class="ivy-v37-update-button" id="ivy-backup-import">↑ Backup importieren</button></div>';
+ $('ivy-backup-export')?.addEventListener('click',()=>window.exportSettings?.());
+ $('ivy-backup-import')?.addEventListener('click',()=>$('import-file-input')?.click());
  const updates=addGroup(section,'updates','Updates & Offline');
- updates.innerHTML='<p class="ivy-v37-help">Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.</p><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><button id="ivy-v37-check-update" type="button" class="ivy-v37-update-button">↻ Jetzt nach Updates suchen</button><small>Installiert: V44</small></div><output id="ivy-v37-update-status" role="status" aria-live="polite" class="ivy-v37-update-status">Automatische Prüfung im Hintergrund aktiviert.</output><button id="ivy-v37-weather-refresh" type="button" class="ivy-v37-update-button">☁ Wetter jetzt aktualisieren</button><p class="ivy-v37-help">Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.</p>';
+ updates.innerHTML='<p class="ivy-v37-help">Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.</p><div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px"><button id="ivy-v37-check-update" type="button" class="ivy-v37-update-button">↻ Jetzt nach Updates suchen</button><small>Installiert: V47</small></div><output id="ivy-v37-update-status" role="status" aria-live="polite" class="ivy-v37-update-status">Automatische Prüfung im Hintergrund aktiviert.</output><button id="ivy-v37-weather-refresh" type="button" class="ivy-v37-update-button">☁ Wetter jetzt aktualisieren</button><p class="ivy-v37-help">Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.</p>';
  $('ivy-v37-check-update')?.addEventListener('click',()=>{const m=window.ivyUpdateMonitor;if(m?.checkManual)m.checkManual();else $('ivy-v37-update-status').textContent='Updateprüfung ist noch nicht bereit.'});
  $('ivy-v37-weather-refresh')?.addEventListener('click',()=>{const city=$('weather-city-input')?.value.trim()||localStorage.getItem('weatherCity');const status=$('ivy-v37-update-status');if(!city){status.textContent='Bitte zuerst einen Wetterstandort festlegen.';return}if(!navigator.onLine){status.textContent='Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.';return}if(typeof window.ivyRefreshWeather==='function'){window.ivyRefreshWeather(city);status.textContent='Wetteraktualisierung gestartet.'}});
  if(footer){footer.classList.add('ivy-v37-footer');section.append(footer)}
@@ -2912,11 +2912,9 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
 
 ;
 
-/* IVY: original WebGL weather is the sole live weather renderer.
-   The previous independent animated 2D canvas (and duplicate draw loop) was removed.
-   A locally saved still frame covers the startup until live WebGL has drawn. */
+/* IVY V47: one lightweight Canvas2D weather renderer, no shader programs or GPU readbacks. */
 
-/* IVY V44: defer the sole HQ weather renderer until dashboard has painted. */
+/* IVY V47: initialize simple weather after the dashboard UI has painted. */
 (()=>{'use strict';
   const $=id=>document.getElementById(id);
  const quality=()=>'auto';
@@ -2930,43 +2928,24 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
    });
    updates.append(btn);
   }
-  // Independent of network favicons, window.load and weather API responses.
-  // Wait for the UI's first visual frames, then schedule the expensive WebGL shader
-  // compilation in an idle period, never on the critical startup path.
-  {
-   let queued=false;
-   const load=()=>{
-    if(queued||document.hidden||!$('ivy-weather-scene')?.isConnected)return;
-    queued=true;
-    const script=document.createElement('script');script.id='ivy-weather-live-script';
-    script.src='./weather.js';script.async=true;
-    script.onerror=()=>{console.warn('IVY: HQ-Wetter nicht verfügbar; einfache CSS-Wetterdarstellung bleibt sichtbar.');};
-    document.head.append(script);
-   };
-   const scheduleIdle=()=>{
-    const invoke=()=>{if(document.hidden)return;if('requestIdleCallback'in window){
-      requestIdleCallback(()=>load(),{timeout:1200});
-     }else setTimeout(load,200);};
-    // The delay is for HQ only. All 2D weather and particles render immediately.
-    setTimeout(invoke,80);
-   };
-   requestAnimationFrame(()=>requestAnimationFrame(scheduleIdle));
-   document.addEventListener('visibilitychange',()=>{
-     if(!document.hidden&&!queued&&!$('ivy-weather-live-script'))scheduleIdle();
-   },{passive:true});
+  // Minimal Canvas weather: isolated from dashboard and never blocks its first paint.
+  if(!$('ivy-weather-simple-script')){
+   const script=document.createElement('script');script.id='ivy-weather-simple-script';script.src='./weather.js';script.async=true;
+   script.onerror=()=>console.warn('IVY: Wetterrenderer konnte nicht geladen werden.');
+   requestAnimationFrame(()=>document.head.append(script));
   }
  }
  if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
  async function diagnostics(){
   const nav=performance.getEntriesByType('navigation')[0],paint=performance.getEntriesByType('paint');
-  const summary={build:document.querySelector('meta[name="ivy-build"]')?.content||'?',mode:'hq-default',weather:$('ivy-weather-scene')?.dataset.ivyNatural,
-    iconCache:window.ivyIconCache?.stats?.(),cachedWeatherFrames:window.ivyHqFrameBuffer?.getState?.(),backgroundReadyAt:Math.round(window.IVY_PARTICLES?.readyAt||0),hqState:$('ivy-weather-scene')?.dataset.ivyHq||'not-started',weatherBoot:window.IVY_WEATHER_BOOT||null,
+  const summary={build:document.querySelector('meta[name="ivy-build"]')?.content||'?',mode:'canvas2d',weather:$('ivy-weather-scene')?.dataset.ivyNatural,
+    iconCache:window.ivyIconCache?.stats?.(),backgroundReadyAt:Math.round(window.IVY_PARTICLES?.readyAt||0),weatherState:$('ivy-weather-scene')?.dataset.ivyHq||'not-started',weatherBoot:window.IVY_WEATHER_BOOT||null,
     links:document.querySelectorAll('#quick-dials-grid>[data-id]').length,loadedIcons:document.querySelectorAll('#quick-dials-grid .ivy-icon-loaded').length,
     domMs:Math.round(nav?.domContentLoadedEventEnd||0),loadMs:Math.round(nav?.loadEventEnd||0),firstPaintMs:Math.round(paint.find(e=>e.name==='first-paint')?.startTime||0),
     fcpMs:Math.round(paint.find(e=>e.name==='first-contentful-paint')?.startTime||0),swControlled:!!navigator.serviceWorker?.controller,
     offlineCapable:!!navigator.serviceWorker?.controller,online:navigator.onLine};
   try{summary.cacheNames=(await caches.keys()).filter(x=>x.startsWith('ivy-dashboard-'))}catch(_){}
-  const assets=performance.getEntriesByType('resource').filter(r=>/app\.js|app\.css|weather\.js|weather-cache\.js|particles\.js|version\.json/.test(r.name))
+  const assets=performance.getEntriesByType('resource').filter(r=>/app\.js|app\.css|weather\.js|particles\.js|version\.json/.test(r.name))
     .map(r=>({asset:r.name.split('/').pop(),durationMs:Math.round(r.duration),transferBytes:r.transferSize||0}));
   return JSON.stringify({...summary,assets},null,2);
  }
