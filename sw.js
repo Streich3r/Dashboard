@@ -1,9 +1,9 @@
-/* IVY Dashboard V39 – verified, atomic offline-first shell. */
+/* IVY Dashboard V40 – verified, atomic offline-first shell. */
 'use strict';
-const BUILD='39';
-const CACHE_NAME='ivy-dashboard-shell-natural-v39';
+const BUILD='40';
+const CACHE_NAME='ivy-dashboard-shell-natural-v40';
 const CACHE_PREFIX='ivy-dashboard-shell-';
-const SHELL_FILES=['./index.html','./ivy-shell-v39.css','./ivy-app-v39.js','./ivy-weather-hq-v39.js','./version.json','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
+const SHELL_FILES=['./index.html','./ivy-shell-v40.css','./ivy-particles-v40.js','./ivy-app-v40.js','./ivy-weather-hq-v40.js','./version.json','./manifest.json','./favicon-32x32.png','./icon-192.png','./icon-512.png'];
 const base=new URL(self.registration.scope);
 const indexURL=new URL('./index.html',base).href;
 const homeURL=new URL('./',base).href;
@@ -17,9 +17,10 @@ self.addEventListener('install',event=>event.waitUntil((async()=>{
   const index=await byURL.get(indexURL).clone().text();
   const metadata=await byURL.get(new URL('./version.json',base).href).clone().json();
   if(metadata.build!==BUILD||metadata.hash!==await sha(index))throw new Error('Version oder HTML-Hash inkonsistent');
-  const style=await byURL.get(new URL('./ivy-shell-v39.css',base).href).clone().text();
-  const script=await byURL.get(new URL('./ivy-app-v39.js',base).href).clone().text();
-  if(!index.includes('ivy-shell-v39.css')||!index.includes('ivy-app-v39.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length)throw new Error('Unvollständiger App-Build');
+  const style=await byURL.get(new URL('./ivy-shell-v40.css',base).href).clone().text();
+  const particles=await byURL.get(new URL('./ivy-particles-v40.js',base).href).clone().text();
+  const script=await byURL.get(new URL('./ivy-app-v40.js',base).href).clone().text();
+  if(!index.includes('ivy-shell-v40.css')||!index.includes('ivy-particles-v40.js')||!index.includes('ivy-app-v40.js')||!script.includes("const CLIENT_SIGNATURE='"+metadata.hash+"';")||!style.length||!particles.includes('IVY_PARTICLES'))throw new Error('Unvollständiger App-Build');
   const cache=await caches.open(CACHE_NAME);
   try{await Promise.all(resources.map(([url,res])=>cache.put(url,res)))}catch(error){await caches.delete(CACHE_NAME);throw error}
   // Do not skipWaiting: user confirmation is required on an existing installation.
