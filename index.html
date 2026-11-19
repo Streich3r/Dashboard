@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>IVY Dashboard</title>
-<meta name="ivy-build" content="58">
+<meta name="ivy-build" content="59">
 <!-- IVY V36: Tailwind is precompiled; no runtime compiler or DOM-wide class observer. -->
 
 <meta name="description" content="IVY – dein anpassbares Dashboard mit Links, Wetter und futuristischen Effekten."/>
@@ -118,6 +118,8 @@
 <div class="hidden fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" id="add-modal">
 <div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md border border-gray-700">
 <h3 class="text-xl font-bold text-white mb-4">Schnellwahleintrag hinzufügen</h3>
+<label class="ivy-v59-placeholder-option" for="modal-is-placeholder"><input type="checkbox" id="modal-is-placeholder"/><span>Leeren Platzhalter hinzufügen (ohne Titel oder Link)</span></label>
+<p class="ivy-v59-placeholder-help">Reserviert eine freie Kachelposition. Im Bearbeitungsmodus kannst du sie verschieben, bearbeiten oder löschen.</p>
 <input class="w-full p-3 mb-3 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" id="modal-title" placeholder="Titel (z.B. Google)" type="text"/>
 <input class="w-full p-3 mb-4 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" id="modal-url" placeholder="URL (z.B. https://google.com)" type="url"/>
 <div class="ivy-icon-config">

@@ -686,19 +686,21 @@ function renderQuickDials(dials) {
     if (!addButton) return;
 
     dials.forEach(dial => {
-        if (!/^https?:\/\//i.test(String(dial.url))) return;
-        const safe = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const isPlaceholder = dial.isPlaceholder === true;
+        if (!isPlaceholder && !/^https?:\/\//i.test(String(dial.url))) return;
+        const safe = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         const dialDiv = document.createElement('div');
         
         // WICHTIG: Stellt sicher, dass die Klasse 'group' vorhanden ist
         dialDiv.className = 'flex flex-col items-center justify-center rounded-xl shadow-xl transition duration-300 dynamic-bg compensated-p4 hover:scale-105 group relative';
         dialDiv.setAttribute('data-id', dial.id);
+        if (isPlaceholder) { dialDiv.classList.add('ivy-dial-spacer'); dialDiv.setAttribute('aria-label','Freier Platzhalter'); }
         
         dialDiv.innerHTML = `
-            <a href="${safe(dial.url)}" target="_self" class="w-full h-full flex flex-col items-center justify-center p-4">
+            ${isPlaceholder ? '<div class="ivy-dial-placeholder-space" aria-hidden="true"></div>' : `<a href="${safe(dial.url)}" target="_self" class="w-full h-full flex flex-col items-center justify-center p-4">
                 <img data-ivy-placeholder="true" alt="${safe(dial.title)}" class="quick-dial-icon rounded-full mb-2 ${currentSettings.quickDialImageSize} shadow-lg transition duration-300">
                 <span class="text-white text-sm font-medium text-center w-full px-1">${safe(dial.title)}</span>
-            </a>
+            </a>`}
             
             <button class="edit-button absolute top-1 right-12 opacity-0 group-hover:opacity-100 transition duration-300 p-1 rounded-full bg-gray-900/50 hover:bg-indigo-600/70 z-20" 
                     onclick="editLink(event, '${safe(dial.id)}')"
@@ -719,12 +721,12 @@ function renderQuickDials(dials) {
         
         const handle = document.createElement('button');
         handle.type = 'button'; handle.className = 'ivy-dial-drag-handle';
-        handle.title = 'Link verschieben'; handle.setAttribute('aria-label', `${dial.title} verschieben`);
+        handle.title = isPlaceholder ? 'Platzhalter verschieben' : 'Link verschieben'; handle.setAttribute('aria-label', isPlaceholder ? 'Platzhalter verschieben' : `${dial.title} verschieben`);
         handle.textContent = '⠿';
         dialDiv.appendChild(handle);
         ivyBindDialDrag(dialDiv, handle);
         grid.insertBefore(dialDiv, addButton);
-        ivyIconQueue.attach(dialDiv.querySelector('.quick-dial-icon'),dial.iconUrl || getFaviconUrl(dial.url),dial.title);
+        if (!isPlaceholder) ivyIconQueue.attach(dialDiv.querySelector('.quick-dial-icon'),dial.iconUrl || getFaviconUrl(dial.url),dial.title);
     });
 
     applySettings(currentSettings);
@@ -735,6 +737,18 @@ function renderQuickDials(dials) {
         // =================================================================
 
 let isEditingId = null; // Speichert die ID des Links, der gerade bearbeitet wird
+function ivySyncPlaceholderEditor() {
+    const modal = document.getElementById('add-modal');
+    const enabled = document.getElementById('modal-is-placeholder')?.checked === true;
+    if (!modal) return;
+    modal.classList.toggle('ivy-v59-placeholder-entry', enabled);
+    for (const id of ['modal-title','modal-url','modal-icon-url']) {
+        const field = document.getElementById(id);
+        if (field) field.disabled = enabled;
+    }
+    if (!enabled) ivyUpdateIconPreview();
+}
+
 
 // --- FUNKTION ZUM ÖFFNEN DES MODALS (HINZUFÜGEN) ---
 window.showAddModal = () => {
@@ -745,7 +759,8 @@ window.showAddModal = () => {
     document.getElementById('modal-title').value = ''; 
     document.getElementById('modal-url').value = '';
     document.getElementById('modal-icon-url').value = '';
-    ivyUpdateIconPreview();
+    document.getElementById('modal-is-placeholder').checked = false;
+    ivySyncPlaceholderEditor();
     
     // 3. Setzt den Modal-Titel und Button-Text für den Hinzufügen-Modus
     document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag hinzufügen';
@@ -780,10 +795,11 @@ window.editLink = (event, id) => {
     const dialToEdit = dials.find(dial => dial.id === id);
     
     if (dialToEdit) {
-        document.getElementById('modal-title').value = dialToEdit.title;
-        document.getElementById('modal-url').value = dialToEdit.url;
+        document.getElementById('modal-title').value = dialToEdit.title || '';
+        document.getElementById('modal-url').value = dialToEdit.url || '';
         document.getElementById('modal-icon-url').value = dialToEdit.iconUrl || '';
-        ivyUpdateIconPreview();
+        document.getElementById('modal-is-placeholder').checked = dialToEdit.isPlaceholder === true;
+        ivySyncPlaceholderEditor();
         
         // UI auf Bearbeiten-Modus setzen
         document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag bearbeiten';
@@ -797,26 +813,27 @@ window.editLink = (event, id) => {
 	// --- SPEICHERFUNKTION ---
         // =================================================================
 window.saveQuickDial = () => {
-    const title = document.getElementById('modal-title').value.trim();
-    let url = document.getElementById('modal-url').value.trim();
+    const isPlaceholder = document.getElementById('modal-is-placeholder')?.checked === true;
+    const title = isPlaceholder ? '' : document.getElementById('modal-title').value.trim();
+    let url = isPlaceholder ? '' : document.getElementById('modal-url').value.trim();
     if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
     try { if (url && !['http:', 'https:'].includes(new URL(url).protocol)) throw new Error('Invalid protocol'); } catch(e) { alert('Bitte eine gültige HTTP- oder HTTPS-Adresse eingeben.'); return; }
 
-    const iconRaw = document.getElementById('modal-icon-url')?.value.trim() || '';
+    const iconRaw = isPlaceholder ? '' : (document.getElementById('modal-icon-url')?.value.trim() || '');
     let iconUrl = '';
     if (iconRaw) {
         try { iconUrl = new URL(/^https?:\/\//i.test(iconRaw) ? iconRaw : 'https://' + iconRaw).href;
           if (!/^https?:$/i.test(new URL(iconUrl).protocol)) throw new Error('Invalid icon protocol');
         } catch { alert('Icon-URL muss eine gültige HTTP-/HTTPS-Adresse sein.'); return; }
     }
-    if (title && url) {
+    if (isPlaceholder || (title && url)) {
         let dials = getDialsFromLocalStorage();
 
         if (isEditingId) {
             // BEARBEITEN-MODUS
             dials = dials.map(dial => {
                 if (dial.id === isEditingId) {
-                    return { ...dial, title: title, url: url, iconUrl };
+                    return { ...dial, title, url, iconUrl, isPlaceholder };
                 }
                 return dial;
             });
@@ -827,6 +844,7 @@ window.saveQuickDial = () => {
                 title: title, 
                 url: url,
                 iconUrl,
+                isPlaceholder,
                 createdAt: Date.now() 
             });
         }
@@ -852,6 +870,8 @@ window.hideAddModal = () => {
     // Setzt Eingabefelder und UI auf den Hinzufügen-Modus zurück
     document.getElementById('modal-title').value = ''; 
     document.getElementById('modal-url').value = '';
+    document.getElementById('modal-is-placeholder').checked = false;
+    ivySyncPlaceholderEditor();
     document.querySelector('#add-modal h3').textContent = 'Schnellwahleintrag hinzufügen';
     document.querySelector('#add-modal button[onclick="saveQuickDial()"]').textContent = 'Speichern'; 
 };
@@ -1385,6 +1405,7 @@ function ivyInitV11(){
   document.getElementById('ivy-mobile-weather')?.addEventListener('click',()=>ivyToggleMobileCard('weather'));
   document.getElementById('ivy-mobile-profile')?.addEventListener('click',()=>ivyToggleMobileCard('profile'));
   document.getElementById('ivy-mobile-clock')?.addEventListener('click',()=>ivyToggleMobileCard('clock'));
+  document.getElementById('modal-is-placeholder')?.addEventListener('change',ivySyncPlaceholderEditor);
   document.getElementById('modal-icon-url')?.addEventListener('input',ivyUpdateIconPreview);
   document.getElementById('modal-url')?.addEventListener('input',ivyUpdateIconPreview);
   document.addEventListener('pointerdown',e=>{
@@ -2535,7 +2556,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='ec46a040026370902a1cb8acfb42aba62b03e7a5c31d7b33d58904be00a16809';
+ const CLIENT_SIGNATURE='35929a6874ea6516520cfa0b5a14786ea0f646108f28e0058056205bbdb18f09';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');
@@ -2873,7 +2894,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const $=id=>document.getElementById(id);
  const mobile=()=>window.matchMedia('(max-width:900px)').matches;
  const langKey='ivyDashboardLanguage';
- const dictionary={"LINKS":"LINKS","Wetter":"Weather","Profil":"Profile","Uhr":"Clock","Suche":"Search","← Zurück":"← Back","＋ Link hinzufügen":"+ Add link","✎ Bearbeiten":"✎ Edit","✓ Fertig":"✓ Done","Link hinzufügen":"Add link","Wähle Suchmaschine":"Choose search engine","Icons in Graustufen":"Grayscale icons","Schnellwahleintrag hinzufügen":"Add quick link","Schnellwahleintrag bearbeiten":"Edit quick link","Eigenes Icon (optional)":"Custom icon (optional)","Website-Icon automatisch erkennen":"Detect website icon automatically","Website-Icon automatisch":"Automatic website icon","Eigenes Bild":"Custom image","Abbrechen":"Cancel","Speichern":"Save","Lichtsteuerung":"Light controls","✕ Schließen":"✕ Close","Dunkel":"Dark","Hell":"Light","Helligkeit":"Brightness","Kalt":"Cool","Warm":"Warm","Farbtemperatur":"Color temperature","Dashboard-Einstellungen":"Dashboard settings","IVY · Einstellungen":"IVY · Settings","Alle öffnen":"Expand all","Alle schließen":"Collapse all","Design & Farben":"Design & colors","Farben & Darstellung":"Colors & appearance","Suchfeld & Effekte":"Search & effects","Hintergründe & Rahmen":"Backgrounds & borders","Wetter & Standort":"Weather & location","Uhr & Zeit":"Clock & time","Größen & Geräteprofile":"Sizes & device profiles","Suche & Bedienung":"Search & controls","Datensicherung · Import & Export":"Backup · Import & Export","Updates & Offline":"Updates & offline","Sprache / Language":"Language / Sprache","Akzent-/Start-Glow-Farbe:":"Accent / initial glow color:","Ziel-Glow-Farbe (Animation):":"Target glow color (animation):","Kachel-Hintergrundfarbe (Standard):":"Tile background color (default):","Kachel-Transparenz:":"Tile transparency:","Suchfarben mit den Dashboard-Akzentfarben synchronisieren":"Sync search colors with dashboard accents","Suchfeld-Farbe 1":"Search color 1","Suchfeld-Farbe 2":"Search color 2","Glow-Effekt":"Glow effect","Aurora + Scan":"Aurora + scan","Weicher Puls":"Soft pulse","Statischer Glow":"Static glow","Aus":"Off","Glow-Intensität":"Glow intensity","Animationsgeschwindigkeit":"Animation speed","Suchfeld-Deckkraft":"Search opacity","Suchmaschinenmenü-Deckkraft":"Search engine menu opacity","Suchfeld-Randdeckkraft":"Search border opacity","Hintergrund von Modulen/Buttons ausblenden (Wetter, Profil, Steuerung):":"Hide widget/button backgrounds (weather, profile, controls):","Hintergrund von Schnellwahleinträgen ausblenden (Kacheln):":"Hide quick-link tile backgrounds:","Ränder ausblenden (Dynamic Border):":"Hide borders (dynamic border):","\"Link hinzufügen\"-Button ausblenden:":"Hide \"Add link\" button:","Standort-Suchfeld unter der Wetterkarte anzeigen":"Show location search below weather card","Aurora anzeigen":"Show aurora","Fenstertropfen anzeigen":"Show window droplets","Effektstärke":"Effect intensity","Wolkendichte":"Cloud density","24-Stunden-Format":"24-hour format","Sekunden anzeigen":"Show seconds","Datum anzeigen":"Show date","Wochentag anzeigen":"Show weekday","Zeitzone anzeigen":"Show time zone","Darstellung":"Appearance","Glas":"Glass","Minimal":"Minimal","Kartengröße":"Card size","Wetterkarte – Transparenz":"Weather card opacity","Uhrkarte – Transparenz":"Clock card opacity","Uhrkarte – Breite":"Clock card width","Uhrkarte – Höhe":"Clock card height","Wetter-Karten-Breite (Tailwind-Klasse):":"Weather card width (Tailwind class):","Profilbild-Größe:":"Profile image size:","Quick-Dial-Icon-Größe:":"Quick-link icon size:","Klein (w-16 h-16)":"Small (w-16 h-16)","Mittel (w-20 h-20)":"Medium (w-20 h-20)","Groß (w-24 h-24)":"Large (w-24 h-24)","Klein (w-8 h-8)":"Small (w-8 h-8)","Mittel (w-10 h-10)":"Medium (w-10 h-10)","Groß (w-12 h-12)":"Large (w-12 h-12)","Zusätzliche Größen & Bedienung":"Additional sizes & controls","Suchfeld-Breite":"Search field width","Link-Container-Breite":"Links container width","Link-Container-Höhe":"Links container height","Link-Kachel-Größe":"Link tile size","Link-Icon-Größe":"Link icon size","Buttons / Touchflächen":"Buttons / touch targets","Profilbild-Größe":"Profile image size","Wetterkarte-Breite":"Weather card width","Wetterkarte-Höhe":"Weather card height","Die Größen passen sich automatisch an den verfügbaren Platz an. Die bestehenden Designfarben bleiben erhalten.":"Sizes adapt to available space. Your design colors are preserved.","Manuellen Layout-Modus aktivieren (Drag & Drop):":"Enable manual layout (drag & drop):","Gewählte Suchmaschine speichern:":"Remember selected search engine:","Suchvorschläge (Autofill) deaktivieren:":"Disable search suggestions (autofill):","Cache löschen (Alle Daten)":"Clear cache (all data)","Speichern & Schließen":"Save & close","Geräteprofile & Sichtbarkeit":"Device profiles & visibility","Farben und Glow bleiben gemeinsam. Positionen, Größen und sichtbare Widgets sind pro Ansichtsmodus getrennt.":"Colors and glow are shared. Positions, sizes and visible widgets are separate for each view.","Einstellungen bearbeiten für":"Edit settings for","Desktop-Ansicht":"Desktop view","Mobil-Ansicht":"Mobile view","Wetter anzeigen":"Show weather","Profil anzeigen":"Show profile","Schnellsuche anzeigen":"Show quick search","Uhr anzeigen":"Show clock","Exportiert gespeicherte Links, Einstellungen, Profil, Wetterort und Layoutpositionen. Ein Import ersetzt nur die enthaltenen gespeicherten Werte; zuvor ein Backup erstellen.":"Exports saved links, settings, profile, weather location and layout positions. Import replaces only included saved values; create a backup first.","↓ Backup exportieren":"↓ Export backup","↑ Backup importieren":"↑ Import backup","Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.":"The app starts instantly from its offline cache. Version checks run in the background; the cache is updated only after your confirmation.","↻ Jetzt nach Updates suchen":"↻ Check for updates","☁ Wetter jetzt aktualisieren":"☁ Refresh weather now","Automatische Prüfung im Hintergrund aktiviert.":"Automatic background checks enabled.","Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.":"Personal data stays in your browser. Only “Clear all data” removes settings and links.","⧉ Lade-Diagnose kopieren":"⧉ Copy load diagnostics","✓ Diagnose kopiert":"✓ Diagnostics copied","✦ IVY Dashboard · Update verfügbar":"✦ IVY Dashboard · Update available","Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?":"A new dashboard version is available. Reload now to apply it?","Jetzt aktualisieren":"Update now","Später":"Later","Bitte zuerst einen Wetterstandort festlegen.":"Please choose a weather location first.","Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.":"Offline – last saved weather data remain visible.","Wetteraktualisierung gestartet.":"Weather refresh started.","Neue Version gefunden – im Popup installieren.":"New version found – install it in the popup.","Suche nach Updates …":"Checking for updates …","Eine Prüfung läuft bereits.":"A check is already running.","Bitte das Dashboard im Vordergrund öffnen.":"Please bring the dashboard to the foreground.","Offline – die gespeicherte Version bleibt nutzbar.":"Offline – your saved version remains available.","Versionsdatei nicht erreichbar.":"Version file unavailable.","Ungültige Versionsdatei.":"Invalid version file.","Keine Verbindung zum Updateserver – offline weiter nutzbar.":"Cannot reach the update server – offline version remains available.","Update wird im Offline-Cache installiert …":"Installing update in the offline cache …","Update nicht übernommen:":"Update not applied:","Bitte erneut versuchen.":"Please try again.","Bereit":"Ready","Live-Wetterdaten":"Live weather data","Ort unten eingeben":"Enter a city below","Schneefall":"Snowfall","Gewitter":"Thunderstorm","Gefrierender Regen":"Freezing rain","Leichter Regen":"Light rain","Regen":"Rain","Nebel":"Fog","Bewölkt":"Cloudy","Klar":"Clear","Stadt eingeben, z. B. Berlin":"Enter a city, e.g. Berlin","Schnellsuche...":"Quick search...","Einstellungen suchen …":"Search settings …","Titel (z.B. Google)":"Title (e.g. Google)","URL (z.B. https://google.com)":"URL (e.g. https://google.com)","Eintrag bearbeiten":"Edit link","Eintrag löschen":"Delete link","Link verschieben":"Move link","Links bearbeiten":"Edit links","Mobile Linkbearbeitung":"Mobile link editing","Bearbeitungsmodus für Links":"Link editing mode","Nur in der mobilen Linkansicht. Aktiviert Bearbeiten, Löschen und Verschieben.":"Only in the mobile links view. Enables edit, delete and reorder.","Sprache auswählen":"Choose language","Sprache für das Dashboard":"Dashboard language","Deutsch":"German","Englisch":"English","Sprachwechsel wird sofort gespeichert.":"Language changes are saved immediately.","Bearbeiten":"Edit","Fertig":"Done","Bitte geben Sie einen Titel und eine URL ein.":"Please enter a title and a URL.","Soll dieser Schnellwahleintrag wirklich gelöscht werden?":"Do you really want to delete this quick link?","Bitte eine gültige HTTP- oder HTTPS-Adresse eingeben.":"Please enter a valid HTTP or HTTPS address.","Icon-URL muss eine gültige HTTP-/HTTPS-Adresse sein.":"Icon URL must be a valid HTTP/HTTPS address."};
+ const dictionary={"LINKS":"LINKS","Wetter":"Weather","Profil":"Profile","Uhr":"Clock","Suche":"Search","← Zurück":"← Back","＋ Link hinzufügen":"+ Add link","✎ Bearbeiten":"✎ Edit","✓ Fertig":"✓ Done","Link hinzufügen":"Add link","Wähle Suchmaschine":"Choose search engine","Icons in Graustufen":"Grayscale icons","Schnellwahleintrag hinzufügen":"Add quick link","Schnellwahleintrag bearbeiten":"Edit quick link","Eigenes Icon (optional)":"Custom icon (optional)","Website-Icon automatisch erkennen":"Detect website icon automatically","Website-Icon automatisch":"Automatic website icon","Eigenes Bild":"Custom image","Abbrechen":"Cancel","Speichern":"Save","Lichtsteuerung":"Light controls","✕ Schließen":"✕ Close","Dunkel":"Dark","Hell":"Light","Helligkeit":"Brightness","Kalt":"Cool","Warm":"Warm","Farbtemperatur":"Color temperature","Dashboard-Einstellungen":"Dashboard settings","IVY · Einstellungen":"IVY · Settings","Alle öffnen":"Expand all","Alle schließen":"Collapse all","Design & Farben":"Design & colors","Farben & Darstellung":"Colors & appearance","Suchfeld & Effekte":"Search & effects","Hintergründe & Rahmen":"Backgrounds & borders","Wetter & Standort":"Weather & location","Uhr & Zeit":"Clock & time","Größen & Geräteprofile":"Sizes & device profiles","Suche & Bedienung":"Search & controls","Datensicherung · Import & Export":"Backup · Import & Export","Updates & Offline":"Updates & offline","Sprache / Language":"Language / Sprache","Akzent-/Start-Glow-Farbe:":"Accent / initial glow color:","Ziel-Glow-Farbe (Animation):":"Target glow color (animation):","Kachel-Hintergrundfarbe (Standard):":"Tile background color (default):","Kachel-Transparenz:":"Tile transparency:","Suchfarben mit den Dashboard-Akzentfarben synchronisieren":"Sync search colors with dashboard accents","Suchfeld-Farbe 1":"Search color 1","Suchfeld-Farbe 2":"Search color 2","Glow-Effekt":"Glow effect","Aurora + Scan":"Aurora + scan","Weicher Puls":"Soft pulse","Statischer Glow":"Static glow","Aus":"Off","Glow-Intensität":"Glow intensity","Animationsgeschwindigkeit":"Animation speed","Suchfeld-Deckkraft":"Search opacity","Suchmaschinenmenü-Deckkraft":"Search engine menu opacity","Suchfeld-Randdeckkraft":"Search border opacity","Hintergrund von Modulen/Buttons ausblenden (Wetter, Profil, Steuerung):":"Hide widget/button backgrounds (weather, profile, controls):","Hintergrund von Schnellwahleinträgen ausblenden (Kacheln):":"Hide quick-link tile backgrounds:","Ränder ausblenden (Dynamic Border):":"Hide borders (dynamic border):","\"Link hinzufügen\"-Button ausblenden:":"Hide \"Add link\" button:","Standort-Suchfeld unter der Wetterkarte anzeigen":"Show location search below weather card","Aurora anzeigen":"Show aurora","Fenstertropfen anzeigen":"Show window droplets","Effektstärke":"Effect intensity","Wolkendichte":"Cloud density","24-Stunden-Format":"24-hour format","Sekunden anzeigen":"Show seconds","Datum anzeigen":"Show date","Wochentag anzeigen":"Show weekday","Zeitzone anzeigen":"Show time zone","Darstellung":"Appearance","Glas":"Glass","Minimal":"Minimal","Kartengröße":"Card size","Wetterkarte – Transparenz":"Weather card opacity","Uhrkarte – Transparenz":"Clock card opacity","Uhrkarte – Breite":"Clock card width","Uhrkarte – Höhe":"Clock card height","Wetter-Karten-Breite (Tailwind-Klasse):":"Weather card width (Tailwind class):","Profilbild-Größe:":"Profile image size:","Quick-Dial-Icon-Größe:":"Quick-link icon size:","Klein (w-16 h-16)":"Small (w-16 h-16)","Mittel (w-20 h-20)":"Medium (w-20 h-20)","Groß (w-24 h-24)":"Large (w-24 h-24)","Klein (w-8 h-8)":"Small (w-8 h-8)","Mittel (w-10 h-10)":"Medium (w-10 h-10)","Groß (w-12 h-12)":"Large (w-12 h-12)","Zusätzliche Größen & Bedienung":"Additional sizes & controls","Suchfeld-Breite":"Search field width","Link-Container-Breite":"Links container width","Link-Container-Höhe":"Links container height","Link-Kachel-Größe":"Link tile size","Link-Icon-Größe":"Link icon size","Buttons / Touchflächen":"Buttons / touch targets","Profilbild-Größe":"Profile image size","Wetterkarte-Breite":"Weather card width","Wetterkarte-Höhe":"Weather card height","Die Größen passen sich automatisch an den verfügbaren Platz an. Die bestehenden Designfarben bleiben erhalten.":"Sizes adapt to available space. Your design colors are preserved.","Manuellen Layout-Modus aktivieren (Drag & Drop):":"Enable manual layout (drag & drop):","Gewählte Suchmaschine speichern:":"Remember selected search engine:","Suchvorschläge (Autofill) deaktivieren:":"Disable search suggestions (autofill):","Cache löschen (Alle Daten)":"Clear cache (all data)","Speichern & Schließen":"Save & close","Geräteprofile & Sichtbarkeit":"Device profiles & visibility","Farben und Glow bleiben gemeinsam. Positionen, Größen und sichtbare Widgets sind pro Ansichtsmodus getrennt.":"Colors and glow are shared. Positions, sizes and visible widgets are separate for each view.","Einstellungen bearbeiten für":"Edit settings for","Desktop-Ansicht":"Desktop view","Mobil-Ansicht":"Mobile view","Wetter anzeigen":"Show weather","Profil anzeigen":"Show profile","Schnellsuche anzeigen":"Show quick search","Uhr anzeigen":"Show clock","Exportiert gespeicherte Links, Einstellungen, Profil, Wetterort und Layoutpositionen. Ein Import ersetzt nur die enthaltenen gespeicherten Werte; zuvor ein Backup erstellen.":"Exports saved links, settings, profile, weather location and layout positions. Import replaces only included saved values; create a backup first.","↓ Backup exportieren":"↓ Export backup","↑ Backup importieren":"↑ Import backup","Die App startet weiterhin direkt aus dem Offline-Cache. Die Prüfung lädt nur im Hintergrund eine Versionsinformation; erst nach deiner Bestätigung wird der Cache aktualisiert.":"The app starts instantly from its offline cache. Version checks run in the background; the cache is updated only after your confirmation.","↻ Jetzt nach Updates suchen":"↻ Check for updates","☁ Wetter jetzt aktualisieren":"☁ Refresh weather now","Automatische Prüfung im Hintergrund aktiviert.":"Automatic background checks enabled.","Persönliche Daten bleiben im Browser gespeichert. Nur „Alle Daten löschen“ entfernt Einstellungen und Links.":"Personal data stays in your browser. Only “Clear all data” removes settings and links.","⧉ Lade-Diagnose kopieren":"⧉ Copy load diagnostics","✓ Diagnose kopiert":"✓ Diagnostics copied","✦ IVY Dashboard · Update verfügbar":"✦ IVY Dashboard · Update available","Eine neue Dashboard-Version wurde veröffentlicht. Jetzt neu laden, um sie zu übernehmen?":"A new dashboard version is available. Reload now to apply it?","Jetzt aktualisieren":"Update now","Später":"Later","Bitte zuerst einen Wetterstandort festlegen.":"Please choose a weather location first.","Offline – zuletzt gespeicherte Wetterdaten bleiben sichtbar.":"Offline – last saved weather data remain visible.","Wetteraktualisierung gestartet.":"Weather refresh started.","Neue Version gefunden – im Popup installieren.":"New version found – install it in the popup.","Suche nach Updates …":"Checking for updates …","Eine Prüfung läuft bereits.":"A check is already running.","Bitte das Dashboard im Vordergrund öffnen.":"Please bring the dashboard to the foreground.","Offline – die gespeicherte Version bleibt nutzbar.":"Offline – your saved version remains available.","Versionsdatei nicht erreichbar.":"Version file unavailable.","Ungültige Versionsdatei.":"Invalid version file.","Keine Verbindung zum Updateserver – offline weiter nutzbar.":"Cannot reach the update server – offline version remains available.","Update wird im Offline-Cache installiert …":"Installing update in the offline cache …","Update nicht übernommen:":"Update not applied:","Bitte erneut versuchen.":"Please try again.","Bereit":"Ready","Live-Wetterdaten":"Live weather data","Ort unten eingeben":"Enter a city below","Schneefall":"Snowfall","Gewitter":"Thunderstorm","Gefrierender Regen":"Freezing rain","Leichter Regen":"Light rain","Regen":"Rain","Nebel":"Fog","Bewölkt":"Cloudy","Klar":"Clear","Stadt eingeben, z. B. Berlin":"Enter a city, e.g. Berlin","Schnellsuche...":"Quick search...","Einstellungen suchen …":"Search settings …","Titel (z.B. Google)":"Title (e.g. Google)","URL (z.B. https://google.com)":"URL (e.g. https://google.com)","Leeren Platzhalter hinzufügen (ohne Titel oder Link)":"Add empty placeholder (no title or link)","Reserviert eine freie Kachelposition. Im Bearbeitungsmodus kannst du sie verschieben, bearbeiten oder löschen.":"Reserves a blank tile position. In edit mode you can move, edit or delete it.","Platzhalter verschieben":"Move placeholder","Freier Platzhalter":"Empty placeholder","Eintrag bearbeiten":"Edit link","Eintrag löschen":"Delete link","Link verschieben":"Move link","Links bearbeiten":"Edit links","Mobile Linkbearbeitung":"Mobile link editing","Bearbeitungsmodus für Links":"Link editing mode","Nur in der mobilen Linkansicht. Aktiviert Bearbeiten, Löschen und Verschieben.":"Only in the mobile links view. Enables edit, delete and reorder.","Sprache auswählen":"Choose language","Sprache für das Dashboard":"Dashboard language","Deutsch":"German","Englisch":"English","Sprachwechsel wird sofort gespeichert.":"Language changes are saved immediately.","Bearbeiten":"Edit","Fertig":"Done","Bitte geben Sie einen Titel und eine URL ein.":"Please enter a title and a URL.","Soll dieser Schnellwahleintrag wirklich gelöscht werden?":"Do you really want to delete this quick link?","Bitte eine gültige HTTP- oder HTTPS-Adresse eingeben.":"Please enter a valid HTTP or HTTPS address.","Icon-URL muss eine gültige HTTP-/HTTPS-Adresse sein.":"Icon URL must be a valid HTTP/HTTPS address."};
  const textState=new WeakMap(),attrState=new WeakMap();
  let language=localStorage.getItem(langKey)==='en'?'en':'de';
  const skip=el=>el?.closest?.('#quick-dials-grid,#weather-city,#ivy-clock-time,#ivy-clock-date,#ivy-clock-zone,#user-id-display');
