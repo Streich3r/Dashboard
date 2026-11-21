@@ -1674,8 +1674,10 @@ function apply(){
  const selections=parts();
  for(const n of ['search','links']) {
   if(!selections[n])continue;
+  // Only constrain the *displayed* offset for this viewport. Never rewrite
+  // the user's saved desktop/mobile position when the window is resized,
+  // minimized, maximized, restored or temporarily too small.
   const pos=constrain(n);
-  data[n+'X']=pos.x;data[n+'Y']=pos.y;
   root.style.setProperty('--ivy-v14-'+n+'-x',pos.x+'px');
   root.style.setProperty('--ivy-v14-'+n+'-y',pos.y+'px');
  }
@@ -1735,24 +1737,34 @@ function installDrag(section,name){
   if(!document.body.classList.contains('manual-layout-mode'))return;
   if(event.button!==undefined&&event.button!==0)return;
   const modal=$('settings-modal');if(modal&&!modal.classList.contains('hidden'))return;
-  drag={id:event.pointerId,x:event.clientX,y:event.clientY,ox:data[name+'X'],oy:data[name+'Y']};
+  // Start from the actual visible offset, not the possibly offscreen
+  // canonical offset saved at a different desktop window size.
+  const current=constrain(name);
+  drag={id:event.pointerId,x:event.clientX,y:event.clientY,ox:current.x,oy:current.y,
+        originalX:data[name+'X'],originalY:data[name+'Y'],moved:false};
   handle.setPointerCapture?.(event.pointerId);
   section.classList.add('ivy-v14-being-dragged');
   event.preventDefault();
  });
  handle.addEventListener('pointermove',event=>{
   if(!drag||event.pointerId!==drag.id)return;
+  if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<3&&!drag.moved)return;
+  drag.moved=true;
   const pos=constrain(name,{x:drag.ox+event.clientX-drag.x,y:drag.oy+event.clientY-drag.y});
   data[name+'X']=pos.x;data[name+'Y']=pos.y;
   document.documentElement.style.setProperty('--ivy-v14-'+name+'-x',pos.x+'px');
   document.documentElement.style.setProperty('--ivy-v14-'+name+'-y',pos.y+'px');
   event.preventDefault();
  });
- const finish=event=>{
+ const finish=(event,cancel=false)=>{
   if(!drag||event.pointerId!==drag.id)return;
-  drag=null;section.classList.remove('ivy-v14-being-dragged');save();
+  const moved=drag.moved;
+  if(cancel){data[name+'X']=drag.originalX;data[name+'Y']=drag.originalY;}
+  drag=null;section.classList.remove('ivy-v14-being-dragged');
+  if(moved&&!cancel)save();else apply();
  };
- handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',finish);
+ handle.addEventListener('pointerup',e=>finish(e));
+ handle.addEventListener('pointercancel',e=>finish(e,true));
 }
 function init(){
  const selections=parts();if(!selections.search||!selections.links)return;
@@ -1864,7 +1876,21 @@ function relayout(){
  const mobile=MOBILE();root.classList.toggle('ivy-v16-mobile-ui',mobile);root.classList.toggle('ivy-v18-mobile',mobile);
  document.body.classList.toggle('ivy-v16-mobile-ui',mobile);
  if(priorMobile!==mobile){priorMobile=mobile;
-  if(!mobile){closeLinks(false);for(const id of IDS){if(id==='ivy18-search')continue;const el=elById(id);if(el){for(const k of ['position','left','top','right','bottom','translate','transform','--ivy-v56-top','--ivy-v56-left'])el.style.removeProperty(k);delete el.dataset.ivyV56Positioned}}loadItemPositions()}
+  if(!mobile){
+   closeLinks(false);
+   // The mobile controller temporarily zeroes the dashboard padding. If that
+   // inline !important remains, the entire desktop workspace jumps after a
+   // narrow window was expanded again. Restore CSS ownership on mode exit.
+   const host=$('dashboard-container'),main=host?.firstElementChild;
+   for(const el of [host,main])if(el){
+    for(const prop of ['padding','transform','translate'])el.style.removeProperty(prop);
+   }
+   root.style.removeProperty('--ivy18-search-width');
+   for(const id of IDS){if(id==='ivy18-search')continue;const el=elById(id);if(el){for(const k of ['position','left','top','right','bottom','translate','transform','--ivy-v56-top','--ivy-v56-left'])el.style.removeProperty(k);delete el.dataset.ivyV56Positioned}}
+   loadItemPositions();
+   // Re-measure the original desktop workspace after the mobile CSS is gone.
+   requestAnimationFrame(()=>window.ivyV14Workspace?.apply?.());
+  }
  }
  if(!mobile||busy)return;
  const host=$('dashboard-container'),main=host?.firstElementChild;
@@ -2556,7 +2582,7 @@ if(document.readyState!=='complete')document.addEventListener('DOMContentLoaded'
  const popup=document.getElementById('ivy-update-popup');if(!popup)return;
  // Generate a SHA-256 digest of this packaged HTML with this signature set to zeros.
  // A different deployed HTML version shows a popup but never changes cached content.
- const CLIENT_SIGNATURE='35929a6874ea6516520cfa0b5a14786ea0f646108f28e0058056205bbdb18f09';
+ const CLIENT_SIGNATURE='23a3496c9cc68c4206359cc501c8cdf90a4a43412b461f30c052b48e4a51f4b5';
  const CURRENT_BUILD=document.querySelector('meta[name="ivy-build"]')?.content||'';
  const later=document.getElementById('ivy-update-later');
  const apply=document.getElementById('ivy-update-apply');

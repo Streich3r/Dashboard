@@ -1,6 +1,6 @@
 {
-  "build": "59",
-  "hash": "35929a6874ea6516520cfa0b5a14786ea0f646108f28e0058056205bbdb18f09",
+  "build": "60",
+  "hash": "23a3496c9cc68c4206359cc501c8cdf90a4a43412b461f30c052b48e4a51f4b5",
   "resources": [
     "app.css",
     "particles.js",
@@ -21,10 +21,10 @@
     "icons/icon-512.png"
   ],
   "assets": {
-    "index.html": "35929a6874ea6516520cfa0b5a14786ea0f646108f28e0058056205bbdb18f09",
+    "index.html": "23a3496c9cc68c4206359cc501c8cdf90a4a43412b461f30c052b48e4a51f4b5",
     "app.css": "980a2cae8470e95797027a7c1aeb71eeafbe9a3eb4ba1a71fff5f0fa248cee84",
     "particles.js": "6552bdddc35815a9b620292c4d81d70047c4a5b4f6f656db6dfa134ce398c050",
-    "app.js": "2ba87b1ec39d19d73f89c8e3bfa5f867a7b445994ed782f219ebfb54b1942f7b",
+    "app.js": "c29cc8783551882c760663258609e715867f7b7908d71b68402318c54aa30e22",
     "weather.js": "f5d8f6e3b35d77dd1353098f650dadbaef4462e129f9f70a53939341b67e6c45",
     "manifest.json": "b084c63b8a09ab1e23bffa2d9cbc9babc6609ad7687b220426bf0883155c121c",
     "icons/favicon.ico": "610287f3290d2d7da17115d4eb6bb3d66c74216480f2fa49bf98516aca7d2cdf",
